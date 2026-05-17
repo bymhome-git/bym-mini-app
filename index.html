@@ -7,14 +7,17 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --bg: #ffffff;
-      --text: #111111;
-      --hint: #8e8e93;
-      --primary: #2481cc;
-      --secondary-bg: #f2f2f7;
+      --bg: #050b1a;
+      --bg-soft: #0b1631;
+      --text: #ebf2ff;
+      --hint: #93a6cc;
+      --primary: #5b7cff;
+      --primary-2: #8b5cf6;
+      --secondary-bg: #111f3f;
       --button-text: #ffffff;
-      --danger: #ff3b30;
-      --shadow: 0 8px 24px rgba(15, 15, 20, 0.08);
+      --danger: #ff5a7a;
+      --stroke: rgba(155, 184, 255, 0.2);
+      --shadow: 0 10px 28px rgba(2, 7, 22, 0.45);
       --radius-lg: 20px;
       --radius-md: 14px;
       --radius-sm: 12px;
@@ -24,8 +27,11 @@
 
     body {
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: var(--bg);
+      font-family: "Segoe UI", "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 0% 0%, #1a2a5f55 0%, transparent 60%),
+        radial-gradient(900px 500px at 100% 20%, #7e4dff33 0%, transparent 60%),
+        linear-gradient(180deg, #050b1a 0%, #040913 100%);
       color: var(--text);
       min-height: 100vh;
     }
@@ -52,12 +58,17 @@
       min-height: calc(100vh - 28px);
       border-radius: 24px;
       overflow: hidden;
+      border: 1px solid var(--stroke);
+      box-shadow: 0 0 0 1px rgba(125, 156, 255, 0.04), var(--shadow);
+      background: linear-gradient(180deg, #07142d 0%, #060f22 100%);
     }
 
     .screen {
       position: absolute;
       inset: 0;
-      background: var(--bg);
+      background:
+        radial-gradient(500px 260px at 100% 0%, #7c4dff1f 0%, transparent 65%),
+        linear-gradient(180deg, #07142d 0%, #060f22 100%);
       padding: 14px 14px 22px;
       overflow: auto;
       opacity: 0;
@@ -81,25 +92,26 @@
 
     .title-small {
       margin: 0;
-      font-size: 14px;
+      font-size: 13px;
       letter-spacing: 0.02em;
       color: var(--hint);
-      font-weight: 600;
+      font-weight: 500;
     }
 
     .screen-title {
       margin: 2px 0 14px;
-      font-size: 26px;
+      font-size: 34px;
       line-height: 1.12;
-      font-weight: 700;
+      font-weight: 800;
+      letter-spacing: -0.02em;
     }
 
     .card {
       border-radius: var(--radius-lg);
       padding: 14px;
-      background: var(--secondary-bg);
+      background: linear-gradient(180deg, rgba(19, 35, 72, 0.9) 0%, rgba(15, 28, 58, 0.9) 100%);
       box-shadow: var(--shadow);
-      border: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
+      border: 1px solid var(--stroke);
     }
 
     .balance-row {
@@ -118,9 +130,9 @@
     .action-card {
       width: 100%;
       text-align: left;
-      border: 1px solid transparent;
+      border: 1px solid var(--stroke);
       border-radius: var(--radius-lg);
-      background: var(--secondary-bg);
+      background: linear-gradient(180deg, rgba(20, 36, 74, 0.9) 0%, rgba(16, 29, 60, 0.9) 100%);
       box-shadow: var(--shadow);
       padding: 14px;
       color: var(--text);
@@ -128,8 +140,11 @@
     }
 
     .platform-card.active {
-      border-color: color-mix(in srgb, var(--primary) 45%, transparent);
-      background: color-mix(in srgb, var(--primary) 14%, var(--secondary-bg));
+      border-color: rgba(149, 120, 255, 0.7);
+      background:
+        linear-gradient(90deg, rgba(139, 92, 246, 0.2), rgba(91, 124, 255, 0.2)),
+        linear-gradient(180deg, rgba(20, 36, 74, 0.92) 0%, rgba(16, 29, 60, 0.92) 100%);
+      box-shadow: 0 0 0 1px rgba(149, 120, 255, 0.18), var(--shadow);
     }
 
     .platform-card.disabled {
@@ -184,26 +199,27 @@
       width: auto;
       padding: 9px 12px;
       font-size: 14px;
-      color: var(--text);
-      background: var(--secondary-bg);
-      box-shadow: var(--shadow);
+      color: #dce7ff;
+      background: linear-gradient(180deg, rgba(66, 84, 151, 0.5), rgba(48, 66, 130, 0.5));
+      border: 1px solid var(--stroke);
     }
 
     .btn-main {
-      background: var(--primary);
+      background: linear-gradient(90deg, var(--primary-2) 0%, var(--primary) 100%);
       color: var(--button-text);
+      box-shadow: 0 10px 24px rgba(93, 112, 255, 0.35);
     }
 
     .btn-soft {
-      background: var(--secondary-bg);
+      background: linear-gradient(180deg, rgba(20, 36, 74, 0.9) 0%, rgba(16, 29, 60, 0.9) 100%);
       color: var(--text);
-      border: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
+      border: 1px solid var(--stroke);
     }
 
     .btn-danger {
-      background: color-mix(in srgb, var(--danger) 16%, var(--secondary-bg));
+      background: linear-gradient(180deg, rgba(63, 23, 44, 0.95) 0%, rgba(46, 17, 33, 0.95) 100%);
       color: var(--danger);
-      border: 1px solid color-mix(in srgb, var(--danger) 34%, transparent);
+      border: 1px solid rgba(255, 90, 122, 0.35);
     }
 
     .form-wrap {
@@ -213,7 +229,7 @@
     .label {
       margin: 12px 0 7px;
       font-size: 13px;
-      color: var(--hint);
+      color: #a8bbe1;
       font-weight: 600;
     }
 
@@ -221,8 +237,8 @@
     textarea {
       width: 100%;
       border-radius: var(--radius-sm);
-      border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
-      background: color-mix(in srgb, var(--secondary-bg) 88%, var(--bg));
+      border: 1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(14, 28, 59, 0.9) 0%, rgba(12, 24, 51, 0.9) 100%);
       color: var(--text);
       font-size: 15px;
       padding: 12px;
@@ -231,8 +247,8 @@
 
     select:focus,
     textarea:focus {
-      border-color: color-mix(in srgb, var(--primary) 65%, transparent);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent);
+      border-color: rgba(130, 148, 255, 0.9);
+      box-shadow: 0 0 0 3px rgba(110, 134, 255, 0.18);
     }
 
     textarea {
@@ -248,8 +264,7 @@
       max-width: 560px;
       margin: 0 auto;
       padding: 10px;
-      background: color-mix(in srgb, var(--bg) 90%, transparent);
-      backdrop-filter: blur(4px);
+      background: linear-gradient(180deg, rgba(5, 11, 26, 0.86) 0%, rgba(5, 11, 26, 0.95) 100%);
     }
 
     .loader-wrap {
@@ -263,7 +278,7 @@
       width: 68px;
       height: 68px;
       border-radius: 50%;
-      background: color-mix(in srgb, var(--primary) 22%, transparent);
+      background: rgba(126, 116, 255, 0.2);
       position: relative;
       margin: 0 auto 18px;
     }
@@ -274,7 +289,7 @@
       position: absolute;
       inset: 0;
       border-radius: 50%;
-      border: 2px solid color-mix(in srgb, var(--primary) 45%, transparent);
+      border: 2px solid rgba(131, 151, 255, 0.55);
       animation: pulse 1.8s ease-out infinite;
     }
 
@@ -321,8 +336,8 @@
     }
 
     .global-error {
-      background: color-mix(in srgb, var(--danger) 14%, transparent);
-      border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent);
+      background: rgba(255, 90, 122, 0.12);
+      border: 1px solid rgba(255, 90, 122, 0.35);
       color: var(--danger);
       border-radius: 12px;
       padding: 10px 12px;
@@ -336,6 +351,7 @@
     @media (max-width: 420px) {
       .screen { padding: 12px 12px 20px; }
       .sticky-submit { left: 12px; right: 12px; bottom: 12px; }
+      .screen-title { font-size: 30px; }
     }
   </style>
 </head>
@@ -360,8 +376,8 @@
             <div class="row"><span class="name">Instagram</span><span class="soon">скоро</span></div>
             <div class="desc">Публикации и визуалы для ленты</div>
           </button>
-          <button class="platform-card disabled" disabled>
-            <div class="row"><span class="name">Telegram</span><span class="soon">скоро</span></div>
+          <button id="go-telegram" class="platform-card active">
+            <div class="row"><span class="name">Telegram</span><span class="icon">✈️</span></div>
             <div class="desc">Контент для канала и постов</div>
           </button>
           <button class="platform-card disabled" disabled>
@@ -445,6 +461,66 @@
           <button id="result-back" class="btn-soft">Назад</button>
         </div>
       </section>
+
+      <section id="screen-telegram" class="screen">
+        <div class="global-error" data-global-error></div>
+        <div class="topbar"><button id="telegram-back" class="btn-back">Назад</button></div>
+        <h2 class="screen-title">Telegram</h2>
+        <div class="stack">
+          <button id="telegram-auto-create" class="action-card">
+            <div class="name">Авто-создание</div>
+          </button>
+          <button id="telegram-manual-open" class="action-card">
+            <div class="name">Создать вручную</div>
+          </button>
+        </div>
+      </section>
+
+      <section id="screen-telegram-manual" class="screen">
+        <div class="global-error" data-global-error></div>
+        <div class="topbar"><button id="telegram-manual-back" class="btn-back">Назад</button></div>
+        <h2 class="screen-title">Создать вручную</h2>
+        <div class="form-wrap">
+          <label class="label" for="telegram-topic">Тема</label>
+          <select id="telegram-topic">
+            <option>Ремонт</option>
+            <option>Дизайн</option>
+            <option>Декор</option>
+          </select>
+          <label class="label" for="telegram-post-type">Тип поста</label>
+          <select id="telegram-post-type">
+            <option>Полезный</option>
+            <option>Рекламный</option>
+          </select>
+        </div>
+        <div class="sticky-submit">
+          <button id="telegram-generate-text" class="btn-main">Сгенерировать текст</button>
+        </div>
+      </section>
+
+      <section id="screen-telegram-text" class="screen">
+        <div class="global-error" data-global-error></div>
+        <h2 class="screen-title">Текст поста</h2>
+        <div id="telegram-text-only" class="card" style="white-space:pre-wrap;"></div>
+        <div class="result-actions">
+          <button id="telegram-regenerate-text" class="btn-danger">Перегенерировать текст</button>
+          <button id="telegram-generate-image" class="btn-main">Сгенерировать картинку</button>
+          <button id="telegram-text-back" class="btn-soft">Назад</button>
+        </div>
+      </section>
+
+      <section id="screen-telegram-result" class="screen">
+        <div class="global-error" data-global-error></div>
+        <h2 class="screen-title">Текст и картинка</h2>
+        <img id="telegram-result-image" class="result-image" alt="Сгенерированное изображение" />
+        <div id="telegram-text-with-image" class="card" style="white-space:pre-wrap;"></div>
+        <div class="result-actions">
+          <button id="telegram-recreate-text" class="btn-danger">Пересоздать текст</button>
+          <button id="telegram-recreate-image" class="btn-danger">Пересоздать картинку</button>
+          <button id="telegram-publish" class="btn-main">Опубликовать</button>
+          <button id="telegram-result-back" class="btn-soft">Назад</button>
+        </div>
+      </section>
     </div>
   </div>
 
@@ -459,7 +535,14 @@
       manual: 'https://bymzavod.online/webhook/pinterest-manual',
       regenerate: 'https://bymzavod.online/webhook/pinterest-regenerate',
       status: 'https://bymzavod.online/webhook/pinterest-status',
-      balance: 'https://bymzavod.online/webhook/balance'
+      balance: 'https://bymzavod.online/webhook/balance',
+      telegramAuto: 'https://bymzavod.online/webhook/telegram-auto',
+      telegramManualText: 'https://bymzavod.online/webhook/telegram-manual-text',
+      telegramManualImage: 'https://bymzavod.online/webhook/telegram-manual-image',
+      telegramRegenerateText: 'https://bymzavod.online/webhook/telegram-regenerate-text',
+      telegramRegenerateImage: 'https://bymzavod.online/webhook/telegram-regenerate-image',
+      telegramStatus: 'https://bymzavod.online/webhook/telegram-status',
+      telegramPublish: 'https://bymzavod.online/webhook/telegram-publish'
     };
 
     const POLL_INTERVAL = 5000;
@@ -470,7 +553,11 @@
       platform: document.getElementById('screen-platform'),
       manual: document.getElementById('screen-manual'),
       loading: document.getElementById('screen-loading'),
-      result: document.getElementById('screen-result')
+      result: document.getElementById('screen-result'),
+      telegram: document.getElementById('screen-telegram'),
+      telegramManual: document.getElementById('screen-telegram-manual'),
+      telegramText: document.getElementById('screen-telegram-text'),
+      telegramResult: document.getElementById('screen-telegram-result')
     };
 
     const el = {
@@ -482,7 +569,12 @@
       img: document.getElementById('result-image'),
       balanceRow: document.getElementById('balance-row'),
       balanceOpenrouter: document.getElementById('balance-openrouter'),
-      balanceKieai: document.getElementById('balance-kieai')
+      balanceKieai: document.getElementById('balance-kieai'),
+      telegramTopic: document.getElementById('telegram-topic'),
+      telegramPostType: document.getElementById('telegram-post-type'),
+      telegramTextOnly: document.getElementById('telegram-text-only'),
+      telegramTextWithImage: document.getElementById('telegram-text-with-image'),
+      telegramImage: document.getElementById('telegram-result-image')
     };
 
     const globalErrorNodes = Array.from(document.querySelectorAll('[data-global-error]'));
@@ -490,6 +582,8 @@
     let currentRecordId = null;
     let currentPrompt = '';
     let currentImageUrl = '';
+    let currentText = '';
+    let currentPlatform = 'pinterest';
 
     function checkAccess() {
       const userId = tg?.initDataUnsafe?.user?.id;
@@ -499,15 +593,9 @@
     function applyTelegramTheme() {
       const t = tg?.themeParams || {};
       const root = document.documentElement.style;
-      root.setProperty('--bg', t.bg_color || '#ffffff');
-      root.setProperty('--text', t.text_color || '#111111');
-      root.setProperty('--hint', t.hint_color || '#8e8e93');
-      root.setProperty('--primary', t.button_color || '#2481cc');
-      root.setProperty('--secondary-bg', t.secondary_bg_color || '#f2f2f7');
-      root.setProperty('--danger', t.destructive_text_color || '#ff3b30');
+      if (t.button_color) root.setProperty('--primary', t.button_color);
+      if (t.destructive_text_color) root.setProperty('--danger', t.destructive_text_color);
       root.setProperty('--button-text', t.button_text_color || '#ffffff');
-      if (t.bg_color) document.body.style.background = t.bg_color;
-      if (t.text_color) document.body.style.color = t.text_color;
     }
 
     function showScreen(name) {
@@ -564,6 +652,10 @@
       return data?.prompt || data?.data?.prompt || '';
     }
 
+    function extractPostText(data) {
+      return data?.text || data?.post_text || data?.caption || data?.data?.text || data?.data?.post_text || '';
+    }
+
     async function loadBalance() {
       try {
         const data = await apiGet(WEBHOOKS.balance, {}, { silent: true });
@@ -608,6 +700,36 @@
       throw new Error('timeout');
     }
 
+    async function startTelegramPolling(recordId) {
+      const started = Date.now();
+      currentRecordId = recordId;
+      el.error.textContent = '';
+      showScreen('loading');
+
+      while (Date.now() - started < POLL_TIMEOUT) {
+        const s = await apiGet(WEBHOOKS.telegramStatus, { record_id: currentRecordId });
+        const status = extractStatus(s);
+        if (status === 'ready') {
+          currentImageUrl = extractImageUrl(s);
+          const txt = extractPostText(s);
+          if (txt) currentText = txt;
+          if (currentImageUrl) {
+            el.telegramImage.src = currentImageUrl;
+            el.telegramTextWithImage.textContent = currentText;
+            showScreen('telegramResult');
+          } else {
+            el.telegramTextOnly.textContent = currentText;
+            showScreen('telegramText');
+          }
+          return;
+        }
+        if (status !== 'pending') throw new Error('Неожиданный статус: ' + status);
+        await new Promise(r => setTimeout(r, POLL_INTERVAL));
+      }
+
+      throw new Error('timeout');
+    }
+
     async function runWithLoading(task) {
       try {
         clearGlobalError();
@@ -628,6 +750,27 @@
         if (!id) throw new Error('record_id не получен');
         currentPrompt = extractPrompt(data);
         await startPolling(id);
+      });
+    }
+
+    async function startTelegramAuto() {
+      await runWithLoading(async () => {
+        const data = await apiGet(WEBHOOKS.telegramAuto);
+        const id = extractRecordId(data);
+        if (!id) throw new Error('record_id не получен');
+        await startTelegramPolling(id);
+      });
+    }
+
+    async function startTelegramManualText() {
+      await runWithLoading(async () => {
+        const data = await apiGet(WEBHOOKS.telegramManualText, {
+          topic: el.telegramTopic.value,
+          post_type: el.telegramPostType.value
+        });
+        const id = extractRecordId(data);
+        if (!id) throw new Error('record_id не получен');
+        await startTelegramPolling(id);
       });
     }
 
@@ -665,9 +808,65 @@
       });
     }
 
+    async function telegramRegenerateText() {
+      await runWithLoading(async () => {
+        if (!currentRecordId) throw new Error('record_id отсутствует');
+        const data = await apiGet(WEBHOOKS.telegramRegenerateText, {
+          record_id: currentRecordId,
+          topic: el.telegramTopic.value,
+          post_type: el.telegramPostType.value
+        });
+        const id = extractRecordId(data);
+        if (!id) throw new Error('record_id не получен');
+        await startTelegramPolling(id);
+      });
+    }
+
+    async function telegramGenerateImage() {
+      await runWithLoading(async () => {
+        if (!currentRecordId) throw new Error('record_id отсутствует');
+        const imagePrompt = currentText || extractPrompt(await apiGet(WEBHOOKS.telegramStatus, { record_id: currentRecordId }));
+        const data = await apiGet(WEBHOOKS.telegramManualImage, {
+          record_id: currentRecordId,
+          image_prompt: imagePrompt
+        });
+        const id = extractRecordId(data);
+        if (!id) throw new Error('record_id не получен');
+        await startTelegramPolling(id);
+      });
+    }
+
+    async function telegramRegenerateImage() {
+      await runWithLoading(async () => {
+        if (!currentRecordId) throw new Error('record_id отсутствует');
+        const imagePrompt = currentText || extractPrompt(await apiGet(WEBHOOKS.telegramStatus, { record_id: currentRecordId }));
+        const data = await apiGet(WEBHOOKS.telegramRegenerateImage, {
+          record_id: currentRecordId,
+          image_prompt: imagePrompt
+        });
+        const id = extractRecordId(data);
+        if (!id) throw new Error('record_id не получен');
+        await startTelegramPolling(id);
+      });
+    }
+
+    async function telegramPublish() {
+      await runWithLoading(async () => {
+        if (!currentRecordId) throw new Error('record_id отсутствует');
+        await apiGet(WEBHOOKS.telegramPublish, { record_id: currentRecordId });
+        showScreen('telegram');
+      });
+    }
+
     document.getElementById('go-pinterest').onclick = () => {
       clearGlobalError();
+      currentPlatform = 'pinterest';
       showScreen('platform');
+    };
+    document.getElementById('go-telegram').onclick = () => {
+      clearGlobalError();
+      currentPlatform = 'telegram';
+      showScreen('telegram');
     };
     document.getElementById('platform-back').onclick = () => {
       clearGlobalError();
@@ -685,10 +884,37 @@
       clearGlobalError();
       showScreen('platform');
     };
+    document.getElementById('telegram-back').onclick = () => {
+      clearGlobalError();
+      showScreen('main');
+    };
+    document.getElementById('telegram-manual-open').onclick = () => {
+      clearGlobalError();
+      showScreen('telegramManual');
+    };
+    document.getElementById('telegram-manual-back').onclick = () => {
+      clearGlobalError();
+      showScreen('telegram');
+    };
+    document.getElementById('telegram-text-back').onclick = () => {
+      clearGlobalError();
+      showScreen('telegram');
+    };
+    document.getElementById('telegram-result-back').onclick = () => {
+      clearGlobalError();
+      showScreen('telegram');
+    };
 
     document.getElementById('auto-create').onclick = startAuto;
     document.getElementById('manual-generate').onclick = startManual;
     document.getElementById('regenerate').onclick = regenerate;
+    document.getElementById('telegram-auto-create').onclick = startTelegramAuto;
+    document.getElementById('telegram-generate-text').onclick = startTelegramManualText;
+    document.getElementById('telegram-regenerate-text').onclick = telegramRegenerateText;
+    document.getElementById('telegram-generate-image').onclick = telegramGenerateImage;
+    document.getElementById('telegram-recreate-text').onclick = telegramRegenerateText;
+    document.getElementById('telegram-recreate-image').onclick = telegramRegenerateImage;
+    document.getElementById('telegram-publish').onclick = telegramPublish;
     document.getElementById('download').onclick = () => {
       if (currentImageUrl) window.open(currentImageUrl, '_blank');
     };
