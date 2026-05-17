@@ -133,6 +133,18 @@
       margin-top: 10px;
       min-height: 20px;
     }
+    .global-error {
+      background: color-mix(in srgb, var(--danger) 14%, transparent);
+      border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent);
+      color: var(--danger);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 14px;
+      margin-bottom: 12px;
+      display: none;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
 
     .image-box {
       border-radius: var(--radius);
@@ -152,6 +164,7 @@
   <div class="app">
     <div class="screen-wrap">
       <section id="screen-main" class="screen active">
+        <div class="global-error" data-global-error></div>
         <h1>Контент-завод BYM Home</h1>
         <p>Выберите платформу</p>
         <div class="stack">
@@ -166,6 +179,7 @@
       </section>
 
       <section id="screen-platform" class="screen">
+        <div class="global-error" data-global-error></div>
         <h2>Pinterest</h2>
         <div class="stack">
           <button id="auto-create">Авто-создание</button>
@@ -175,6 +189,7 @@
       </section>
 
       <section id="screen-manual" class="screen">
+        <div class="global-error" data-global-error></div>
         <h2>Ручное создание</h2>
         <label class="label" for="scene-style">Стиль сцены</label>
         <select id="scene-style">
@@ -207,6 +222,7 @@
       </section>
 
       <section id="screen-loading" class="screen">
+        <div class="global-error" data-global-error></div>
         <h2>Генерация</h2>
         <div class="loader"></div>
         <p style="text-align:center;">Генерируем...</p>
@@ -214,6 +230,7 @@
       </section>
 
       <section id="screen-result" class="screen">
+        <div class="global-error" data-global-error></div>
         <h2>Результат</h2>
         <div class="image-box">
           <img id="result-image" alt="Сгенерированное изображение" />
@@ -258,6 +275,7 @@
       prompt: document.getElementById('prompt'),
       img: document.getElementById('result-image')
     };
+    const globalErrorNodes = Array.from(document.querySelectorAll('[data-global-error]'));
 
     let currentRecordId = null;
     let currentPrompt = '';
@@ -281,15 +299,36 @@
       screens[name].classList.add('active');
     }
 
+    function clearGlobalError() {
+      globalErrorNodes.forEach(node => {
+        node.style.display = 'none';
+        node.textContent = '';
+      });
+    }
+
+    function showGlobalError(message, err) {
+      const text = String(message || 'Неизвестная ошибка');
+      console.error(text, err || '');
+      globalErrorNodes.forEach(node => {
+        node.textContent = text;
+        node.style.display = 'block';
+      });
+    }
+
     async function apiGet(url, params = {}) {
       const u = new URL(url);
       Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, String(v)));
-      const res = await fetch(u.toString(), { method: 'GET' });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const ct = res.headers.get('content-type') || '';
-      if (ct.includes('application/json')) return res.json();
-      const text = await res.text();
-      try { return JSON.parse(text); } catch { return { raw: text }; }
+      try {
+        const res = await fetch(u.toString(), { method: 'GET' });
+        if (!res.ok) throw new Error('HTTP ' + res.status + ' для ' + u.pathname);
+        const ct = res.headers.get('content-type') || '';
+        if (ct.includes('application/json')) return res.json();
+        const text = await res.text();
+        try { return JSON.parse(text); } catch { return { raw: text }; }
+      } catch (err) {
+        showGlobalError('Ошибка запроса: ' + (err?.message || err), err);
+        throw err;
+      }
     }
 
     function extractRecordId(data) {
@@ -305,7 +344,7 @@
     }
 
     function extractPrompt(data) {
-      return data?.prompt || data?.data?.prompt || currentPrompt || '';
+      return data?.prompt || data?.data?.prompt || '';
     }
 
     async function startPolling(recordId) {
@@ -320,7 +359,8 @@
 
         if (status === 'ready') {
           currentImageUrl = extractImageUrl(s);
-          currentPrompt = extractPrompt(s);
+          const readyPrompt = extractPrompt(s);
+          if (readyPrompt) currentPrompt = readyPrompt;
           if (!currentImageUrl) throw new Error('Нет image_url в статусе');
           el.img.src = currentImageUrl;
           showScreen('result');
@@ -339,10 +379,13 @@
 
     async function runWithLoading(task) {
       try {
+        clearGlobalError();
         el.error.textContent = '';
         showScreen('loading');
         await task();
       } catch (e) {
+        console.error(e);
+        showGlobalError(e.message || 'Неизвестная ошибка', e);
         el.error.textContent = e.message === 'timeout' ? 'Попробуйте ещё раз' : ('Ошибка: ' + e.message);
       }
     }
@@ -375,6 +418,12 @@
     async function regenerate() {
       await runWithLoading(async () => {
         if (!currentRecordId) throw new Error('record_id отсутствует');
+
+        const statusData = await apiGet(WEBHOOKS.status, { record_id: currentRecordId });
+        const statusPrompt = extractPrompt(statusData);
+        if (statusPrompt) currentPrompt = statusPrompt;
+        if (!currentPrompt) throw new Error('В ответе status нет поля prompt');
+
         const data = await apiGet(WEBHOOKS.regenerate, {
           record_id: currentRecordId,
           prompt: currentPrompt
@@ -398,8 +447,20 @@
       if (currentImageUrl) window.open(currentImageUrl, '_blank');
     };
 
+    window.addEventListener('error', (event) => {
+      const msg = event?.error?.message || event?.message || 'Глобальная ошибка';
+      showGlobalError(msg, event?.error || event);
+    });
+
+    window.addEventListener('unhandledrejection', (event) => {
+      const reason = event?.reason;
+      const msg = reason?.message || String(reason || 'Необработанное отклонение Promise');
+      showGlobalError(msg, reason || event);
+    });
+
     applyTelegramTheme();
     tg?.onEvent?.('themeChanged', applyTelegramTheme);
   </script>
 </body>
 </html>
+
