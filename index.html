@@ -35,6 +35,17 @@
       margin: 0 auto;
       padding: 14px;
     }
+    .access-denied {
+      min-height: 100vh;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--danger);
+    }
 
     .screen-wrap {
       position: relative;
@@ -329,6 +340,7 @@
   </style>
 </head>
 <body>
+  <div id="access-denied" class="access-denied">Доступ запрещён</div>
   <div class="app">
     <div class="screen-wrap">
       <section id="screen-main" class="screen active">
@@ -440,6 +452,7 @@
     const tg = window.Telegram?.WebApp;
     tg?.ready();
     tg?.expand();
+    const ALLOWED_USER_IDS = [656191994];
 
     const WEBHOOKS = {
       auto: 'https://bymzavod.online/webhook/pinterest-auto',
@@ -477,6 +490,11 @@
     let currentRecordId = null;
     let currentPrompt = '';
     let currentImageUrl = '';
+
+    function checkAccess() {
+      const userId = tg?.initDataUnsafe?.user?.id;
+      return ALLOWED_USER_IDS.includes(Number(userId));
+    }
 
     function applyTelegramTheme() {
       const t = tg?.themeParams || {};
@@ -686,9 +704,14 @@
       showGlobalError(msg, reason || event);
     });
 
-    applyTelegramTheme();
-    tg?.onEvent?.('themeChanged', applyTelegramTheme);
-    loadBalance();
+    if (!checkAccess()) {
+      document.querySelector('.app').style.display = 'none';
+      document.getElementById('access-denied').style.display = 'flex';
+    } else {
+      applyTelegramTheme();
+      tg?.onEvent?.('themeChanged', applyTelegramTheme);
+      loadBalance();
+    }
   </script>
 </body>
 </html>
