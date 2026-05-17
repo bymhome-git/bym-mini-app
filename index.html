@@ -1,1 +1,405 @@
-<h1>BYM Mini App</h1>
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>BYM Home Mini App</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #111111;
+      --hint: #8e8e93;
+      --primary: #2481cc;
+      --secondary-bg: #f2f2f7;
+      --danger: #ff3b30;
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .app {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .screen {
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      position: absolute;
+      inset: 0;
+      padding: 16px;
+      overflow: auto;
+      background: var(--bg);
+    }
+
+    .screen.active {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .screen-wrap {
+      position: relative;
+      min-height: calc(100vh - 32px);
+    }
+
+    h1, h2 {
+      margin: 0 0 14px;
+      font-size: 24px;
+      line-height: 1.2;
+    }
+
+    p { margin: 0 0 12px; color: var(--hint); }
+
+    .stack { display: grid; gap: 10px; }
+
+    button, select, textarea {
+      width: 100%;
+      border-radius: var(--radius);
+      border: 1px solid transparent;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 14px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: var(--secondary-bg);
+      color: var(--text);
+    }
+
+    button.disabled {
+      background: var(--secondary-bg);
+      color: var(--hint);
+      cursor: not-allowed;
+    }
+
+    .soon {
+      font-size: 12px;
+      color: var(--hint);
+      text-align: center;
+      margin-top: -6px;
+      margin-bottom: 2px;
+    }
+
+    select, textarea {
+      background: var(--secondary-bg);
+      color: var(--text);
+      padding: 12px;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    .label {
+      margin: 8px 0 6px;
+      font-size: 14px;
+      color: var(--hint);
+    }
+
+    .loader {
+      width: 56px;
+      height: 56px;
+      border: 4px solid var(--secondary-bg);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+      margin: 24px auto 14px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error {
+      color: var(--danger);
+      text-align: center;
+      margin-top: 10px;
+      min-height: 20px;
+    }
+
+    .image-box {
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--secondary-bg);
+      margin-bottom: 12px;
+    }
+
+    .image-box img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="screen-wrap">
+      <section id="screen-main" class="screen active">
+        <h1>Контент-завод BYM Home</h1>
+        <p>Выберите платформу</p>
+        <div class="stack">
+          <button id="go-pinterest">Pinterest</button>
+          <button class="disabled" disabled>Instagram</button>
+          <div class="soon">скоро</div>
+          <button class="disabled" disabled>Telegram</button>
+          <div class="soon">скоро</div>
+          <button class="disabled" disabled>Яндекс.Дзен</button>
+          <div class="soon">скоро</div>
+        </div>
+      </section>
+
+      <section id="screen-platform" class="screen">
+        <h2>Pinterest</h2>
+        <div class="stack">
+          <button id="auto-create">Авто-создание</button>
+          <button id="manual-open" class="secondary">Создать вручную</button>
+          <button id="platform-back" class="secondary">Назад</button>
+        </div>
+      </section>
+
+      <section id="screen-manual" class="screen">
+        <h2>Ручное создание</h2>
+        <label class="label" for="scene-style">Стиль сцены</label>
+        <select id="scene-style">
+          <option>Простой современный евроремонт (комфорт)</option>
+          <option>Дорогой премиум-стиль (люкс)</option>
+          <option>Уютный эко-стиль (под дерево и камень)</option>
+        </select>
+
+        <label class="label" for="mounting-type">Тип крепления</label>
+        <select id="mounting-type">
+          <option>Люверсы</option>
+          <option>Крючки</option>
+        </select>
+
+        <label class="label" for="color">Цвет</label>
+        <select id="color">
+          <option>Белый</option>
+          <option>Бежевый</option>
+          <option>Светло-серый</option>
+          <option>Тёмно-серый</option>
+        </select>
+
+        <label class="label" for="prompt">Описание</label>
+        <textarea id="prompt" placeholder="Опишите желаемый интерьер..."></textarea>
+
+        <div class="stack" style="margin-top:10px;">
+          <button id="manual-generate">Сгенерировать</button>
+          <button id="manual-back" class="secondary">Назад</button>
+        </div>
+      </section>
+
+      <section id="screen-loading" class="screen">
+        <h2>Генерация</h2>
+        <div class="loader"></div>
+        <p style="text-align:center;">Генерируем...</p>
+        <div id="error-text" class="error"></div>
+      </section>
+
+      <section id="screen-result" class="screen">
+        <h2>Результат</h2>
+        <div class="image-box">
+          <img id="result-image" alt="Сгенерированное изображение" />
+        </div>
+        <div class="stack">
+          <button id="regenerate">Пересоздать</button>
+          <button id="download" class="secondary">Скачать</button>
+          <button id="result-back" class="secondary">Назад</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+    tg?.ready();
+    tg?.expand();
+
+    const WEBHOOKS = {
+      auto: 'https://bymzavod.online/webhook/pinterest-auto',
+      manual: 'https://bymzavod.online/webhook/pinterest-manual',
+      regenerate: 'https://bymzavod.online/webhook/pinterest-regenerate',
+      status: 'https://bymzavod.online/webhook/pinterest-status'
+    };
+
+    const POLL_INTERVAL = 5000;
+    const POLL_TIMEOUT = 180000;
+
+    const screens = {
+      main: document.getElementById('screen-main'),
+      platform: document.getElementById('screen-platform'),
+      manual: document.getElementById('screen-manual'),
+      loading: document.getElementById('screen-loading'),
+      result: document.getElementById('screen-result')
+    };
+
+    const el = {
+      error: document.getElementById('error-text'),
+      scene: document.getElementById('scene-style'),
+      mount: document.getElementById('mounting-type'),
+      color: document.getElementById('color'),
+      prompt: document.getElementById('prompt'),
+      img: document.getElementById('result-image')
+    };
+
+    let currentRecordId = null;
+    let currentPrompt = '';
+    let currentImageUrl = '';
+
+    function applyTelegramTheme() {
+      const t = tg?.themeParams || {};
+      const root = document.documentElement.style;
+      root.setProperty('--bg', t.bg_color || '#ffffff');
+      root.setProperty('--text', t.text_color || '#111111');
+      root.setProperty('--hint', t.hint_color || '#8e8e93');
+      root.setProperty('--primary', t.button_color || '#2481cc');
+      root.setProperty('--secondary-bg', t.secondary_bg_color || '#f2f2f7');
+      root.setProperty('--danger', t.destructive_text_color || '#ff3b30');
+      if (t.bg_color) document.body.style.background = t.bg_color;
+      if (t.text_color) document.body.style.color = t.text_color;
+    }
+
+    function showScreen(name) {
+      Object.values(screens).forEach(s => s.classList.remove('active'));
+      screens[name].classList.add('active');
+    }
+
+    async function apiGet(url, params = {}) {
+      const u = new URL(url);
+      Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, String(v)));
+      const res = await fetch(u.toString(), { method: 'GET' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const ct = res.headers.get('content-type') || '';
+      if (ct.includes('application/json')) return res.json();
+      const text = await res.text();
+      try { return JSON.parse(text); } catch { return { raw: text }; }
+    }
+
+    function extractRecordId(data) {
+      return data?.record_id || data?.recordId || data?.id || data?.data?.record_id || null;
+    }
+
+    function extractStatus(data) {
+      return data?.status || data?.data?.status || null;
+    }
+
+    function extractImageUrl(data) {
+      return data?.image_url || data?.imageUrl || data?.data?.image_url || '';
+    }
+
+    function extractPrompt(data) {
+      return data?.prompt || data?.data?.prompt || currentPrompt || '';
+    }
+
+    async function startPolling(recordId) {
+      const started = Date.now();
+      currentRecordId = recordId;
+      el.error.textContent = '';
+      showScreen('loading');
+
+      while (Date.now() - started < POLL_TIMEOUT) {
+        const s = await apiGet(WEBHOOKS.status, { record_id: currentRecordId });
+        const status = extractStatus(s);
+
+        if (status === 'ready') {
+          currentImageUrl = extractImageUrl(s);
+          currentPrompt = extractPrompt(s);
+          if (!currentImageUrl) throw new Error('Нет image_url в статусе');
+          el.img.src = currentImageUrl;
+          showScreen('result');
+          return;
+        }
+
+        if (status !== 'pending') {
+          throw new Error('Неожиданный статус: ' + status);
+        }
+
+        await new Promise(r => setTimeout(r, POLL_INTERVAL));
+      }
+
+      throw new Error('timeout');
+    }
+
+    async function runWithLoading(task) {
+      try {
+        el.error.textContent = '';
+        showScreen('loading');
+        await task();
+      } catch (e) {
+        el.error.textContent = e.message === 'timeout' ? 'Попробуйте ещё раз' : ('Ошибка: ' + e.message);
+      }
+    }
+
+    async function startAuto() {
+      await runWithLoading(async () => {
+        const data = await apiGet(WEBHOOKS.auto);
+        const id = extractRecordId(data);
+        if (!id) throw new Error('record_id не получен');
+        currentPrompt = extractPrompt(data);
+        await startPolling(id);
+      });
+    }
+
+    async function startManual() {
+      await runWithLoading(async () => {
+        currentPrompt = el.prompt.value.trim();
+        const data = await apiGet(WEBHOOKS.manual, {
+          scene_style: el.scene.value,
+          mounting_type: el.mount.value,
+          color: el.color.value,
+          prompt: currentPrompt
+        });
+        const id = extractRecordId(data);
+        if (!id) throw new Error('record_id не получен');
+        await startPolling(id);
+      });
+    }
+
+    async function regenerate() {
+      await runWithLoading(async () => {
+        if (!currentRecordId) throw new Error('record_id отсутствует');
+        const data = await apiGet(WEBHOOKS.regenerate, {
+          record_id: currentRecordId,
+          prompt: currentPrompt
+        });
+        const newId = extractRecordId(data);
+        if (!newId) throw new Error('Новый record_id не получен');
+        await startPolling(newId);
+      });
+    }
+
+    document.getElementById('go-pinterest').onclick = () => showScreen('platform');
+    document.getElementById('platform-back').onclick = () => showScreen('main');
+    document.getElementById('manual-open').onclick = () => showScreen('manual');
+    document.getElementById('manual-back').onclick = () => showScreen('platform');
+    document.getElementById('result-back').onclick = () => showScreen('platform');
+
+    document.getElementById('auto-create').onclick = startAuto;
+    document.getElementById('manual-generate').onclick = startManual;
+    document.getElementById('regenerate').onclick = regenerate;
+    document.getElementById('download').onclick = () => {
+      if (currentImageUrl) window.open(currentImageUrl, '_blank');
+    };
+
+    applyTelegramTheme();
+    tg?.onEvent?.('themeChanged', applyTelegramTheme);
+  </script>
+</body>
+</html>
