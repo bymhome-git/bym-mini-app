@@ -528,7 +528,6 @@
     const tg = window.Telegram?.WebApp;
     tg?.ready();
     tg?.expand();
-    const ALLOWED_USER_IDS = [656191994];
 
     const WEBHOOKS = {
       auto: 'https://bymzavod.online/webhook/pinterest-auto',
@@ -586,8 +585,7 @@
     let currentPlatform = 'pinterest';
 
     function checkAccess() {
-      const userId = tg?.initDataUnsafe?.user?.id;
-      return ALLOWED_USER_IDS.includes(Number(userId));
+      return true;
     }
 
     function applyTelegramTheme() {
