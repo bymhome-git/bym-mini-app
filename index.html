@@ -12,11 +12,16 @@
       --hint: #8e8e93;
       --primary: #2481cc;
       --secondary-bg: #f2f2f7;
+      --button-text: #ffffff;
       --danger: #ff3b30;
-      --radius: 14px;
+      --shadow: 0 8px 24px rgba(15, 15, 20, 0.08);
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --radius-sm: 12px;
     }
 
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -26,137 +31,300 @@
     }
 
     .app {
-      max-width: 520px;
+      max-width: 560px;
       margin: 0 auto;
-      padding: 16px;
-    }
-
-    .screen {
-      opacity: 0;
-      transform: translateY(8px);
-      pointer-events: none;
-      transition: opacity 0.25s ease, transform 0.25s ease;
-      position: absolute;
-      inset: 0;
-      padding: 16px;
-      overflow: auto;
-      background: var(--bg);
-    }
-
-    .screen.active {
-      opacity: 1;
-      transform: translateY(0);
-      pointer-events: auto;
+      padding: 14px;
     }
 
     .screen-wrap {
       position: relative;
-      min-height: calc(100vh - 32px);
+      min-height: calc(100vh - 28px);
+      border-radius: 24px;
+      overflow: hidden;
     }
 
-    h1, h2 {
-      margin: 0 0 14px;
-      font-size: 24px;
-      line-height: 1.2;
+    .screen {
+      position: absolute;
+      inset: 0;
+      background: var(--bg);
+      padding: 14px 14px 22px;
+      overflow: auto;
+      opacity: 0;
+      transform: translateY(12px) scale(0.99);
+      pointer-events: none;
+      transition: opacity 0.35s ease, transform 0.35s ease;
     }
 
-    p { margin: 0 0 12px; color: var(--hint); }
+    .screen.active {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .title-small {
+      margin: 0;
+      font-size: 14px;
+      letter-spacing: 0.02em;
+      color: var(--hint);
+      font-weight: 600;
+    }
+
+    .screen-title {
+      margin: 2px 0 14px;
+      font-size: 26px;
+      line-height: 1.12;
+      font-weight: 700;
+    }
+
+    .card {
+      border-radius: var(--radius-lg);
+      padding: 14px;
+      background: var(--secondary-bg);
+      box-shadow: var(--shadow);
+      border: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
+    }
+
+    .balance-row {
+      display: none;
+      font-size: 12px;
+      color: var(--hint);
+      margin-bottom: 14px;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
 
     .stack { display: grid; gap: 10px; }
 
-    button, select, textarea {
+    .platform-card,
+    .action-card {
       width: 100%;
-      border-radius: var(--radius);
+      text-align: left;
       border: 1px solid transparent;
-      font-size: 16px;
-    }
-
-    button {
+      border-radius: var(--radius-lg);
+      background: var(--secondary-bg);
+      box-shadow: var(--shadow);
       padding: 14px;
-      background: var(--primary);
-      color: #fff;
-      font-weight: 600;
+      color: var(--text);
       cursor: pointer;
     }
 
-    button.secondary {
-      background: var(--secondary-bg);
-      color: var(--text);
+    .platform-card.active {
+      border-color: color-mix(in srgb, var(--primary) 45%, transparent);
+      background: color-mix(in srgb, var(--primary) 14%, var(--secondary-bg));
     }
 
-    button.disabled {
-      background: var(--secondary-bg);
-      color: var(--hint);
+    .platform-card.disabled {
+      opacity: 0.65;
+      filter: grayscale(0.3);
       cursor: not-allowed;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .name {
+      font-size: 17px;
+      font-weight: 600;
     }
 
     .soon {
       font-size: 12px;
       color: var(--hint);
-      text-align: center;
-      margin-top: -6px;
-      margin-bottom: 2px;
+      border-radius: 999px;
+      padding: 3px 8px;
+      background: color-mix(in srgb, var(--text) 6%, transparent);
     }
 
-    select, textarea {
+    .icon { font-size: 20px; }
+
+    .desc {
+      margin-top: 5px;
+      font-size: 13px;
+      color: var(--hint);
+      line-height: 1.3;
+    }
+
+    .btn-back,
+    .btn-main,
+    .btn-soft,
+    .btn-danger {
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 13px 14px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .btn-back {
+      width: auto;
+      padding: 9px 12px;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--secondary-bg);
+      box-shadow: var(--shadow);
+    }
+
+    .btn-main {
+      background: var(--primary);
+      color: var(--button-text);
+    }
+
+    .btn-soft {
       background: var(--secondary-bg);
       color: var(--text);
-      padding: 12px;
+      border: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
     }
 
-    textarea {
-      min-height: 110px;
-      resize: vertical;
+    .btn-danger {
+      background: color-mix(in srgb, var(--danger) 16%, var(--secondary-bg));
+      color: var(--danger);
+      border: 1px solid color-mix(in srgb, var(--danger) 34%, transparent);
+    }
+
+    .form-wrap {
+      padding-bottom: 84px;
     }
 
     .label {
-      margin: 8px 0 6px;
-      font-size: 14px;
+      margin: 12px 0 7px;
+      font-size: 13px;
       color: var(--hint);
+      font-weight: 600;
     }
 
-    .loader {
-      width: 56px;
-      height: 56px;
-      border: 4px solid var(--secondary-bg);
-      border-top-color: var(--primary);
+    select,
+    textarea {
+      width: 100%;
+      border-radius: var(--radius-sm);
+      border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+      background: color-mix(in srgb, var(--secondary-bg) 88%, var(--bg));
+      color: var(--text);
+      font-size: 15px;
+      padding: 12px;
+      outline: none;
+    }
+
+    select:focus,
+    textarea:focus {
+      border-color: color-mix(in srgb, var(--primary) 65%, transparent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent);
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .sticky-submit {
+      position: fixed;
+      left: 14px;
+      right: 14px;
+      bottom: 14px;
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 10px;
+      background: color-mix(in srgb, var(--bg) 90%, transparent);
+      backdrop-filter: blur(4px);
+    }
+
+    .loader-wrap {
+      min-height: 58vh;
+      display: grid;
+      place-items: center;
+      text-align: center;
+    }
+
+    .pulse {
+      width: 68px;
+      height: 68px;
       border-radius: 50%;
-      animation: spin 0.9s linear infinite;
-      margin: 24px auto 14px;
+      background: color-mix(in srgb, var(--primary) 22%, transparent);
+      position: relative;
+      margin: 0 auto 18px;
     }
 
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .pulse::before,
+    .pulse::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid color-mix(in srgb, var(--primary) 45%, transparent);
+      animation: pulse 1.8s ease-out infinite;
+    }
+
+    .pulse::after { animation-delay: 0.8s; }
+
+    @keyframes pulse {
+      0% { transform: scale(0.92); opacity: 0.8; }
+      80% { transform: scale(1.45); opacity: 0; }
+      100% { opacity: 0; }
+    }
+
+    .loading-title {
+      font-size: 20px;
+      margin: 0 0 6px;
+    }
+
+    .loading-sub {
+      margin: 0;
+      color: var(--hint);
+      font-size: 14px;
+    }
+
+    .result-image {
+      width: 100%;
+      border-radius: var(--radius-lg);
+      display: block;
+      background: var(--secondary-bg);
+      box-shadow: var(--shadow);
+      margin-bottom: 12px;
+    }
+
+    .result-actions {
+      display: grid;
+      gap: 10px;
+      margin-top: 2px;
+    }
 
     .error {
       color: var(--danger);
       text-align: center;
-      margin-top: 10px;
+      margin-top: 12px;
       min-height: 20px;
+      font-size: 14px;
     }
+
     .global-error {
       background: color-mix(in srgb, var(--danger) 14%, transparent);
       border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent);
       color: var(--danger);
-      border-radius: 10px;
+      border-radius: 12px;
       padding: 10px 12px;
-      font-size: 14px;
+      font-size: 13px;
       margin-bottom: 12px;
       display: none;
       white-space: pre-wrap;
       word-break: break-word;
     }
 
-    .image-box {
-      border-radius: var(--radius);
-      overflow: hidden;
-      background: var(--secondary-bg);
-      margin-bottom: 12px;
-    }
-
-    .image-box img {
-      display: block;
-      width: 100%;
-      height: auto;
+    @media (max-width: 420px) {
+      .screen { padding: 12px 12px 20px; }
+      .sticky-submit { left: 12px; right: 12px; bottom: 12px; }
     }
   </style>
 </head>
@@ -165,80 +333,104 @@
     <div class="screen-wrap">
       <section id="screen-main" class="screen active">
         <div class="global-error" data-global-error></div>
-        <h1>Контент-завод BYM Home</h1>
-        <p>Выберите платформу</p>
+        <h1 class="title-small">BYM Content Factory</h1>
+        <div id="balance-row" class="balance-row card">
+          <span id="balance-openrouter"></span>
+          <span id="balance-kieai"></span>
+        </div>
+        <h2 class="screen-title">Платформы</h2>
         <div class="stack">
-          <button id="go-pinterest">Pinterest</button>
-          <button class="disabled" disabled>Instagram</button>
-          <div class="soon">скоро</div>
-          <button class="disabled" disabled>Telegram</button>
-          <div class="soon">скоро</div>
-          <button class="disabled" disabled>Яндекс.Дзен</button>
-          <div class="soon">скоро</div>
+          <button id="go-pinterest" class="platform-card active">
+            <div class="row"><span class="name">Pinterest</span><span class="icon">📌</span></div>
+            <div class="desc">Создание интерьерного контента</div>
+          </button>
+          <button class="platform-card disabled" disabled>
+            <div class="row"><span class="name">Instagram</span><span class="soon">скоро</span></div>
+            <div class="desc">Публикации и визуалы для ленты</div>
+          </button>
+          <button class="platform-card disabled" disabled>
+            <div class="row"><span class="name">Telegram</span><span class="soon">скоро</span></div>
+            <div class="desc">Контент для канала и постов</div>
+          </button>
+          <button class="platform-card disabled" disabled>
+            <div class="row"><span class="name">Яндекс.Дзен</span><span class="soon">скоро</span></div>
+            <div class="desc">Обложки и статьи</div>
+          </button>
         </div>
       </section>
 
       <section id="screen-platform" class="screen">
         <div class="global-error" data-global-error></div>
-        <h2>Pinterest</h2>
+        <div class="topbar"><button id="platform-back" class="btn-back">Назад</button></div>
+        <h2 class="screen-title">Pinterest</h2>
         <div class="stack">
-          <button id="auto-create">Авто-создание</button>
-          <button id="manual-open" class="secondary">Создать вручную</button>
-          <button id="platform-back" class="secondary">Назад</button>
+          <button id="auto-create" class="action-card">
+            <div class="name">Авто-создание</div>
+            <div class="desc">Система сама соберёт лучший вариант сцены</div>
+          </button>
+          <button id="manual-open" class="action-card">
+            <div class="name">Создать вручную</div>
+            <div class="desc">Настройте стиль, крепление, цвет и описание</div>
+          </button>
         </div>
       </section>
 
       <section id="screen-manual" class="screen">
         <div class="global-error" data-global-error></div>
-        <h2>Ручное создание</h2>
-        <label class="label" for="scene-style">Стиль сцены</label>
-        <select id="scene-style">
-          <option>Простой современный евроремонт (комфорт)</option>
-          <option>Дорогой премиум-стиль (люкс)</option>
-          <option>Уютный эко-стиль (под дерево и камень)</option>
-        </select>
+        <div class="topbar"><button id="manual-back" class="btn-back">Назад</button></div>
+        <h2 class="screen-title">Ручное создание</h2>
 
-        <label class="label" for="mounting-type">Тип крепления</label>
-        <select id="mounting-type">
-          <option>Люверсы</option>
-          <option>Крючки</option>
-        </select>
+        <div class="form-wrap">
+          <label class="label" for="scene-style">Стиль сцены</label>
+          <select id="scene-style">
+            <option>Простой современный евроремонт (комфорт)</option>
+            <option>Дорогой премиум-стиль (люкс)</option>
+            <option>Уютный эко-стиль (под дерево и камень)</option>
+          </select>
 
-        <label class="label" for="color">Цвет</label>
-        <select id="color">
-          <option>Белый</option>
-          <option>Бежевый</option>
-          <option>Светло-серый</option>
-          <option>Тёмно-серый</option>
-        </select>
+          <label class="label" for="mounting-type">Тип крепления</label>
+          <select id="mounting-type">
+            <option>Люверсы</option>
+            <option>Крючки</option>
+          </select>
 
-        <label class="label" for="prompt">Описание</label>
-        <textarea id="prompt" placeholder="Опишите желаемый интерьер..."></textarea>
+          <label class="label" for="color">Цвет</label>
+          <select id="color">
+            <option>Белый</option>
+            <option>Бежевый</option>
+            <option>Светло-серый</option>
+            <option>Тёмно-серый</option>
+          </select>
 
-        <div class="stack" style="margin-top:10px;">
-          <button id="manual-generate">Сгенерировать</button>
-          <button id="manual-back" class="secondary">Назад</button>
+          <label class="label" for="prompt">Описание</label>
+          <textarea id="prompt" placeholder="Опишите желаемый интерьер..."></textarea>
+        </div>
+
+        <div class="sticky-submit">
+          <button id="manual-generate" class="btn-main">Сгенерировать</button>
         </div>
       </section>
 
       <section id="screen-loading" class="screen">
         <div class="global-error" data-global-error></div>
-        <h2>Генерация</h2>
-        <div class="loader"></div>
-        <p style="text-align:center;">Генерируем...</p>
-        <div id="error-text" class="error"></div>
+        <div class="loader-wrap">
+          <div>
+            <div class="pulse"></div>
+            <h2 class="loading-title">Генерируем контент...</h2>
+            <p class="loading-sub">Это займёт около минуты</p>
+            <div id="error-text" class="error"></div>
+          </div>
+        </div>
       </section>
 
       <section id="screen-result" class="screen">
         <div class="global-error" data-global-error></div>
-        <h2>Результат</h2>
-        <div class="image-box">
-          <img id="result-image" alt="Сгенерированное изображение" />
-        </div>
-        <div class="stack">
-          <button id="regenerate">Пересоздать</button>
-          <button id="download" class="secondary">Скачать</button>
-          <button id="result-back" class="secondary">Назад</button>
+        <h2 class="screen-title">Результат</h2>
+        <img id="result-image" class="result-image" alt="Сгенерированное изображение" />
+        <div class="result-actions">
+          <button id="regenerate" class="btn-danger">Пересоздать</button>
+          <button id="download" class="btn-main">Скачать</button>
+          <button id="result-back" class="btn-soft">Назад</button>
         </div>
       </section>
     </div>
@@ -253,7 +445,8 @@
       auto: 'https://bymzavod.online/webhook/pinterest-auto',
       manual: 'https://bymzavod.online/webhook/pinterest-manual',
       regenerate: 'https://bymzavod.online/webhook/pinterest-regenerate',
-      status: 'https://bymzavod.online/webhook/pinterest-status'
+      status: 'https://bymzavod.online/webhook/pinterest-status',
+      balance: 'https://bymzavod.online/webhook/balance'
     };
 
     const POLL_INTERVAL = 5000;
@@ -273,8 +466,12 @@
       mount: document.getElementById('mounting-type'),
       color: document.getElementById('color'),
       prompt: document.getElementById('prompt'),
-      img: document.getElementById('result-image')
+      img: document.getElementById('result-image'),
+      balanceRow: document.getElementById('balance-row'),
+      balanceOpenrouter: document.getElementById('balance-openrouter'),
+      balanceKieai: document.getElementById('balance-kieai')
     };
+
     const globalErrorNodes = Array.from(document.querySelectorAll('[data-global-error]'));
 
     let currentRecordId = null;
@@ -290,6 +487,7 @@
       root.setProperty('--primary', t.button_color || '#2481cc');
       root.setProperty('--secondary-bg', t.secondary_bg_color || '#f2f2f7');
       root.setProperty('--danger', t.destructive_text_color || '#ff3b30');
+      root.setProperty('--button-text', t.button_text_color || '#ffffff');
       if (t.bg_color) document.body.style.background = t.bg_color;
       if (t.text_color) document.body.style.color = t.text_color;
     }
@@ -315,7 +513,7 @@
       });
     }
 
-    async function apiGet(url, params = {}) {
+    async function apiGet(url, params = {}, options = {}) {
       const u = new URL(url);
       Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, String(v)));
       try {
@@ -326,7 +524,8 @@
         const text = await res.text();
         try { return JSON.parse(text); } catch { return { raw: text }; }
       } catch (err) {
-        showGlobalError('Ошибка запроса: ' + (err?.message || err), err);
+        if (!options.silent) showGlobalError('Ошибка запроса: ' + (err?.message || err), err);
+        else console.error('Ошибка запроса:', err);
         throw err;
       }
     }
@@ -345,6 +544,20 @@
 
     function extractPrompt(data) {
       return data?.prompt || data?.data?.prompt || '';
+    }
+
+    async function loadBalance() {
+      try {
+        const data = await apiGet(WEBHOOKS.balance, {}, { silent: true });
+        const openrouter = data?.openrouter ?? data?.data?.openrouter;
+        const kieai = data?.kieai ?? data?.data?.kieai;
+        if (openrouter == null || kieai == null) return;
+        el.balanceOpenrouter.textContent = 'OpenRouter: ' + openrouter;
+        el.balanceKieai.textContent = 'KieAI: ' + kieai;
+        el.balanceRow.style.display = 'flex';
+      } catch (e) {
+        console.error('Баланс не загружен:', e);
+      }
     }
 
     async function startPolling(recordId) {
@@ -434,11 +647,26 @@
       });
     }
 
-    document.getElementById('go-pinterest').onclick = () => showScreen('platform');
-    document.getElementById('platform-back').onclick = () => showScreen('main');
-    document.getElementById('manual-open').onclick = () => showScreen('manual');
-    document.getElementById('manual-back').onclick = () => showScreen('platform');
-    document.getElementById('result-back').onclick = () => showScreen('platform');
+    document.getElementById('go-pinterest').onclick = () => {
+      clearGlobalError();
+      showScreen('platform');
+    };
+    document.getElementById('platform-back').onclick = () => {
+      clearGlobalError();
+      showScreen('main');
+    };
+    document.getElementById('manual-open').onclick = () => {
+      clearGlobalError();
+      showScreen('manual');
+    };
+    document.getElementById('manual-back').onclick = () => {
+      clearGlobalError();
+      showScreen('platform');
+    };
+    document.getElementById('result-back').onclick = () => {
+      clearGlobalError();
+      showScreen('platform');
+    };
 
     document.getElementById('auto-create').onclick = startAuto;
     document.getElementById('manual-generate').onclick = startManual;
@@ -460,7 +688,7 @@
 
     applyTelegramTheme();
     tg?.onEvent?.('themeChanged', applyTelegramTheme);
+    loadBalance();
   </script>
 </body>
 </html>
-
