@@ -250,7 +250,7 @@
 
     .hidden,
     .platform-extra.hidden {
-      display: none;
+      display: none !important;
     }
 
     .flow-block {
@@ -806,7 +806,7 @@
 
       pinterestManualBox.classList.toggle('active', selectedPlatform === 'pinterest' && mode === 'manual');
       textManualBox.classList.toggle('active', textPlatform && mode === 'manual' && !textReady);
-      autoCountBox.classList.toggle('hidden', mode !== 'auto' || textReady);
+      autoCountBox.classList.toggle('hidden', textReady);
       instagramSubtypeBox.classList.toggle('hidden', selectedPlatform !== 'instagram' || textReady);
       carouselSlidesBox.classList.toggle('hidden', !isCarousel || selectedPlatform !== 'instagram' || textReady);
       generateBtn.textContent = textPlatform ? 'Сгенерировать текст' : 'Сгенерировать';
@@ -873,7 +873,7 @@
 
     async function createPinterestGeneration() {
       const mode = getMode();
-      const count = mode === 'auto' ? Number(autoPostCountSelect.value) : 1;
+      const count = Number(autoPostCountSelect.value);
       const params = buildPinterestParams(mode);
       setButtonLoading(generateBtn, true, 'Отправка...');
       try {
@@ -895,7 +895,7 @@
 
     async function createTextGeneration() {
       const mode = getMode();
-      const count = mode === 'auto' ? Number(autoPostCountSelect.value) : 1;
+      const count = Number(autoPostCountSelect.value);
       const params = buildTextParams();
       activeTextParams = params;
       setButtonLoading(generateBtn, true, 'Отправка...');
