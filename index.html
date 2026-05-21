@@ -248,8 +248,24 @@
       display: grid;
     }
 
+    .hidden,
     .platform-extra.hidden {
       display: none;
+    }
+
+    .flow-block {
+      margin-top: 14px;
+    }
+
+    .inline-select {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .inline-select select {
+      width: 92px;
     }
 
     .generation-title {
@@ -272,6 +288,12 @@
       overflow: auto;
       white-space: pre-wrap;
       line-height: 1.45;
+    }
+
+    #generatedTextArea {
+      min-height: 180px;
+      max-height: 280px;
+      overflow: auto;
     }
 
     .params {
@@ -403,16 +425,66 @@
           <span>🎛 Ручная настройка</span>
         </label>
       </div>
-      <div id="manualBox" class="manual-box stack">
+
+      <div id="instagramSubtypeBox" class="flow-block hidden">
+        <div class="segmented">
+          <label>
+            <input type="radio" name="contentSubtype" value="single" checked>
+            <span>📷 Одно фото</span>
+          </label>
+          <label>
+            <input type="radio" name="contentSubtype" value="carousel">
+            <span>🎠 Карусель</span>
+          </label>
+        </div>
+        <label id="carouselSlidesBox" class="field hidden">Количество слайдов
+          <select id="carouselSlidesSelect">
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </label>
+      </div>
+
+      <label id="autoCountBox" class="field flow-block">Количество постов
+        <select id="autoPostCountSelect">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+        </select>
+      </label>
+
+      <div id="pinterestManualBox" class="manual-box stack">
         <label class="field">Стиль<select id="styleSelect"></select></label>
         <label class="field">Цвет<select id="colorSelect"></select></label>
         <label class="field">Принт<select id="printSelect"></select></label>
         <label class="field">Материал<select id="materialSelect"></select></label>
-        <label class="field platform-extra">Тип поста<select id="postTypeSelect"></select></label>
-        <label class="field platform-extra">Тема поста<select id="postThemeSelect"></select></label>
       </div>
+
+      <div id="textManualBox" class="manual-box stack">
+        <label class="field">Тип поста<select id="postTypeSelect"></select></label>
+        <label class="field">Тема поста<select id="postThemeSelect"></select></label>
+      </div>
+
       <div class="stack" style="margin-top: 14px;">
         <button id="generateBtn">Сгенерировать</button>
+      </div>
+
+      <div id="textFlowBox" class="stack flow-block hidden">
+        <div id="textStatus" class="loading">Ожидание текста...</div>
+        <label class="field">Текст поста<textarea id="generatedTextArea"></textarea></label>
+        <button id="regenerateTextBtn" class="secondary">🔄 Перегенерировать текст</button>
+        <label class="field inline-select">Количество вариантов картинки
+          <select id="imageCountSelect">
+            <option value="1" selected>1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+          </select>
+        </label>
+        <button id="generateImageBtn">🎨 Сгенерировать картинку</button>
       </div>
     </section>
 
@@ -461,6 +533,7 @@
     const API = {
       balance:        'https://bymzavod.online/webhook/openrouter-balance',
       newGeneration:  'https://bymzavod.online/webhook/new-generation',
+      getGeneration:  'https://bymzavod.online/webhook/get-generation',
       getGenerations: 'https://bymzavod.online/webhook/get-generations',
       getReferences:  'https://bymzavod.online/webhook/get-references',
       analyzePhoto:   'https://bymzavod.online/webhook/analyze-photo',
@@ -475,8 +548,20 @@
     const balanceEl = document.getElementById('balance');
     const platformList = document.getElementById('platformList');
     const settingsTitle = document.getElementById('settingsTitle');
-    const manualBox = document.getElementById('manualBox');
+    const pinterestManualBox = document.getElementById('pinterestManualBox');
+    const textManualBox = document.getElementById('textManualBox');
+    const autoCountBox = document.getElementById('autoCountBox');
+    const autoPostCountSelect = document.getElementById('autoPostCountSelect');
+    const instagramSubtypeBox = document.getElementById('instagramSubtypeBox');
+    const carouselSlidesBox = document.getElementById('carouselSlidesBox');
+    const carouselSlidesSelect = document.getElementById('carouselSlidesSelect');
     const generateBtn = document.getElementById('generateBtn');
+    const textFlowBox = document.getElementById('textFlowBox');
+    const textStatus = document.getElementById('textStatus');
+    const generatedTextArea = document.getElementById('generatedTextArea');
+    const regenerateTextBtn = document.getElementById('regenerateTextBtn');
+    const imageCountSelect = document.getElementById('imageCountSelect');
+    const generateImageBtn = document.getElementById('generateImageBtn');
     const generationsList = document.getElementById('generationsList');
     const postDetails = document.getElementById('postDetails');
     const photoInput = document.getElementById('photoInput');
@@ -505,8 +590,9 @@
 
     const statusMap = {
       done: '✅ Готово',
-      processing: '⏳ Генерируется',
+      processing: '⏳ Обработка',
       queue: '🕐 Ожидание',
+      text_done: '📝 Текст готов',
       error: '❌ Ошибка',
     };
 
@@ -524,6 +610,9 @@
     let generations = [];
     let selectedGeneration = null;
     let pollingTimer = null;
+    let textPollingTimer = null;
+    let activeTextGeneration = null;
+    let activeTextParams = {};
     let simpleCollection = 'post_types';
     let toastTimer = null;
 
@@ -574,6 +663,7 @@
         else tg.BackButton.show();
       }
       if (screen !== 'generations') stopPolling();
+      if (screen !== 'settings') stopTextPolling();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -611,8 +701,7 @@
       const params = item.params && typeof item.params === 'object' ? item.params : {};
       if (params.post_theme) return params.post_theme;
       if (params.style && params.color) return `${params.style}, ${params.color}`;
-      if (!Object.keys(params).length) return 'Авто-генерация';
-      return 'Генерация';
+      return 'Авто-генерация';
     }
 
     function escapeHtml(value) {
@@ -643,7 +732,10 @@
     async function openSettings(platformKey) {
       selectedPlatform = platformKey;
       settingsTitle.textContent = platformName(platformKey);
-      updatePlatformExtraFields();
+      document.querySelector('input[name="mode"][value="auto"]').checked = true;
+      document.querySelector('input[name="contentSubtype"][value="single"]').checked = true;
+      resetTextFlow();
+      updateSettingsView();
       navigate('settings');
       if (!references) await loadReferences();
     }
@@ -651,7 +743,12 @@
     async function loadReferences() {
       setButtonLoading(generateBtn, true);
       try {
-        references = await request(API.getReferences);
+        const data = await request(API.getReferences);
+        references = {
+          ...data,
+          post_types: data.post_types || [],
+          post_themes: data.post_themes || [],
+        };
         fillSelect(selects.style, references.styles || []);
         fillSelect(selects.color, references.colors || []);
         fillSelect(selects.print, references.prints || []);
@@ -679,59 +776,246 @@
       };
     }
 
-    function updatePlatformExtraFields() {
-      document.querySelectorAll('.platform-extra').forEach(item => {
-        item.classList.toggle('hidden', selectedPlatform === 'pinterest');
-      });
+    function getMode() {
+      return document.querySelector('input[name="mode"]:checked').value;
     }
 
-    async function createGeneration(extra = {}) {
-      const mode = document.querySelector('input[name="mode"]:checked').value;
-      let payload = {
-        platform: selectedPlatform,
-        mode,
-        params: {},
-        ...extra,
+    function isTextPlatform() {
+      return selectedPlatform !== 'pinterest';
+    }
+
+    function resetTextFlow() {
+      stopTextPolling();
+      activeTextGeneration = null;
+      activeTextParams = {};
+      generatedTextArea.value = '';
+      textStatus.textContent = 'Ожидание текста...';
+      textStatus.classList.remove('hidden');
+      textFlowBox.classList.add('hidden');
+      generateBtn.classList.remove('hidden');
+    }
+
+    function updateSettingsView() {
+      const mode = getMode();
+      const textPlatform = isTextPlatform();
+      const textReady = activeTextGeneration && !textFlowBox.classList.contains('hidden');
+      const isCarousel = document.querySelector('input[name="contentSubtype"]:checked')?.value === 'carousel';
+
+      pinterestManualBox.classList.toggle('active', selectedPlatform === 'pinterest' && mode === 'manual');
+      textManualBox.classList.toggle('active', textPlatform && mode === 'manual' && !textReady);
+      autoCountBox.classList.toggle('hidden', mode !== 'auto' || textReady);
+      instagramSubtypeBox.classList.toggle('hidden', selectedPlatform !== 'instagram' || textReady);
+      carouselSlidesBox.classList.toggle('hidden', !isCarousel || selectedPlatform !== 'instagram' || textReady);
+      generateBtn.textContent = textPlatform ? 'Сгенерировать текст' : 'Сгенерировать';
+    }
+
+    function getGenerationId(data) {
+      return data.generation_id || data.id || data?.data?.generation_id || data?.data?.id || '';
+    }
+
+    function buildTextParams() {
+      const mode = getMode();
+      const postType = getSelected(selects.postType);
+      const postTheme = getSelected(selects.postTheme);
+      const params = {
+        post_type: mode === 'manual' ? postType.name : '',
+        post_type_description: mode === 'manual' ? postType.description : '',
+        post_theme: mode === 'manual' ? postTheme.name : '',
+        post_theme_description: mode === 'manual' ? postTheme.description : '',
       };
 
-      if (mode === 'manual' && !extra.regenerate) {
-        const style = getSelected(selects.style);
-        const color = getSelected(selects.color);
-        const print = getSelected(selects.print);
-        const material = getSelected(selects.material);
-        const postType = getSelected(selects.postType);
-        const postTheme = getSelected(selects.postTheme);
-        payload.params = {
-          style: style.name,
-          style_description: style.description,
-          color: color.name,
-          color_description: color.description,
-          print: print.name,
-          print_description: print.description,
-          material: material.name,
-          material_description: material.description,
-        };
-
-        if (selectedPlatform !== 'pinterest') {
-          payload.params.post_type = postType.name;
-          payload.params.post_type_description = postType.description;
-          payload.params.post_theme = postTheme.name;
-          payload.params.post_theme_description = postTheme.description;
+      if (selectedPlatform === 'instagram') {
+        const subtype = document.querySelector('input[name="contentSubtype"]:checked')?.value || 'single';
+        if (subtype === 'carousel') {
+          params.post_subtype = 'carousel';
+          params.image_count = Number(carouselSlidesSelect.value);
         }
       }
 
+      return params;
+    }
+
+    function buildPinterestParams(mode) {
+      if (mode !== 'manual') return {};
+      const style = getSelected(selects.style);
+      const color = getSelected(selects.color);
+      const print = getSelected(selects.print);
+      const material = getSelected(selects.material);
+      return {
+        style: style.name,
+        style_description: style.description,
+        color: color.name,
+        color_description: color.description,
+        print: print.name,
+        print_description: print.description,
+        material: material.name,
+        material_description: material.description,
+      };
+    }
+
+    async function postNewGeneration(payload) {
+      return request(API.newGeneration, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+    }
+
+    async function createGeneration() {
+      if (selectedPlatform === 'pinterest') {
+        await createPinterestGeneration();
+      } else {
+        await createTextGeneration();
+      }
+    }
+
+    async function createPinterestGeneration() {
+      const mode = getMode();
+      const count = mode === 'auto' ? Number(autoPostCountSelect.value) : 1;
+      const params = buildPinterestParams(mode);
       setButtonLoading(generateBtn, true, 'Отправка...');
       try {
-        await request(API.newGeneration, {
-          method: 'POST',
-          body: JSON.stringify(payload),
-        });
-        showToast('✅ Задача добавлена в очередь');
+        for (let index = 0; index < count; index += 1) {
+          await postNewGeneration({
+            platform: selectedPlatform,
+            mode,
+            params,
+          });
+        }
+        showToast(count > 1 ? `✅ Добавлено ${count} задачи в очередь` : '✅ Задача добавлена в очередь');
         navigate('home');
       } catch (error) {
         showToast(error.message || 'Не удалось создать задачу');
       } finally {
         setButtonLoading(generateBtn, false);
+      }
+    }
+
+    async function createTextGeneration() {
+      const mode = getMode();
+      const count = mode === 'auto' ? Number(autoPostCountSelect.value) : 1;
+      const params = buildTextParams();
+      activeTextParams = params;
+      setButtonLoading(generateBtn, true, 'Отправка...');
+      try {
+        let firstData = null;
+        for (let index = 0; index < count; index += 1) {
+          const data = await postNewGeneration({
+            platform: selectedPlatform,
+            mode,
+            params,
+          });
+          if (!firstData) firstData = data;
+        }
+
+        if (count > 1) {
+          showToast(`✅ Добавлено ${count} задачи в очередь`);
+          navigate('home');
+          return;
+        }
+
+        const generationId = getGenerationId(firstData || {});
+        if (!generationId) throw new Error('Не получен ID генерации');
+        activeTextGeneration = generationId;
+        showTextLoading();
+        startTextPolling(generationId);
+      } catch (error) {
+        showToast(error.message || 'Не удалось создать задачу');
+      } finally {
+        setButtonLoading(generateBtn, false);
+      }
+    }
+
+    function showTextLoading() {
+      generateBtn.classList.add('hidden');
+      textFlowBox.classList.remove('hidden');
+      textStatus.classList.remove('hidden');
+      textStatus.textContent = 'Генерация текста...';
+      generatedTextArea.value = '';
+      generatedTextArea.disabled = true;
+      regenerateTextBtn.textContent = '🔄 Перегенерировать текст';
+      regenerateTextBtn.disabled = true;
+      generateImageBtn.textContent = '🎨 Сгенерировать картинку';
+      generateImageBtn.disabled = true;
+      updateSettingsView();
+    }
+
+    function showTextReady(item) {
+      stopTextPolling();
+      textStatus.textContent = '📝 Текст готов';
+      generatedTextArea.value = item.post_text || '';
+      generatedTextArea.disabled = false;
+      regenerateTextBtn.disabled = false;
+      generateImageBtn.disabled = false;
+      if (item.params && typeof item.params === 'object') activeTextParams = item.params;
+    }
+
+    function startTextPolling(generationId) {
+      stopTextPolling();
+      pollTextGeneration(generationId);
+      textPollingTimer = setInterval(() => pollTextGeneration(generationId), 3000);
+    }
+
+    function stopTextPolling() {
+      if (!textPollingTimer) return;
+      clearInterval(textPollingTimer);
+      textPollingTimer = null;
+    }
+
+    async function pollTextGeneration(generationId) {
+      try {
+        const data = await request(`${API.getGeneration}?id=${encodeURIComponent(generationId)}`);
+        const item = Array.isArray(data) ? data[0] : data;
+        if (item.status === 'text_done') showTextReady(item);
+        if (item.status === 'error') {
+          stopTextPolling();
+          textStatus.textContent = item.error || 'Ошибка генерации текста';
+          showToast('Ошибка генерации текста');
+        }
+      } catch (error) {
+        stopTextPolling();
+        showToast(error.message || 'Не удалось проверить статус');
+      }
+    }
+
+    async function regenerateText() {
+      if (!activeTextGeneration) return;
+      setButtonLoading(regenerateTextBtn, true, 'Отправка...');
+      try {
+        const data = await postNewGeneration({
+          platform: selectedPlatform,
+          mode: getMode(),
+          params: activeTextParams,
+          regenerate: 'text',
+          generation_id: activeTextGeneration,
+        });
+        activeTextGeneration = getGenerationId(data) || activeTextGeneration;
+        showTextLoading();
+        startTextPolling(activeTextGeneration);
+      } catch (error) {
+        showToast(error.message || 'Не удалось перегенерировать текст');
+      } finally {
+        if (!textPollingTimer) setButtonLoading(regenerateTextBtn, false);
+      }
+    }
+
+    async function generateImageOnly() {
+      if (!activeTextGeneration) return;
+      setButtonLoading(generateImageBtn, true, 'Отправка...');
+      try {
+        await postNewGeneration({
+          platform: selectedPlatform,
+          mode: 'image_only',
+          params: {
+            generation_id: activeTextGeneration,
+            image_count: Number(imageCountSelect.value),
+          },
+        });
+        showToast('✅ Задача добавлена в очередь');
+        navigate('home');
+      } catch (error) {
+        showToast(error.message || 'Не удалось создать картинку');
+      } finally {
+        setButtonLoading(generateImageBtn, false);
       }
     }
 
@@ -1012,6 +1296,8 @@
       document.getElementById('choosePhotoBtn').addEventListener('click', choosePhoto);
       simpleSaveBtn.addEventListener('click', saveSimple);
       generateBtn.addEventListener('click', () => createGeneration());
+      regenerateTextBtn.addEventListener('click', regenerateText);
+      generateImageBtn.addEventListener('click', generateImageOnly);
       photoInput.addEventListener('change', event => analyzePhoto(event.target.files[0]));
 
       platformList.addEventListener('click', event => {
@@ -1021,8 +1307,13 @@
 
       document.querySelectorAll('input[name="mode"]').forEach(input => {
         input.addEventListener('change', () => {
-          manualBox.classList.toggle('active', input.value === 'manual' && input.checked);
+          resetTextFlow();
+          updateSettingsView();
         });
+      });
+
+      document.querySelectorAll('input[name="contentSubtype"]').forEach(input => {
+        input.addEventListener('change', updateSettingsView);
       });
 
       generationsList.addEventListener('click', event => {
