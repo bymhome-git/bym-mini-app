@@ -1,156 +1,140 @@
 <!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-  <title>BYM Home Mini App</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Контент-завод</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --bg: #050b1a;
-      --bg-soft: #0b1631;
-      --text: #ebf2ff;
-      --hint: #93a6cc;
-      --primary: #5b7cff;
-      --primary-2: #8b5cf6;
-      --secondary-bg: #111f3f;
-      --button-text: #ffffff;
-      --danger: #ff5a7a;
-      --stroke: rgba(155, 184, 255, 0.2);
-      --shadow: 0 10px 28px rgba(2, 7, 22, 0.45);
-      --radius-lg: 20px;
-      --radius-md: 14px;
-      --radius-sm: 12px;
+      --bg: var(--tg-theme-bg-color, #0f1014);
+      --text: var(--tg-theme-text-color, #f2f3f7);
+      --hint: var(--tg-theme-hint-color, #8f93a3);
+      --button: var(--tg-theme-button-color, #6C63FF);
+      --button-text: var(--tg-theme-button-text-color, #ffffff);
+      --card: var(--tg-theme-secondary-bg-color, #1a1c24);
+      --accent: #6C63FF;
+      --danger: #ff4d5d;
+      --ok: #39d98a;
+      --shadow: 0 12px 30px rgba(0, 0, 0, 0.24);
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
+    html,
     body {
       margin: 0;
-      font-family: "Segoe UI", "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
-      background:
-        radial-gradient(1200px 600px at 0% 0%, #1a2a5f55 0%, transparent 60%),
-        radial-gradient(900px 500px at 100% 20%, #7e4dff33 0%, transparent 60%),
-        linear-gradient(180deg, #050b1a 0%, #040913 100%);
+      min-height: 100%;
+      background: var(--bg);
       color: var(--text);
-      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      letter-spacing: 0;
+    }
+
+    body {
+      padding: 18px 14px calc(26px + env(safe-area-inset-bottom));
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button,
+    .button {
+      min-height: 48px;
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      padding: 13px 16px;
+      background: var(--button);
+      color: var(--button-text);
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    button:disabled {
+      cursor: default;
+      opacity: 0.55;
+      transform: none;
     }
 
     .app {
+      width: 100%;
       max-width: 560px;
       margin: 0 auto;
-      padding: 14px;
-    }
-    .access-denied {
-      min-height: 100vh;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 20px;
-      font-size: 24px;
-      font-weight: 700;
-      color: var(--danger);
-    }
-
-    .screen-wrap {
-      position: relative;
-      min-height: calc(100vh - 28px);
-      border-radius: 24px;
-      overflow: hidden;
-      border: 1px solid var(--stroke);
-      box-shadow: 0 0 0 1px rgba(125, 156, 255, 0.04), var(--shadow);
-      background: linear-gradient(180deg, #07142d 0%, #060f22 100%);
     }
 
     .screen {
-      position: absolute;
-      inset: 0;
-      background:
-        radial-gradient(500px 260px at 100% 0%, #7c4dff1f 0%, transparent 65%),
-        linear-gradient(180deg, #07142d 0%, #060f22 100%);
-      padding: 14px 14px 22px;
-      overflow: auto;
-      opacity: 0;
-      transform: translateY(12px) scale(0.99);
-      pointer-events: none;
-      transition: opacity 0.35s ease, transform 0.35s ease;
+      display: none;
+      animation: fade 0.18s ease;
     }
 
     .screen.active {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-      pointer-events: auto;
+      display: block;
     }
 
-    .topbar {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 12px;
+    @keyframes fade {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
-    .title-small {
-      margin: 0;
-      font-size: 13px;
-      letter-spacing: 0.02em;
-      color: var(--hint);
-      font-weight: 500;
+    h1 {
+      margin: 0 0 18px;
+      font-size: 28px;
+      line-height: 1.16;
     }
 
-    .screen-title {
-      margin: 2px 0 14px;
-      font-size: 34px;
-      line-height: 1.12;
-      font-weight: 800;
-      letter-spacing: -0.02em;
+    h2 {
+      margin: 0 0 16px;
+      font-size: 22px;
+      line-height: 1.2;
+    }
+
+    .stack {
+      display: grid;
+      gap: 12px;
     }
 
     .card {
-      border-radius: var(--radius-lg);
-      padding: 14px;
-      background: linear-gradient(180deg, rgba(19, 35, 72, 0.9) 0%, rgba(15, 28, 58, 0.9) 100%);
-      box-shadow: var(--shadow);
-      border: 1px solid var(--stroke);
-    }
-
-    .balance-row {
-      display: none;
-      font-size: 12px;
-      color: var(--hint);
-      margin-bottom: 14px;
-      gap: 16px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .stack { display: grid; gap: 10px; }
-
-    .platform-card,
-    .action-card {
-      width: 100%;
-      text-align: left;
-      border: 1px solid var(--stroke);
-      border-radius: var(--radius-lg);
-      background: linear-gradient(180deg, rgba(20, 36, 74, 0.9) 0%, rgba(16, 29, 60, 0.9) 100%);
+      border-radius: 12px;
+      background: var(--card);
       box-shadow: var(--shadow);
       padding: 14px;
-      color: var(--text);
+      transition: all 0.2s ease;
+    }
+
+    .tap-card {
       cursor: pointer;
     }
 
-    .platform-card.active {
-      border-color: rgba(149, 120, 255, 0.7);
-      background:
-        linear-gradient(90deg, rgba(139, 92, 246, 0.2), rgba(91, 124, 255, 0.2)),
-        linear-gradient(180deg, rgba(20, 36, 74, 0.92) 0%, rgba(16, 29, 60, 0.92) 100%);
-      box-shadow: 0 0 0 1px rgba(149, 120, 255, 0.18), var(--shadow);
+    .tap-card:active {
+      transform: scale(0.99);
     }
 
-    .platform-card.disabled {
-      opacity: 0.65;
-      filter: grayscale(0.3);
-      cursor: not-allowed;
+    .balance {
+      margin-bottom: 18px;
+      color: var(--hint);
+      font-size: 15px;
+    }
+
+    .muted {
+      color: var(--hint);
     }
 
     .row {
@@ -160,782 +144,841 @@
       gap: 12px;
     }
 
-    .name {
-      font-size: 17px;
-      font-weight: 600;
+    .platform-title,
+    .status {
+      font-weight: 700;
     }
 
-    .soon {
-      font-size: 12px;
-      color: var(--hint);
-      border-radius: 999px;
-      padding: 3px 8px;
-      background: color-mix(in srgb, var(--text) 6%, transparent);
+    .status.done {
+      color: var(--ok);
     }
 
-    .icon { font-size: 20px; }
-
-    .desc {
-      margin-top: 5px;
-      font-size: 13px;
-      color: var(--hint);
-      line-height: 1.3;
+    .status.processing,
+    .status.queue {
+      color: var(--accent);
     }
 
-    .btn-back,
-    .btn-main,
-    .btn-soft,
-    .btn-danger {
-      border: none;
-      border-radius: var(--radius-md);
-      padding: 13px 14px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      width: 100%;
-    }
-
-    .btn-back {
-      width: auto;
-      padding: 9px 12px;
-      font-size: 14px;
-      color: #dce7ff;
-      background: linear-gradient(180deg, rgba(66, 84, 151, 0.5), rgba(48, 66, 130, 0.5));
-      border: 1px solid var(--stroke);
-    }
-
-    .btn-main {
-      background: linear-gradient(90deg, var(--primary-2) 0%, var(--primary) 100%);
-      color: var(--button-text);
-      box-shadow: 0 10px 24px rgba(93, 112, 255, 0.35);
-    }
-
-    .btn-soft {
-      background: linear-gradient(180deg, rgba(20, 36, 74, 0.9) 0%, rgba(16, 29, 60, 0.9) 100%);
-      color: var(--text);
-      border: 1px solid var(--stroke);
-    }
-
-    .btn-danger {
-      background: linear-gradient(180deg, rgba(63, 23, 44, 0.95) 0%, rgba(46, 17, 33, 0.95) 100%);
+    .status.error {
       color: var(--danger);
-      border: 1px solid rgba(255, 90, 122, 0.35);
     }
 
-    .form-wrap {
-      padding-bottom: 84px;
+    .segmented {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
     }
 
-    .label {
-      margin: 12px 0 7px;
+    .segmented input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .segmented span {
+      display: flex;
+      min-height: 48px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      background: var(--card);
+      color: var(--hint);
+      font-weight: 700;
+      transition: all 0.2s ease;
+    }
+
+    .segmented input:checked + span {
+      border-color: var(--accent);
+      color: var(--text);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+
+    label.field {
+      display: grid;
+      gap: 7px;
+      color: var(--hint);
       font-size: 13px;
-      color: #a8bbe1;
-      font-weight: 600;
     }
 
+    input[type="text"],
     select,
     textarea {
       width: 100%;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--stroke);
-      background: linear-gradient(180deg, rgba(14, 28, 59, 0.9) 0%, rgba(12, 24, 51, 0.9) 100%);
-      color: var(--text);
-      font-size: 15px;
-      padding: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
       outline: none;
+      padding: 12px;
+      background: var(--card);
+      color: var(--text);
+      transition: all 0.2s ease;
     }
 
+    input[type="text"]:focus,
     select:focus,
     textarea:focus {
-      border-color: rgba(130, 148, 255, 0.9);
-      box-shadow: 0 0 0 3px rgba(110, 134, 255, 0.18);
+      border-color: var(--accent);
     }
 
     textarea {
-      min-height: 120px;
+      min-height: 96px;
       resize: vertical;
     }
 
-    .sticky-submit {
-      position: fixed;
-      left: 14px;
-      right: 14px;
-      bottom: 14px;
-      max-width: 560px;
-      margin: 0 auto;
-      padding: 10px;
-      background: linear-gradient(180deg, rgba(5, 11, 26, 0.86) 0%, rgba(5, 11, 26, 0.95) 100%);
-    }
-
-    .loader-wrap {
-      min-height: 58vh;
-      display: grid;
-      place-items: center;
-      text-align: center;
-    }
-
-    .pulse {
-      width: 68px;
-      height: 68px;
-      border-radius: 50%;
-      background: rgba(126, 116, 255, 0.2);
-      position: relative;
-      margin: 0 auto 18px;
-    }
-
-    .pulse::before,
-    .pulse::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      border: 2px solid rgba(131, 151, 255, 0.55);
-      animation: pulse 1.8s ease-out infinite;
-    }
-
-    .pulse::after { animation-delay: 0.8s; }
-
-    @keyframes pulse {
-      0% { transform: scale(0.92); opacity: 0.8; }
-      80% { transform: scale(1.45); opacity: 0; }
-      100% { opacity: 0; }
-    }
-
-    .loading-title {
-      font-size: 20px;
-      margin: 0 0 6px;
-    }
-
-    .loading-sub {
-      margin: 0;
-      color: var(--hint);
-      font-size: 14px;
-    }
-
-    .result-image {
-      width: 100%;
-      border-radius: var(--radius-lg);
-      display: block;
-      background: var(--secondary-bg);
-      box-shadow: var(--shadow);
-      margin-bottom: 12px;
-    }
-
-    .result-actions {
-      display: grid;
-      gap: 10px;
-      margin-top: 2px;
-    }
-
-    .error {
-      color: var(--danger);
-      text-align: center;
-      margin-top: 12px;
-      min-height: 20px;
-      font-size: 14px;
-    }
-
-    .global-error {
-      background: rgba(255, 90, 122, 0.12);
-      border: 1px solid rgba(255, 90, 122, 0.35);
-      color: var(--danger);
-      border-radius: 12px;
-      padding: 10px 12px;
-      font-size: 13px;
-      margin-bottom: 12px;
+    .manual-box {
       display: none;
+    }
+
+    .manual-box.active {
+      display: grid;
+    }
+
+    .post-image {
+      width: 100%;
+      max-height: 460px;
+      object-fit: cover;
+      border-radius: 12px;
+      background: var(--card);
+      display: block;
+    }
+
+    .post-text {
+      max-height: 240px;
+      overflow: auto;
       white-space: pre-wrap;
+      line-height: 1.45;
+    }
+
+    .params {
+      display: grid;
+      gap: 8px;
+    }
+
+    .param-row {
+      display: grid;
+      grid-template-columns: minmax(110px, 0.7fr) 1fr;
+      gap: 10px;
+      font-size: 14px;
+    }
+
+    .param-key {
+      color: var(--hint);
       word-break: break-word;
     }
 
-    @media (max-width: 420px) {
-      .screen { padding: 12px 12px 20px; }
-      .sticky-submit { left: 12px; right: 12px; bottom: 12px; }
-      .screen-title { font-size: 30px; }
+    .param-value {
+      word-break: break-word;
+    }
+
+    .danger {
+      background: var(--danger);
+      color: #ffffff;
+    }
+
+    .secondary {
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    .check {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text);
+    }
+
+    .check input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+    }
+
+    .empty,
+    .loading {
+      padding: 18px 0;
+      color: var(--hint);
+      text-align: center;
+    }
+
+    .toast {
+      position: fixed;
+      left: 14px;
+      right: 14px;
+      bottom: calc(16px + env(safe-area-inset-bottom));
+      z-index: 20;
+      max-width: 560px;
+      margin: 0 auto;
+      border-radius: 12px;
+      padding: 13px 15px;
+      background: rgba(28, 30, 38, 0.96);
+      color: var(--text);
+      box-shadow: var(--shadow);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(10px);
+      transition: all 0.2s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 380px) {
+      body {
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      .segmented {
+        grid-template-columns: 1fr;
+      }
+
+      .param-row {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
-  <div id="access-denied" class="access-denied">Доступ запрещён</div>
-  <div class="app">
-    <div class="screen-wrap">
-      <section id="screen-main" class="screen active">
-        <div class="global-error" data-global-error></div>
-        <h1 class="title-small">BYM Content Factory</h1>
-        <div id="balance-row" class="balance-row card">
-          <span id="balance-openrouter"></span>
-          <span id="balance-kieai"></span>
-        </div>
-        <h2 class="screen-title">Платформы</h2>
-        <div class="stack">
-          <button id="go-pinterest" class="platform-card active">
-            <div class="row"><span class="name">Pinterest</span><span class="icon">📌</span></div>
-            <div class="desc">Создание интерьерного контента</div>
-          </button>
-          <button class="platform-card disabled" disabled>
-            <div class="row"><span class="name">Instagram</span><span class="soon">скоро</span></div>
-            <div class="desc">Публикации и визуалы для ленты</div>
-          </button>
-          <button id="go-telegram" class="platform-card active">
-            <div class="row"><span class="name">Telegram</span><span class="icon">✈️</span></div>
-            <div class="desc">Контент для канала и постов</div>
-          </button>
-          <button class="platform-card disabled" disabled>
-            <div class="row"><span class="name">Яндекс.Дзен</span><span class="soon">скоро</span></div>
-            <div class="desc">Обложки и статьи</div>
-          </button>
-        </div>
-      </section>
+  <main class="app">
+    <section id="home" class="screen active">
+      <h1>🏭 Контент-завод</h1>
+      <div id="balance" class="balance">💰 Баланс OpenRouter: $—</div>
+      <div class="stack">
+        <button id="createBtn">Создать пост</button>
+        <button id="generationsBtn">Генерации</button>
+        <button id="addBtn">Добавить</button>
+      </div>
+    </section>
 
-      <section id="screen-platform" class="screen">
-        <div class="global-error" data-global-error></div>
-        <div class="topbar"><button id="platform-back" class="btn-back">Назад</button></div>
-        <h2 class="screen-title">Pinterest</h2>
-        <div class="stack">
-          <button id="auto-create" class="action-card">
-            <div class="name">Авто-создание</div>
-            <div class="desc">Система сама соберёт лучший вариант сцены</div>
-          </button>
-          <button id="manual-open" class="action-card">
-            <div class="name">Создать вручную</div>
-            <div class="desc">Настройте стиль, крепление, цвет и описание</div>
-          </button>
-        </div>
-      </section>
+    <section id="platform" class="screen">
+      <h2>Выберите платформу</h2>
+      <div id="platformList" class="stack"></div>
+    </section>
 
-      <section id="screen-manual" class="screen">
-        <div class="global-error" data-global-error></div>
-        <div class="topbar"><button id="manual-back" class="btn-back">Назад</button></div>
-        <h2 class="screen-title">Ручное создание</h2>
+    <section id="settings" class="screen">
+      <h2 id="settingsTitle">Платформа</h2>
+      <div class="segmented">
+        <label>
+          <input type="radio" name="mode" value="auto" checked>
+          <span>⚡ Авто</span>
+        </label>
+        <label>
+          <input type="radio" name="mode" value="manual">
+          <span>🎛 Ручная настройка</span>
+        </label>
+      </div>
+      <div id="manualBox" class="manual-box stack">
+        <label class="field">Стиль<select id="styleSelect"></select></label>
+        <label class="field">Цвет<select id="colorSelect"></select></label>
+        <label class="field">Принт<select id="printSelect"></select></label>
+        <label class="field">Материал<select id="materialSelect"></select></label>
+      </div>
+      <div class="stack" style="margin-top: 14px;">
+        <button id="generateBtn">Сгенерировать</button>
+      </div>
+    </section>
 
-        <div class="form-wrap">
-          <label class="label" for="scene-style">Стиль сцены</label>
-          <select id="scene-style">
-            <option>Простой современный евроремонт (комфорт)</option>
-            <option>Дорогой премиум-стиль (люкс)</option>
-            <option>Уютный эко-стиль (под дерево и камень)</option>
-          </select>
+    <section id="generations" class="screen">
+      <h2>Генерации</h2>
+      <div id="generationsList" class="stack"></div>
+    </section>
 
-          <label class="label" for="mounting-type">Тип крепления</label>
-          <select id="mounting-type">
-            <option>Люверсы</option>
-            <option>Крючки</option>
-          </select>
+    <section id="post" class="screen">
+      <h2>Карточка поста</h2>
+      <div id="postDetails" class="stack"></div>
+    </section>
 
-          <label class="label" for="color">Цвет</label>
-          <select id="color">
-            <option>Белый</option>
-            <option>Бежевый</option>
-            <option>Светло-серый</option>
-            <option>Тёмно-серый</option>
-          </select>
+    <section id="add" class="screen">
+      <h2>Добавить</h2>
+      <div class="stack">
+        <button id="photoAddBtn">📷 Добавить из фото</button>
+        <button id="newTypeBtn">Новый тип поста</button>
+        <button id="newThemeBtn">Новая тема поста</button>
+      </div>
+    </section>
 
-          <label class="label" for="prompt">Описание</label>
-          <textarea id="prompt" placeholder="Опишите желаемый интерьер..."></textarea>
-        </div>
+    <section id="photo" class="screen">
+      <h2>Добавить из фото</h2>
+      <div class="stack">
+        <button id="choosePhotoBtn">📷 Выбрать фото</button>
+        <input id="photoInput" class="file-input" type="file" accept="image/*">
+        <div id="photoResults" class="stack"></div>
+      </div>
+    </section>
 
-        <div class="sticky-submit">
-          <button id="manual-generate" class="btn-main">Сгенерировать</button>
-        </div>
-      </section>
+    <section id="simpleForm" class="screen">
+      <h2 id="simpleTitle">Новая запись</h2>
+      <div class="stack">
+        <label class="field">Краткое название<input id="simpleName" type="text" autocomplete="off"></label>
+        <label class="field">Тех. описание<textarea id="simpleDescription"></textarea></label>
+        <label class="check"><input id="simpleActive" type="checkbox" checked> Активно</label>
+        <button id="simpleSaveBtn">Сохранить</button>
+      </div>
+    </section>
+  </main>
 
-      <section id="screen-loading" class="screen">
-        <div class="global-error" data-global-error></div>
-        <div class="loader-wrap">
-          <div>
-            <div class="pulse"></div>
-            <h2 class="loading-title">Генерируем контент...</h2>
-            <p class="loading-sub">Это займёт около минуты</p>
-            <div id="error-text" class="error"></div>
-          </div>
-        </div>
-      </section>
-
-      <section id="screen-result" class="screen">
-        <div class="global-error" data-global-error></div>
-        <h2 class="screen-title">Результат</h2>
-        <img id="result-image" class="result-image" alt="Сгенерированное изображение" />
-        <div class="result-actions">
-          <button id="regenerate" class="btn-danger">Пересоздать</button>
-          <button id="download" class="btn-main">Скачать</button>
-          <button id="result-back" class="btn-soft">Назад</button>
-        </div>
-      </section>
-
-      <section id="screen-telegram" class="screen">
-        <div class="global-error" data-global-error></div>
-        <div class="topbar"><button id="telegram-back" class="btn-back">Назад</button></div>
-        <h2 class="screen-title">Telegram</h2>
-        <div class="stack">
-          <button id="telegram-auto-create" class="action-card">
-            <div class="name">Авто-создание</div>
-          </button>
-          <button id="telegram-manual-open" class="action-card">
-            <div class="name">Создать вручную</div>
-          </button>
-        </div>
-      </section>
-
-      <section id="screen-telegram-manual" class="screen">
-        <div class="global-error" data-global-error></div>
-        <div class="topbar"><button id="telegram-manual-back" class="btn-back">Назад</button></div>
-        <h2 class="screen-title">Создать вручную</h2>
-        <div class="form-wrap">
-          <label class="label" for="telegram-topic">Тема</label>
-          <select id="telegram-topic">
-            <option>Ремонт</option>
-            <option>Дизайн</option>
-            <option>Декор</option>
-          </select>
-          <label class="label" for="telegram-post-type">Тип поста</label>
-          <select id="telegram-post-type">
-            <option>Полезный</option>
-            <option>Рекламный</option>
-          </select>
-        </div>
-        <div class="sticky-submit">
-          <button id="telegram-generate-text" class="btn-main">Сгенерировать текст</button>
-        </div>
-      </section>
-
-      <section id="screen-telegram-text" class="screen">
-        <div class="global-error" data-global-error></div>
-        <h2 class="screen-title">Текст поста</h2>
-        <div id="telegram-text-only" class="card" style="white-space:pre-wrap;"></div>
-        <div class="result-actions">
-          <button id="telegram-regenerate-text" class="btn-danger">Перегенерировать текст</button>
-          <button id="telegram-generate-image" class="btn-main">Сгенерировать картинку</button>
-          <button id="telegram-text-back" class="btn-soft">Назад</button>
-        </div>
-      </section>
-
-      <section id="screen-telegram-result" class="screen">
-        <div class="global-error" data-global-error></div>
-        <h2 class="screen-title">Текст и картинка</h2>
-        <img id="telegram-result-image" class="result-image" alt="Сгенерированное изображение" />
-        <div id="telegram-text-with-image" class="card" style="white-space:pre-wrap;"></div>
-        <div class="result-actions">
-          <button id="telegram-recreate-text" class="btn-danger">Пересоздать текст</button>
-          <button id="telegram-recreate-image" class="btn-danger">Пересоздать картинку</button>
-          <button id="telegram-publish" class="btn-main">Опубликовать</button>
-          <button id="telegram-result-back" class="btn-soft">Назад</button>
-        </div>
-      </section>
-    </div>
-  </div>
+  <div id="toast" class="toast"></div>
 
   <script>
-    const tg = window.Telegram?.WebApp;
-    tg?.ready();
-    tg?.expand();
-
-    const WEBHOOKS = {
-      auto: 'https://bymzavod.online/webhook/pinterest-auto',
-      manual: 'https://bymzavod.online/webhook/pinterest-manual',
-      regenerate: 'https://bymzavod.online/webhook/pinterest-regenerate',
-      status: 'https://bymzavod.online/webhook/pinterest-status',
-      balance: 'https://bymzavod.online/webhook/balance',
-      telegramAuto: 'https://bymzavod.online/webhook/telegram-auto',
-      telegramManualText: 'https://bymzavod.online/webhook/telegram-manual-text',
-      telegramManualImage: 'https://bymzavod.online/webhook/telegram-manual-image',
-      telegramRegenerateText: 'https://bymzavod.online/webhook/telegram-regenerate-text',
-      telegramRegenerateImage: 'https://bymzavod.online/webhook/telegram-regenerate-image',
-      telegramStatus: 'https://bymzavod.online/webhook/telegram-status',
-      telegramPublish: 'https://bymzavod.online/webhook/telegram-publish'
+    const API = {
+      balance:        'https://bymzavod.online/webhook/openrouter-balance',
+      newGeneration:  'https://bymzavod.online/webhook/new-generation',
+      getGenerations: 'https://bymzavod.online/webhook/get-generations',
+      getReferences:  'https://bymzavod.online/webhook/get-references',
+      analyzePhoto:   'https://bymzavod.online/webhook/analyze-photo',
+      syncAirtable:   'https://bymzavod.online/webhook/pb-to-airtable',
+      saveElement:    'https://bymzavod.online/webhook/save-element',
+      deleteGen:      'https://bymzavod.online/webhook/delete-generation',
     };
 
-    const POLL_INTERVAL = 5000;
-    const POLL_TIMEOUT = 180000;
+    const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+    const screens = document.querySelectorAll('.screen');
+    const toastEl = document.getElementById('toast');
+    const balanceEl = document.getElementById('balance');
+    const platformList = document.getElementById('platformList');
+    const settingsTitle = document.getElementById('settingsTitle');
+    const manualBox = document.getElementById('manualBox');
+    const generateBtn = document.getElementById('generateBtn');
+    const generationsList = document.getElementById('generationsList');
+    const postDetails = document.getElementById('postDetails');
+    const photoInput = document.getElementById('photoInput');
+    const photoResults = document.getElementById('photoResults');
+    const simpleTitle = document.getElementById('simpleTitle');
+    const simpleName = document.getElementById('simpleName');
+    const simpleDescription = document.getElementById('simpleDescription');
+    const simpleActive = document.getElementById('simpleActive');
+    const simpleSaveBtn = document.getElementById('simpleSaveBtn');
 
-    const screens = {
-      main: document.getElementById('screen-main'),
-      platform: document.getElementById('screen-platform'),
-      manual: document.getElementById('screen-manual'),
-      loading: document.getElementById('screen-loading'),
-      result: document.getElementById('screen-result'),
-      telegram: document.getElementById('screen-telegram'),
-      telegramManual: document.getElementById('screen-telegram-manual'),
-      telegramText: document.getElementById('screen-telegram-text'),
-      telegramResult: document.getElementById('screen-telegram-result')
+    const selects = {
+      style: document.getElementById('styleSelect'),
+      color: document.getElementById('colorSelect'),
+      print: document.getElementById('printSelect'),
+      material: document.getElementById('materialSelect'),
     };
 
-    const el = {
-      error: document.getElementById('error-text'),
-      scene: document.getElementById('scene-style'),
-      mount: document.getElementById('mounting-type'),
-      color: document.getElementById('color'),
-      prompt: document.getElementById('prompt'),
-      img: document.getElementById('result-image'),
-      balanceRow: document.getElementById('balance-row'),
-      balanceOpenrouter: document.getElementById('balance-openrouter'),
-      balanceKieai: document.getElementById('balance-kieai'),
-      telegramTopic: document.getElementById('telegram-topic'),
-      telegramPostType: document.getElementById('telegram-post-type'),
-      telegramTextOnly: document.getElementById('telegram-text-only'),
-      telegramTextWithImage: document.getElementById('telegram-text-with-image'),
-      telegramImage: document.getElementById('telegram-result-image')
+    const platforms = [
+      { key: 'pinterest', title: 'Pinterest', label: '📌 Pinterest' },
+      { key: 'telegram', title: 'Telegram', label: '✈️ Telegram' },
+      { key: 'instagram', title: 'Instagram', label: '📸 Instagram' },
+      { key: 'dzen', title: 'Яндекс.Дзен', label: '📖 Яндекс.Дзен' },
+    ];
+
+    const statusMap = {
+      done: '✅ Готово',
+      processing: '⏳ Генерируется',
+      queue: '🕐 Ожидание',
+      error: '❌ Ошибка',
     };
 
-    const globalErrorNodes = Array.from(document.querySelectorAll('[data-global-error]'));
+    const photoCollections = {
+      style: { title: 'Стиль', collection: 'styles' },
+      color: { title: 'Цвет', collection: 'colors' },
+      print: { title: 'Принт', collection: 'prints' },
+      material: { title: 'Материал', collection: 'materials' },
+    };
 
-    let currentRecordId = null;
-    let currentPrompt = '';
-    let currentImageUrl = '';
-    let currentText = '';
-    let currentPlatform = 'pinterest';
+    let currentScreen = 'home';
+    let screenHistory = [];
+    let selectedPlatform = null;
+    let references = null;
+    let generations = [];
+    let selectedGeneration = null;
+    let pollingTimer = null;
+    let simpleCollection = 'post_types';
+    let toastTimer = null;
 
-    function checkAccess() {
-      return true;
+    function initTelegram() {
+      if (!tg) return;
+      tg.expand();
+      tg.BackButton.onClick(goBack);
     }
 
-    function applyTelegramTheme() {
-      const t = tg?.themeParams || {};
-      const root = document.documentElement.style;
-      if (t.button_color) root.setProperty('--primary', t.button_color);
-      if (t.destructive_text_color) root.setProperty('--danger', t.destructive_text_color);
-      root.setProperty('--button-text', t.button_text_color || '#ffffff');
+    function showToast(message) {
+      clearTimeout(toastTimer);
+      toastEl.textContent = message;
+      toastEl.classList.add('show');
+      toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3000);
     }
 
-    function showScreen(name) {
-      Object.values(screens).forEach(s => s.classList.remove('active'));
-      screens[name].classList.add('active');
-    }
-
-    function clearGlobalError() {
-      globalErrorNodes.forEach(node => {
-        node.style.display = 'none';
-        node.textContent = '';
+    async function request(url, options = {}) {
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(options.headers || {}),
+        },
       });
+      if (!response.ok) throw new Error('Ошибка сети');
+      const text = await response.text();
+      return text ? JSON.parse(text) : {};
     }
 
-    function showGlobalError(message, err) {
-      const text = String(message || 'Неизвестная ошибка');
-      console.error(text, err || '');
-      globalErrorNodes.forEach(node => {
-        node.textContent = text;
-        node.style.display = 'block';
-      });
-    }
-
-    async function apiGet(url, params = {}, options = {}) {
-      const u = new URL(url);
-      Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, String(v)));
-      try {
-        const res = await fetch(u.toString(), { method: 'GET' });
-        if (!res.ok) throw new Error('HTTP ' + res.status + ' для ' + u.pathname);
-        const ct = res.headers.get('content-type') || '';
-        if (ct.includes('application/json')) return res.json();
-        const text = await res.text();
-        try { return JSON.parse(text); } catch { return { raw: text }; }
-      } catch (err) {
-        if (!options.silent) showGlobalError('Ошибка запроса: ' + (err?.message || err), err);
-        else console.error('Ошибка запроса:', err);
-        throw err;
+    function setButtonLoading(button, isLoading, text = 'Загрузка...') {
+      if (!button) return;
+      if (isLoading) {
+        button.dataset.text = button.textContent;
+        button.textContent = text;
+        button.disabled = true;
+      } else {
+        button.textContent = button.dataset.text || button.textContent;
+        button.disabled = false;
       }
     }
 
-    function extractRecordId(data) {
-      return data?.record_id || data?.recordId || data?.id || data?.data?.record_id || null;
+    function navigate(screen, push = true) {
+      if (push && currentScreen !== screen) screenHistory.push(currentScreen);
+      currentScreen = screen;
+      screens.forEach(item => item.classList.toggle('active', item.id === screen));
+      if (tg) {
+        if (screen === 'home') tg.BackButton.hide();
+        else tg.BackButton.show();
+      }
+      if (screen !== 'generations') stopPolling();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function extractStatus(data) {
-      return data?.status || data?.data?.status || null;
+    function goBack() {
+      const previous = screenHistory.pop();
+      if (previous) navigate(previous, false);
+      else navigate('home', false);
     }
 
-    function extractImageUrl(data) {
-      return data?.image_url || data?.imageUrl || data?.data?.image_url || '';
+    function platformName(key) {
+      const item = platforms.find(platform => platform.key === key);
+      return item ? item.title : key || 'Не указано';
     }
 
-    function extractPrompt(data) {
-      return data?.prompt || data?.data?.prompt || '';
+    function formatDate(value) {
+      if (!value) return 'Дата не указана';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return String(value);
+      return date.toLocaleString('ru-RU', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
     }
 
-    function extractPostText(data) {
-      return data?.text || data?.post_text || data?.caption || data?.data?.text || data?.data?.post_text || '';
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
     }
 
     async function loadBalance() {
       try {
-        const data = await apiGet(WEBHOOKS.balance, {}, { silent: true });
-        const openrouter = data?.openrouter ?? data?.data?.openrouter;
-        const kieai = data?.kieai ?? data?.data?.kieai;
-        if (openrouter == null || kieai == null) return;
-        el.balanceOpenrouter.textContent = 'OpenRouter: ' + openrouter;
-        el.balanceKieai.textContent = 'KieAI: ' + kieai;
-        el.balanceRow.style.display = 'flex';
-      } catch (e) {
-        console.error('Баланс не загружен:', e);
+        const data = await request(API.balance);
+        const value = Number(data.balance);
+        balanceEl.textContent = `💰 Баланс OpenRouter: $${Number.isFinite(value) ? value.toFixed(2) : '—'}`;
+      } catch (error) {
+        showToast(error.message || 'Не удалось загрузить баланс');
       }
     }
 
-    async function startPolling(recordId) {
-      const started = Date.now();
-      currentRecordId = recordId;
-      el.error.textContent = '';
-      showScreen('loading');
-
-      while (Date.now() - started < POLL_TIMEOUT) {
-        const s = await apiGet(WEBHOOKS.status, { record_id: currentRecordId });
-        const status = extractStatus(s);
-
-        if (status === 'ready') {
-          currentImageUrl = extractImageUrl(s);
-          const readyPrompt = extractPrompt(s);
-          if (readyPrompt) currentPrompt = readyPrompt;
-          if (!currentImageUrl) throw new Error('Нет image_url в статусе');
-          el.img.src = currentImageUrl;
-          showScreen('result');
-          return;
-        }
-
-        if (status !== 'pending') {
-          throw new Error('Неожиданный статус: ' + status);
-        }
-
-        await new Promise(r => setTimeout(r, POLL_INTERVAL));
-      }
-
-      throw new Error('timeout');
+    function renderPlatforms() {
+      platformList.innerHTML = platforms.map(platform => (
+        `<button data-platform="${platform.key}">${platform.label}</button>`
+      )).join('');
     }
 
-    async function startTelegramPolling(recordId) {
-      const started = Date.now();
-      currentRecordId = recordId;
-      el.error.textContent = '';
-      showScreen('loading');
-
-      while (Date.now() - started < POLL_TIMEOUT) {
-        const s = await apiGet(WEBHOOKS.telegramStatus, { record_id: currentRecordId });
-        const status = extractStatus(s);
-        if (status === 'ready') {
-          currentImageUrl = extractImageUrl(s);
-          const txt = extractPostText(s);
-          if (txt) currentText = txt;
-          if (currentImageUrl) {
-            el.telegramImage.src = currentImageUrl;
-            el.telegramTextWithImage.textContent = currentText;
-            showScreen('telegramResult');
-          } else {
-            el.telegramTextOnly.textContent = currentText;
-            showScreen('telegramText');
-          }
-          return;
-        }
-        if (status !== 'pending') throw new Error('Неожиданный статус: ' + status);
-        await new Promise(r => setTimeout(r, POLL_INTERVAL));
-      }
-
-      throw new Error('timeout');
+    async function openSettings(platformKey) {
+      selectedPlatform = platformKey;
+      settingsTitle.textContent = platformName(platformKey);
+      navigate('settings');
+      if (!references) await loadReferences();
     }
 
-    async function runWithLoading(task) {
+    async function loadReferences() {
+      setButtonLoading(generateBtn, true);
       try {
-        clearGlobalError();
-        el.error.textContent = '';
-        showScreen('loading');
-        await task();
-      } catch (e) {
-        console.error(e);
-        showGlobalError(e.message || 'Неизвестная ошибка', e);
-        el.error.textContent = e.message === 'timeout' ? 'Попробуйте ещё раз' : ('Ошибка: ' + e.message);
+        references = await request(API.getReferences);
+        fillSelect(selects.style, references.styles || []);
+        fillSelect(selects.color, references.colors || []);
+        fillSelect(selects.print, references.prints || []);
+        fillSelect(selects.material, references.materials || []);
+      } catch (error) {
+        showToast(error.message || 'Не удалось загрузить справочники');
+      } finally {
+        setButtonLoading(generateBtn, false);
       }
     }
 
-    async function startAuto() {
-      await runWithLoading(async () => {
-        const data = await apiGet(WEBHOOKS.auto);
-        const id = extractRecordId(data);
-        if (!id) throw new Error('record_id не получен');
-        currentPrompt = extractPrompt(data);
-        await startPolling(id);
-      });
+    function fillSelect(select, items) {
+      select.innerHTML = '<option value="">Не выбрано</option>' + items.map(item => (
+        `<option value="${escapeHtml(item.id || item.short_name)}" data-name="${escapeHtml(item.short_name)}" data-description="${escapeHtml(item.tech_description || '')}">${escapeHtml(item.short_name)}</option>`
+      )).join('');
     }
 
-    async function startTelegramAuto() {
-      await runWithLoading(async () => {
-        const data = await apiGet(WEBHOOKS.telegramAuto);
-        const id = extractRecordId(data);
-        if (!id) throw new Error('record_id не получен');
-        await startTelegramPolling(id);
-      });
+    function getSelected(select) {
+      const option = select.options[select.selectedIndex];
+      return {
+        name: option ? option.dataset.name || '' : '',
+        description: option ? option.dataset.description || '' : '',
+      };
     }
 
-    async function startTelegramManualText() {
-      await runWithLoading(async () => {
-        const data = await apiGet(WEBHOOKS.telegramManualText, {
-          topic: el.telegramTopic.value,
-          post_type: el.telegramPostType.value
+    async function createGeneration(extra = {}) {
+      const mode = document.querySelector('input[name="mode"]:checked').value;
+      let payload = {
+        platform: selectedPlatform,
+        mode,
+        params: {},
+        ...extra,
+      };
+
+      if (mode === 'manual' && !extra.regenerate) {
+        const style = getSelected(selects.style);
+        const color = getSelected(selects.color);
+        const print = getSelected(selects.print);
+        const material = getSelected(selects.material);
+        payload.params = {
+          style: style.name,
+          style_description: style.description,
+          color: color.name,
+          color_description: color.description,
+          print: print.name,
+          print_description: print.description,
+          material: material.name,
+          material_description: material.description,
+        };
+      }
+
+      setButtonLoading(generateBtn, true, 'Отправка...');
+      try {
+        await request(API.newGeneration, {
+          method: 'POST',
+          body: JSON.stringify(payload),
         });
-        const id = extractRecordId(data);
-        if (!id) throw new Error('record_id не получен');
-        await startTelegramPolling(id);
-      });
+        showToast('✅ Задача добавлена в очередь');
+        navigate('home');
+      } catch (error) {
+        showToast(error.message || 'Не удалось создать задачу');
+      } finally {
+        setButtonLoading(generateBtn, false);
+      }
     }
 
-    async function startManual() {
-      await runWithLoading(async () => {
-        currentPrompt = el.prompt.value.trim();
-        const data = await apiGet(WEBHOOKS.manual, {
-          scene_style: el.scene.value,
-          mounting_type: el.mount.value,
-          color: el.color.value,
-          prompt: currentPrompt
+    async function loadGenerations(showLoading = true) {
+      if (showLoading) generationsList.innerHTML = '<div class="loading">Загрузка...</div>';
+      try {
+        const data = await request(API.getGenerations);
+        generations = Array.isArray(data) ? data : [];
+        renderGenerations();
+        const hasActive = generations.some(item => item.status === 'queue' || item.status === 'processing');
+        if (hasActive) startPolling();
+        else stopPolling();
+      } catch (error) {
+        generationsList.innerHTML = '<div class="empty">Не удалось загрузить список</div>';
+        showToast(error.message || 'Ошибка загрузки');
+      }
+    }
+
+    function renderGenerations() {
+      if (!generations.length) {
+        generationsList.innerHTML = '<div class="empty">Генераций пока нет</div>';
+        return;
+      }
+      generationsList.innerHTML = generations.map(item => {
+        const status = item.status || 'queue';
+        return `
+          <article class="card tap-card" data-generation="${escapeHtml(item.id)}">
+            <div class="row">
+              <div class="status ${escapeHtml(status)}">${statusMap[status] || status}</div>
+              <div class="muted">${escapeHtml(platformName(item.platform))}</div>
+            </div>
+            <div class="muted" style="margin-top: 8px;">${escapeHtml(formatDate(item.created))}</div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function startPolling() {
+      if (pollingTimer) return;
+      pollingTimer = setInterval(() => loadGenerations(false), 5000);
+    }
+
+    function stopPolling() {
+      if (!pollingTimer) return;
+      clearInterval(pollingTimer);
+      pollingTimer = null;
+    }
+
+    function openPost(id) {
+      selectedGeneration = generations.find(item => String(item.id) === String(id));
+      if (!selectedGeneration) {
+        showToast('Запись не найдена');
+        return;
+      }
+      renderPost();
+      navigate('post');
+    }
+
+    function renderPost() {
+      const item = selectedGeneration;
+      const params = item.params && typeof item.params === 'object' ? item.params : {};
+      const paramsHtml = Object.keys(params).length
+        ? `<div class="card params">${Object.entries(params).map(([key, value]) => `
+            <div class="param-row">
+              <div class="param-key">${escapeHtml(key)}</div>
+              <div class="param-value">${escapeHtml(typeof value === 'object' ? JSON.stringify(value) : value)}</div>
+            </div>
+          `).join('')}</div>`
+        : '';
+
+      const errorHtml = item.status === 'error'
+        ? `<div class="card"><div class="status error">❌ Ошибка</div><div class="muted" style="margin-top: 8px;">${escapeHtml(item.error || 'Текст ошибки не указан')}</div></div><button id="retryBtn">🔁 Повторить</button>`
+        : '';
+
+      postDetails.innerHTML = `
+        ${item.image_url ? `<img class="post-image" src="${escapeHtml(item.image_url)}" alt="Изображение поста">` : ''}
+        ${item.post_text ? `<div class="card post-text">${escapeHtml(item.post_text)}</div>` : ''}
+        ${paramsHtml}
+        ${errorHtml}
+        <button id="regenImageBtn">🔄 Перегенерировать картинку</button>
+        ${item.platform === 'pinterest' ? '' : '<button id="regenTextBtn">🔄 Перегенерировать текст</button>'}
+        ${item.image_url ? '<button id="downloadImageBtn" class="secondary">⬇️ Скачать картинку</button>' : ''}
+        <button id="deleteGenerationBtn" class="danger">🗑 Удалить</button>
+      `;
+
+      bindPostButtons();
+    }
+
+    function bindPostButtons() {
+      const item = selectedGeneration;
+      const base = {
+        platform: item.platform,
+        mode: 'manual',
+        params: item.params || {},
+        generation_id: item.id,
+      };
+
+      document.getElementById('regenImageBtn')?.addEventListener('click', event => {
+        postGeneration({ ...base, regenerate: 'image' }, event.currentTarget);
+      });
+      document.getElementById('regenTextBtn')?.addEventListener('click', event => {
+        postGeneration({ ...base, regenerate: 'text' }, event.currentTarget);
+      });
+      document.getElementById('retryBtn')?.addEventListener('click', event => {
+        postGeneration(base, event.currentTarget);
+      });
+      document.getElementById('downloadImageBtn')?.addEventListener('click', downloadImage);
+      document.getElementById('deleteGenerationBtn')?.addEventListener('click', deleteGeneration);
+    }
+
+    async function postGeneration(payload, button) {
+      setButtonLoading(button, true, 'Отправка...');
+      try {
+        await request(API.newGeneration, {
+          method: 'POST',
+          body: JSON.stringify(payload),
         });
-        const id = extractRecordId(data);
-        if (!id) throw new Error('record_id не получен');
-        await startPolling(id);
-      });
+        showToast('✅ Задача добавлена в очередь');
+        navigate('home');
+      } catch (error) {
+        showToast(error.message || 'Не удалось отправить задачу');
+      } finally {
+        setButtonLoading(button, false);
+      }
     }
 
-    async function regenerate() {
-      await runWithLoading(async () => {
-        if (!currentRecordId) throw new Error('record_id отсутствует');
-
-        const statusData = await apiGet(WEBHOOKS.status, { record_id: currentRecordId });
-        const statusPrompt = extractPrompt(statusData);
-        if (statusPrompt) currentPrompt = statusPrompt;
-        if (!currentPrompt) throw new Error('В ответе status нет поля prompt');
-
-        const data = await apiGet(WEBHOOKS.regenerate, {
-          record_id: currentRecordId,
-          prompt: currentPrompt
+    async function deleteGeneration(event) {
+      const button = event.currentTarget;
+      setButtonLoading(button, true, 'Удаление...');
+      try {
+        await request(API.deleteGen, {
+          method: 'POST',
+          body: JSON.stringify({ generation_id: selectedGeneration.id }),
         });
-        const newId = extractRecordId(data);
-        if (!newId) throw new Error('Новый record_id не получен');
-        await startPolling(newId);
-      });
+        showToast('✅ Удалено');
+        navigate('generations');
+        await loadGenerations();
+      } catch (error) {
+        showToast(error.message || 'Не удалось удалить');
+      } finally {
+        setButtonLoading(button, false);
+      }
     }
 
-    async function telegramRegenerateText() {
-      await runWithLoading(async () => {
-        if (!currentRecordId) throw new Error('record_id отсутствует');
-        const data = await apiGet(WEBHOOKS.telegramRegenerateText, {
-          record_id: currentRecordId,
-          topic: el.telegramTopic.value,
-          post_type: el.telegramPostType.value
+    function downloadImage() {
+      if (!selectedGeneration?.image_url) return;
+      const link = document.createElement('a');
+      link.href = selectedGeneration.image_url;
+      link.download = `post-${selectedGeneration.id || Date.now()}.jpg`;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
+
+    function openSimpleForm(collection, title) {
+      simpleCollection = collection;
+      simpleTitle.textContent = title;
+      simpleName.value = '';
+      simpleDescription.value = '';
+      simpleActive.checked = true;
+      navigate('simpleForm');
+    }
+
+    async function saveSimple() {
+      const shortName = simpleName.value.trim();
+      if (!shortName) {
+        showToast('Укажите краткое название');
+        return;
+      }
+      setButtonLoading(simpleSaveBtn, true);
+      try {
+        await request(API.saveElement, {
+          method: 'POST',
+          body: JSON.stringify({
+            collection: simpleCollection,
+            short_name: shortName,
+            tech_description: simpleDescription.value.trim(),
+            active: simpleActive.checked,
+          }),
         });
-        const id = extractRecordId(data);
-        if (!id) throw new Error('record_id не получен');
-        await startTelegramPolling(id);
+        showToast('✅ Сохранено');
+        navigate('add');
+      } catch (error) {
+        showToast(error.message || 'Не удалось сохранить');
+      } finally {
+        setButtonLoading(simpleSaveBtn, false);
+      }
+    }
+
+    function choosePhoto() {
+      photoInput.click();
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('Не удалось прочитать фото'));
+        reader.readAsDataURL(file);
       });
     }
 
-    async function telegramGenerateImage() {
-      await runWithLoading(async () => {
-        if (!currentRecordId) throw new Error('record_id отсутствует');
-        const imagePrompt = currentText || extractPrompt(await apiGet(WEBHOOKS.telegramStatus, { record_id: currentRecordId }));
-        const data = await apiGet(WEBHOOKS.telegramManualImage, {
-          record_id: currentRecordId,
-          image_prompt: imagePrompt
+    async function analyzePhoto(file) {
+      if (!file) return;
+      const button = document.getElementById('choosePhotoBtn');
+      setButtonLoading(button, true, 'Анализ...');
+      photoResults.innerHTML = '';
+      try {
+        const image = await fileToBase64(file);
+        const data = await request(API.analyzePhoto, {
+          method: 'POST',
+          body: JSON.stringify({ image }),
         });
-        const id = extractRecordId(data);
-        if (!id) throw new Error('record_id не получен');
-        await startTelegramPolling(id);
-      });
+        renderPhotoResults(data);
+      } catch (error) {
+        showToast(error.message || 'Не удалось проанализировать фото');
+      } finally {
+        setButtonLoading(button, false);
+        photoInput.value = '';
+      }
     }
 
-    async function telegramRegenerateImage() {
-      await runWithLoading(async () => {
-        if (!currentRecordId) throw new Error('record_id отсутствует');
-        const imagePrompt = currentText || extractPrompt(await apiGet(WEBHOOKS.telegramStatus, { record_id: currentRecordId }));
-        const data = await apiGet(WEBHOOKS.telegramRegenerateImage, {
-          record_id: currentRecordId,
-          image_prompt: imagePrompt
+    function renderPhotoResults(data) {
+      photoResults.innerHTML = Object.entries(photoCollections).map(([key, meta]) => {
+        const item = data[key] || {};
+        return `
+          <article class="card stack" data-photo-card="${key}">
+            <div class="platform-title">${meta.title}</div>
+            <label class="field">Название<input type="text" value="${escapeHtml(item.name || '')}" data-role="name"></label>
+            <label class="field">Тех. описание<textarea data-role="description">${escapeHtml(item.tech_description || '')}</textarea></label>
+            <button data-role="save">💾 Сохранить</button>
+          </article>
+        `;
+      }).join('');
+    }
+
+    async function savePhotoCard(card) {
+      const key = card.dataset.photoCard;
+      const meta = photoCollections[key];
+      const button = card.querySelector('[data-role="save"]');
+      const shortName = card.querySelector('[data-role="name"]').value.trim();
+      const description = card.querySelector('[data-role="description"]').value.trim();
+      if (!shortName) {
+        showToast('Укажите название');
+        return;
+      }
+      setButtonLoading(button, true);
+      try {
+        await request(API.saveElement, {
+          method: 'POST',
+          body: JSON.stringify({
+            collection: meta.collection,
+            short_name: shortName,
+            tech_description: description,
+            active: true,
+          }),
         });
-        const id = extractRecordId(data);
-        if (!id) throw new Error('record_id не получен');
-        await startTelegramPolling(id);
+        button.textContent = '✅ Сохранено';
+        button.disabled = true;
+      } catch (error) {
+        showToast(error.message || 'Не удалось сохранить');
+        setButtonLoading(button, false);
+      }
+    }
+
+    function bindEvents() {
+      document.getElementById('createBtn').addEventListener('click', () => navigate('platform'));
+      document.getElementById('generationsBtn').addEventListener('click', async () => {
+        navigate('generations');
+        await loadGenerations();
+      });
+      document.getElementById('addBtn').addEventListener('click', () => navigate('add'));
+      document.getElementById('photoAddBtn').addEventListener('click', () => navigate('photo'));
+      document.getElementById('newTypeBtn').addEventListener('click', () => openSimpleForm('post_types', 'Новый тип поста'));
+      document.getElementById('newThemeBtn').addEventListener('click', () => openSimpleForm('post_themes', 'Новая тема поста'));
+      document.getElementById('choosePhotoBtn').addEventListener('click', choosePhoto);
+      simpleSaveBtn.addEventListener('click', saveSimple);
+      generateBtn.addEventListener('click', () => createGeneration());
+      photoInput.addEventListener('change', event => analyzePhoto(event.target.files[0]));
+
+      platformList.addEventListener('click', event => {
+        const button = event.target.closest('[data-platform]');
+        if (button) openSettings(button.dataset.platform);
+      });
+
+      document.querySelectorAll('input[name="mode"]').forEach(input => {
+        input.addEventListener('change', () => {
+          manualBox.classList.toggle('active', input.value === 'manual' && input.checked);
+        });
+      });
+
+      generationsList.addEventListener('click', event => {
+        const card = event.target.closest('[data-generation]');
+        if (card) openPost(card.dataset.generation);
+      });
+
+      photoResults.addEventListener('click', event => {
+        const button = event.target.closest('[data-role="save"]');
+        const card = event.target.closest('[data-photo-card]');
+        if (button && card) savePhotoCard(card);
       });
     }
 
-    async function telegramPublish() {
-      await runWithLoading(async () => {
-        if (!currentRecordId) throw new Error('record_id отсутствует');
-        await apiGet(WEBHOOKS.telegramPublish, { record_id: currentRecordId });
-        showScreen('telegram');
-      });
-    }
-
-    document.getElementById('go-pinterest').onclick = () => {
-      clearGlobalError();
-      currentPlatform = 'pinterest';
-      showScreen('platform');
-    };
-    document.getElementById('go-telegram').onclick = () => {
-      clearGlobalError();
-      currentPlatform = 'telegram';
-      showScreen('telegram');
-    };
-    document.getElementById('platform-back').onclick = () => {
-      clearGlobalError();
-      showScreen('main');
-    };
-    document.getElementById('manual-open').onclick = () => {
-      clearGlobalError();
-      showScreen('manual');
-    };
-    document.getElementById('manual-back').onclick = () => {
-      clearGlobalError();
-      showScreen('platform');
-    };
-    document.getElementById('result-back').onclick = () => {
-      clearGlobalError();
-      showScreen('platform');
-    };
-    document.getElementById('telegram-back').onclick = () => {
-      clearGlobalError();
-      showScreen('main');
-    };
-    document.getElementById('telegram-manual-open').onclick = () => {
-      clearGlobalError();
-      showScreen('telegramManual');
-    };
-    document.getElementById('telegram-manual-back').onclick = () => {
-      clearGlobalError();
-      showScreen('telegram');
-    };
-    document.getElementById('telegram-text-back').onclick = () => {
-      clearGlobalError();
-      showScreen('telegram');
-    };
-    document.getElementById('telegram-result-back').onclick = () => {
-      clearGlobalError();
-      showScreen('telegram');
-    };
-
-    document.getElementById('auto-create').onclick = startAuto;
-    document.getElementById('manual-generate').onclick = startManual;
-    document.getElementById('regenerate').onclick = regenerate;
-    document.getElementById('telegram-auto-create').onclick = startTelegramAuto;
-    document.getElementById('telegram-generate-text').onclick = startTelegramManualText;
-    document.getElementById('telegram-regenerate-text').onclick = telegramRegenerateText;
-    document.getElementById('telegram-generate-image').onclick = telegramGenerateImage;
-    document.getElementById('telegram-recreate-text').onclick = telegramRegenerateText;
-    document.getElementById('telegram-recreate-image').onclick = telegramRegenerateImage;
-    document.getElementById('telegram-publish').onclick = telegramPublish;
-    document.getElementById('download').onclick = () => {
-      if (currentImageUrl) window.open(currentImageUrl, '_blank');
-    };
-
-    window.addEventListener('error', (event) => {
-      const msg = event?.error?.message || event?.message || 'Глобальная ошибка';
-      showGlobalError(msg, event?.error || event);
-    });
-
-    window.addEventListener('unhandledrejection', (event) => {
-      const reason = event?.reason;
-      const msg = reason?.message || String(reason || 'Необработанное отклонение Promise');
-      showGlobalError(msg, reason || event);
-    });
-
-    if (!checkAccess()) {
-      document.querySelector('.app').style.display = 'none';
-      document.getElementById('access-denied').style.display = 'flex';
-    } else {
-      applyTelegramTheme();
-      tg?.onEvent?.('themeChanged', applyTelegramTheme);
-      loadBalance();
-    }
+    initTelegram();
+    renderPlatforms();
+    bindEvents();
+    loadBalance();
   </script>
 </body>
 </html>
