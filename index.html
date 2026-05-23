@@ -697,10 +697,19 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    const logicalBack = {
+      platform: 'home',
+      settings: 'platform',
+      generations: 'home',
+      post: 'generations',
+      add: 'home',
+      photo: 'add',
+      simpleForm: 'add',
+    };
+
     function goBack() {
-      const previous = screenHistory.pop();
-      if (previous) navigate(previous, false);
-      else navigate('home', false);
+      const back = logicalBack[currentScreen] || 'home';
+      navigate(back, false);
     }
 
     function platformName(key) {
@@ -924,30 +933,17 @@
       const mode = getMode();
       const count = Number(autoPostCountSelect.value);
       const params = buildTextParams();
-      activeTextParams = params;
       setButtonLoading(generateBtn, true, 'Отправка...');
       try {
-        let firstData = null;
         for (let index = 0; index < count; index += 1) {
-          const data = await postNewGeneration({
+          await postNewGeneration({
             platform: selectedPlatform,
             mode,
             params,
           });
-          if (!firstData) firstData = data;
         }
-
-        if (count > 1) {
-          showToast(`✅ Добавлено ${count} задачи в очередь`);
-          navigate('home');
-          return;
-        }
-
-        const generationId = getGenerationId(firstData || {});
-        if (!generationId) throw new Error('Не получен ID генерации');
-        activeTextGeneration = generationId;
-        showTextLoading();
-        startTextPolling(generationId);
+        showToast(count > 1 ? `✅ Добавлено ${count} задачи в очередь` : '✅ Задача добавлена в очередь');
+        navigate('home');
       } catch (error) {
         showToast(error.message || 'Не удалось создать задачу');
       } finally {
