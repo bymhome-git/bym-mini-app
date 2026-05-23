@@ -317,6 +317,32 @@
       word-break: break-word;
     }
 
+    .params-accordion {
+      padding: 12px 14px;
+      cursor: pointer;
+    }
+
+    .params-accordion summary {
+      list-style: none;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--hint);
+      padding: 2px 0;
+    }
+
+    .params-accordion summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .params-accordion[open] summary {
+      margin-bottom: 10px;
+    }
+
+    .params-body {
+      display: grid;
+      gap: 8px;
+    }
+
     .danger {
       background: var(--danger);
       color: #ffffff;
@@ -614,7 +640,6 @@
     let generations = [];
     let selectedGeneration = null;
     let pollingTimer = null;
-    let postPollingTimer = null;
     let textPollingTimer = null;
     let activeTextGeneration = null;
     let activeTextParams = {};
@@ -668,7 +693,6 @@
         else tg.BackButton.show();
       }
       if (screen !== 'generations') stopPolling();
-      if (screen !== 'post') stopPostPolling();
       if (screen !== 'settings') stopTextPolling();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -1031,7 +1055,7 @@
         const data = await request(API.getGenerations);
         generations = Array.isArray(data) ? data : [];
         renderGenerations();
-        const hasActive = generations.some(item => item.status === 'queue' || item.status === 'processing');
+        const hasActive = generations.some(item => ['queue', 'processing', 'text_done'].includes(item.status));
         if (hasActive) startPolling();
         else stopPolling();
       } catch (error) {
@@ -1070,41 +1094,6 @@
       pollingTimer = null;
     }
 
-    function isActiveGenerationStatus(status) {
-      return status === 'queue' || status === 'processing';
-    }
-
-    function startPostPolling(generationId, initialStatus) {
-      stopPostPolling();
-      const state = { initialStatus, hasStatusChanged: false };
-      pollPostGeneration(generationId, state);
-      postPollingTimer = setInterval(() => pollPostGeneration(generationId, state), 3000);
-    }
-
-    function stopPostPolling() {
-      if (!postPollingTimer) return;
-      clearInterval(postPollingTimer);
-      postPollingTimer = null;
-    }
-
-    async function pollPostGeneration(generationId, state) {
-      try {
-        const data = await request(`${API.getGeneration}?id=${encodeURIComponent(generationId)}`);
-        const item = Array.isArray(data) ? data[0] : data;
-        if (!item?.id) return;
-        selectedGeneration = item;
-        generations = generations.map(generation => (
-          String(generation.id) === String(item.id) ? item : generation
-        ));
-        renderPost();
-        if (item.status !== state.initialStatus) state.hasStatusChanged = true;
-        if (state.hasStatusChanged && !isActiveGenerationStatus(item.status)) stopPostPolling();
-      } catch (error) {
-        stopPostPolling();
-        showToast(error.message || 'Не удалось проверить статус');
-      }
-    }
-
     function openPost(id) {
       selectedGeneration = generations.find(item => String(item.id) === String(id));
       if (!selectedGeneration) {
@@ -1119,25 +1108,36 @@
       const item = selectedGeneration;
       const params = item.params && typeof item.params === 'object' ? item.params : {};
       const imageUrl = getImageUrl(item);
-      const paramsHtml = Object.keys(params).length
-        ? `<div class="card params">${Object.entries(params).map(([key, value]) => `
-            <div class="param-row">
-              <div class="param-key">${escapeHtml(key)}</div>
-              <div class="param-value">${escapeHtml(typeof value === 'object' ? JSON.stringify(value) : value)}</div>
+
+      const visibleParams = Object.entries(params).filter(([key]) => !key.endsWith('_description'));
+      const paramsHtml = visibleParams.length
+        ? `<details class="card params-accordion">
+            <summary>📋 Параметры генерации</summary>
+            <div class="params-body">
+              ${visibleParams.map(([key, value]) => `
+                <div class="param-row">
+                  <div class="param-key">${escapeHtml(key)}</div>
+                  <div class="param-value">${escapeHtml(typeof value === 'object' ? JSON.stringify(value) : String(value))}</div>
+                </div>
+              `).join('')}
             </div>
-          `).join('')}</div>`
-        : '';
+          </details>`
+        : `<div class="muted" style="font-size:13px; padding: 4px 0;">Авто-режим — параметры выбраны ИИ</div>`;
 
       const errorHtml = item.status === 'error'
-        ? `<div class="card"><div class="status error">❌ Ошибка</div><div class="muted" style="margin-top: 8px;">${escapeHtml(item.error || 'Текст ошибки не указан')}</div></div><button id="retryBtn">🔁 Повторить</button>`
+        ? `<div class="card"><div class="status error">❌ Ошибка</div><div class="muted" style="margin-top: 8px;">${escapeHtml(item.error_message || item.error || 'Текст ошибки не указан')}</div></div><button id="retryBtn">🔁 Повторить</button>`
         : '';
+
+      const imageReady = !!imageUrl;
+      const textOnlyReady = item.status === 'text_done' && !imageReady;
+      const regenImageLabel = textOnlyReady ? '🎨 Сгенерировать картинку' : '🔄 Перегенерировать картинку';
 
       postDetails.innerHTML = `
         ${imageUrl ? `<img class="post-image" src="${escapeHtml(imageUrl)}" alt="Изображение поста">` : ''}
         ${item.post_text ? `<div class="card post-text">${escapeHtml(item.post_text)}</div>` : ''}
         ${paramsHtml}
         ${errorHtml}
-        <button id="regenImageBtn">🔄 Перегенерировать картинку</button>
+        <button id="regenImageBtn">${regenImageLabel}</button>
         ${item.platform === 'pinterest' ? '' : '<button id="regenTextBtn">🔄 Перегенерировать текст</button>'}
         ${imageUrl ? '<button id="downloadImageBtn" class="secondary">⬇️ Скачать картинку</button>' : ''}
         <button id="deleteGenerationBtn" class="danger">🗑 Удалить</button>
@@ -1148,22 +1148,65 @@
 
     function bindPostButtons() {
       const item = selectedGeneration;
-      const base = {
-        platform: item.platform,
-        mode: 'manual',
-        params: item.params || {},
-        generation_id: item.id,
-      };
 
-      document.getElementById('regenImageBtn')?.addEventListener('click', event => {
-        regenerateGeneration(event.currentTarget);
+      document.getElementById('regenImageBtn')?.addEventListener('click', async event => {
+        const button = event.currentTarget;
+        setButtonLoading(button, true, 'Отправка...');
+        try {
+          await request(API.regenerate, {
+            method: 'POST',
+            body: JSON.stringify({ generation_id: item.id }),
+          });
+          showToast('✅ Задача добавлена в очередь');
+          navigate('generations');
+          await loadGenerations();
+        } catch (error) {
+          showToast(error.message || 'Не удалось отправить задачу');
+        } finally {
+          setButtonLoading(button, false);
+        }
       });
-      document.getElementById('regenTextBtn')?.addEventListener('click', event => {
-        regenerateGeneration(event.currentTarget);
+
+      document.getElementById('regenTextBtn')?.addEventListener('click', async event => {
+        const button = event.currentTarget;
+        setButtonLoading(button, true, 'Отправка...');
+        try {
+          await request(API.newGeneration, {
+            method: 'POST',
+            body: JSON.stringify({
+              platform: item.platform,
+              mode: item.mode || 'auto',
+              params: item.params || {},
+            }),
+          });
+          showToast('✅ Задача добавлена в очередь');
+          navigate('generations');
+          await loadGenerations();
+        } catch (error) {
+          showToast(error.message || 'Не удалось перегенерировать текст');
+        } finally {
+          setButtonLoading(button, false);
+        }
       });
-      document.getElementById('retryBtn')?.addEventListener('click', event => {
-        postGeneration(base, event.currentTarget);
+
+      document.getElementById('retryBtn')?.addEventListener('click', async event => {
+        const button = event.currentTarget;
+        setButtonLoading(button, true, 'Отправка...');
+        try {
+          await request(API.regenerate, {
+            method: 'POST',
+            body: JSON.stringify({ generation_id: item.id }),
+          });
+          showToast('✅ Повторная задача добавлена в очередь');
+          navigate('generations');
+          await loadGenerations();
+        } catch (error) {
+          showToast(error.message || 'Не удалось повторить');
+        } finally {
+          setButtonLoading(button, false);
+        }
       });
+
       document.getElementById('downloadImageBtn')?.addEventListener('click', downloadImage);
       document.getElementById('deleteGenerationBtn')?.addEventListener('click', deleteGeneration);
     }
@@ -1179,25 +1222,6 @@
         navigate('home');
       } catch (error) {
         showToast(error.message || 'Не удалось отправить задачу');
-      } finally {
-        setButtonLoading(button, false);
-      }
-    }
-
-    async function regenerateGeneration(button) {
-      if (!selectedGeneration?.id) return;
-      const generationId = selectedGeneration.id;
-      const initialStatus = selectedGeneration.status;
-      setButtonLoading(button, true, 'Отправка...');
-      try {
-        await request(API.regenerate, {
-          method: 'POST',
-          body: JSON.stringify({ generation_id: generationId }),
-        });
-        showToast('✅ Задача обновлена');
-        startPostPolling(generationId, initialStatus);
-      } catch (error) {
-        showToast(error.message || 'Не удалось перегенерировать');
       } finally {
         setButtonLoading(button, false);
       }
