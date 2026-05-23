@@ -543,6 +543,7 @@
       syncAirtable:   'https://bymzavod.online/webhook/pb-to-airtable',
       saveElement:    'https://bymzavod.online/webhook/save-element',
       deleteGen:      'https://bymzavod.online/webhook/delete-generation',
+      regenerate:     'https://bymzavod.online/webhook/regenerate-generation',
     };
 
     const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
@@ -613,6 +614,7 @@
     let generations = [];
     let selectedGeneration = null;
     let pollingTimer = null;
+    let postPollingTimer = null;
     let textPollingTimer = null;
     let activeTextGeneration = null;
     let activeTextParams = {};
@@ -666,6 +668,7 @@
         else tg.BackButton.show();
       }
       if (screen !== 'generations') stopPolling();
+      if (screen !== 'post') stopPostPolling();
       if (screen !== 'settings') stopTextPolling();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -1067,6 +1070,41 @@
       pollingTimer = null;
     }
 
+    function isActiveGenerationStatus(status) {
+      return status === 'queue' || status === 'processing';
+    }
+
+    function startPostPolling(generationId, initialStatus) {
+      stopPostPolling();
+      const state = { initialStatus, hasStatusChanged: false };
+      pollPostGeneration(generationId, state);
+      postPollingTimer = setInterval(() => pollPostGeneration(generationId, state), 3000);
+    }
+
+    function stopPostPolling() {
+      if (!postPollingTimer) return;
+      clearInterval(postPollingTimer);
+      postPollingTimer = null;
+    }
+
+    async function pollPostGeneration(generationId, state) {
+      try {
+        const data = await request(`${API.getGeneration}?id=${encodeURIComponent(generationId)}`);
+        const item = Array.isArray(data) ? data[0] : data;
+        if (!item?.id) return;
+        selectedGeneration = item;
+        generations = generations.map(generation => (
+          String(generation.id) === String(item.id) ? item : generation
+        ));
+        renderPost();
+        if (item.status !== state.initialStatus) state.hasStatusChanged = true;
+        if (state.hasStatusChanged && !isActiveGenerationStatus(item.status)) stopPostPolling();
+      } catch (error) {
+        stopPostPolling();
+        showToast(error.message || 'Не удалось проверить статус');
+      }
+    }
+
     function openPost(id) {
       selectedGeneration = generations.find(item => String(item.id) === String(id));
       if (!selectedGeneration) {
@@ -1118,10 +1156,10 @@
       };
 
       document.getElementById('regenImageBtn')?.addEventListener('click', event => {
-        postGeneration({ ...base, regenerate: 'image' }, event.currentTarget);
+        regenerateGeneration(event.currentTarget);
       });
       document.getElementById('regenTextBtn')?.addEventListener('click', event => {
-        postGeneration({ ...base, regenerate: 'text' }, event.currentTarget);
+        regenerateGeneration(event.currentTarget);
       });
       document.getElementById('retryBtn')?.addEventListener('click', event => {
         postGeneration(base, event.currentTarget);
@@ -1141,6 +1179,25 @@
         navigate('home');
       } catch (error) {
         showToast(error.message || 'Не удалось отправить задачу');
+      } finally {
+        setButtonLoading(button, false);
+      }
+    }
+
+    async function regenerateGeneration(button) {
+      if (!selectedGeneration?.id) return;
+      const generationId = selectedGeneration.id;
+      const initialStatus = selectedGeneration.status;
+      setButtonLoading(button, true, 'Отправка...');
+      try {
+        await request(API.regenerate, {
+          method: 'POST',
+          body: JSON.stringify({ generation_id: generationId }),
+        });
+        showToast('✅ Задача обновлена');
+        startPostPolling(generationId, initialStatus);
+      } catch (error) {
+        showToast(error.message || 'Не удалось перегенерировать');
       } finally {
         setButtonLoading(button, false);
       }
