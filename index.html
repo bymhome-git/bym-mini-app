@@ -493,9 +493,9 @@
         <label class="field">Материал<select id="materialSelect"></select></label>
       </div>
 
-      <div id="textManualBox" class="manual-box stack">
-        <label class="field">Тип поста<select id="postTypeSelect"></select></label>
-        <label class="field">Тема поста<select id="postThemeSelect"></select></label>
+      <div id="textParamsBox" class="stack" style="display:none; gap:12px; margin-bottom:14px;">
+        <label class="field">Тип поста <span class="muted" style="font-size:12px;">(необязательно)</span><select id="postTypeSelect"></select></label>
+        <label class="field">Тема поста <span class="muted" style="font-size:12px;">(необязательно)</span><select id="postThemeSelect"></select></label>
       </div>
 
       <div class="stack" style="margin-top: 14px;">
@@ -570,6 +570,7 @@
       saveElement:    'https://bymzavod.online/webhook/save-element',
       deleteGen:      'https://bymzavod.online/webhook/delete-generation',
       regenerate:     'https://bymzavod.online/webhook/regenerate-generation',
+      regenerateText: 'https://bymzavod.online/webhook/regenerate-text',
     };
 
     const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
@@ -841,7 +842,8 @@
       const isCarousel = document.querySelector('input[name="contentSubtype"]:checked')?.value === 'carousel';
 
       pinterestManualBox.classList.toggle('active', selectedPlatform === 'pinterest' && mode === 'manual');
-      textManualBox.classList.toggle('active', textPlatform && mode === 'manual' && !textReady);
+      const textParamsBox = document.getElementById('textParamsBox');
+      if (textParamsBox) textParamsBox.style.display = textPlatform ? 'grid' : 'none';
       autoCountBox.classList.toggle('hidden', textReady);
       instagramSubtypeBox.classList.toggle('hidden', selectedPlatform !== 'instagram' || textReady);
       carouselSlidesBox.classList.toggle('hidden', !isCarousel || selectedPlatform !== 'instagram' || textReady);
@@ -857,10 +859,10 @@
       const postType = getSelected(selects.postType);
       const postTheme = getSelected(selects.postTheme);
       const params = {
-        post_type: mode === 'manual' ? postType.name : '',
-        post_type_description: mode === 'manual' ? postType.description : '',
-        post_theme: mode === 'manual' ? postTheme.name : '',
-        post_theme_description: mode === 'manual' ? postTheme.description : '',
+        post_type: postType.name || '',
+        post_type_description: postType.description || '',
+        post_theme: postTheme.name || '',
+        post_theme_description: postTheme.description || '',
       };
 
       if (selectedPlatform === 'instagram') {
@@ -1167,15 +1169,11 @@
         const button = event.currentTarget;
         setButtonLoading(button, true, 'Отправка...');
         try {
-          await request(API.newGeneration, {
+          await request(API.regenerateText, {
             method: 'POST',
-            body: JSON.stringify({
-              platform: item.platform,
-              mode: item.mode || 'auto',
-              params: item.params || {},
-            }),
+            body: JSON.stringify({ generation_id: item.id }),
           });
-          showToast('✅ Задача добавлена в очередь');
+          showToast('✅ Текст будет перегенерирован');
           navigate('generations');
           await loadGenerations();
         } catch (error) {
