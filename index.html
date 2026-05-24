@@ -637,6 +637,7 @@
       regenerate:     'https://bymzavod.online/webhook/regenerate-generation',
       regenerateText: 'https://bymzavod.online/webhook/regenerate-text',
       getCarouselSlides: 'https://bymzavod.online/webhook/get-carousel-slides',
+      regenerateSlide: 'https://bymzavod.online/webhook/regenerate-slide',
     };
 
     const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
@@ -1274,11 +1275,11 @@
               const slideNum = btn.dataset.slideNum;
               setButtonLoading(btn, true, 'Отправка...');
               try {
-                await request(API.regenerate, {
+                await request(API.regenerateSlide, {
                   method: 'POST',
-                  body: JSON.stringify({ generation_id: item.id, slide_id: slideId, slide_number: Number(slideNum) }),
+                  body: JSON.stringify({ slide_id: slideId }),
                 });
-                showToast('✅ Слайд отправлен на перегенерацию');
+                showToast('✅ Слайд ' + slideNum + ' отправлен на перегенерацию');
               } catch (e) {
                 showToast('Ошибка перегенерации слайда');
               } finally {
