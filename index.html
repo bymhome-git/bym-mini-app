@@ -636,7 +636,7 @@
       deleteGen:      'https://bymzavod.online/webhook/delete-generation',
       regenerate:     'https://bymzavod.online/webhook/regenerate-generation',
       regenerateText: 'https://bymzavod.online/webhook/regenerate-text',
-      getCarouselSlides: 'https://pb.bymzavod.online/api/collections/carousel_slides/records',
+      getCarouselSlides: 'https://bymzavod.online/webhook/get-carousel-slides',
     };
 
     const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
@@ -1170,9 +1170,9 @@
 
     async function loadCarouselSlides(generationId) {
       try {
-        const res = await fetch(`${API.getCarouselSlides}?filter=(generation_id="${generationId}")&sort=slide_number&perPage=20`);
+        const res = await fetch(`${API.getCarouselSlides}?id=${generationId}`);
         const data = await res.json();
-        return data.items || [];
+        return Array.isArray(data) ? data : [];
       } catch {
         return [];
       }
