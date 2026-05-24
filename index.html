@@ -274,6 +274,71 @@
       line-height: 1.3;
     }
 
+    .carousel-container {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      border-radius: 12px;
+      background: var(--tg-theme-secondary-bg-color);
+    }
+
+    .carousel-track {
+      display: flex;
+      transition: transform 0.3s ease;
+    }
+
+    .carousel-slide {
+      min-width: 100%;
+      position: relative;
+    }
+
+    .carousel-slide img {
+      width: 100%;
+      display: block;
+      border-radius: 12px;
+    }
+
+    .carousel-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 10px;
+    }
+
+    .carousel-btn {
+      background: var(--tg-theme-secondary-bg-color);
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      font-size: 16px;
+      cursor: pointer;
+      color: var(--tg-theme-text-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .carousel-counter {
+      font-size: 13px;
+      color: var(--hint);
+      min-width: 40px;
+      text-align: center;
+    }
+
+    .carousel-regen-btn {
+      font-size: 12px;
+      padding: 6px 12px;
+      margin-top: 8px;
+      width: 100%;
+      background: var(--tg-theme-secondary-bg-color);
+      color: var(--tg-theme-text-color);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
     .post-image {
       width: 100%;
       max-height: 460px;
@@ -571,6 +636,7 @@
       deleteGen:      'https://bymzavod.online/webhook/delete-generation',
       regenerate:     'https://bymzavod.online/webhook/regenerate-generation',
       regenerateText: 'https://bymzavod.online/webhook/regenerate-text',
+      getCarouselSlides: 'https://pb.bymzavod.online/api/collections/carousel_slides/records',
     };
 
     const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
@@ -1102,6 +1168,62 @@
       navigate('post');
     }
 
+    async function loadCarouselSlides(generationId) {
+      try {
+        const res = await fetch(`${API.getCarouselSlides}?filter=(generation_id="${generationId}")&sort=slide_number&perPage=20`);
+        const data = await res.json();
+        return data.items || [];
+      } catch {
+        return [];
+      }
+    }
+
+    function buildCarouselHtml(slides) {
+      if (!slides.length) return '';
+      let currentSlide = 0;
+
+      const slidesHtml = slides.map((slide, i) => {
+        const imgUrl = `https://pb.bymzavod.online/api/files/carousel_slides/${slide.id}/${slide.image}`;
+        return `
+          <div class="carousel-slide">
+            <img src="${escapeHtml(imgUrl)}" alt="Слайд ${i + 1}">
+            <button class="carousel-regen-btn" data-slide-id="${slide.id}" data-slide-num="${slide.slide_number}">🔄 Перегенерировать слайд ${slide.slide_number}</button>
+          </div>`;
+      }).join('');
+
+      return `
+        <div class="carousel-container" id="carouselContainer">
+          <div class="carousel-track" id="carouselTrack">
+            ${slidesHtml}
+          </div>
+        </div>
+        <div class="carousel-controls">
+          <button class="carousel-btn" id="carouselPrev">◀</button>
+          <span class="carousel-counter" id="carouselCounter">1 / ${slides.length}</span>
+          <button class="carousel-btn" id="carouselNext">▶</button>
+        </div>`;
+    }
+
+    function initCarousel(total) {
+      let current = 0;
+      const track = document.getElementById('carouselTrack');
+      const counter = document.getElementById('carouselCounter');
+      const prev = document.getElementById('carouselPrev');
+      const next = document.getElementById('carouselNext');
+      if (!track || !counter) return;
+
+      const update = () => {
+        track.style.transform = `translateX(-${current * 100}%)`;
+        counter.textContent = `${current + 1} / ${total}`;
+        prev.disabled = current === 0;
+        next.disabled = current === total - 1;
+      };
+
+      prev.addEventListener('click', () => { if (current > 0) { current--; update(); } });
+      next.addEventListener('click', () => { if (current < total - 1) { current++; update(); } });
+      update();
+    }
+
     function renderPost() {
       const item = selectedGeneration;
       const params = item.params && typeof item.params === 'object' ? item.params : {};
@@ -1129,6 +1251,45 @@
       const imageReady = !!imageUrl;
       const textOnlyReady = item.status === 'text_done' && !imageReady;
       const regenImageLabel = textOnlyReady ? '🎨 Сгенерировать картинку' : '🔄 Перегенерировать картинку';
+
+      const isCarousel = item.platform === 'instagram' && item.params?.post_subtype === 'carousel';
+
+      if (isCarousel && item.status === 'done') {
+        loadCarouselSlides(item.id).then(slides => {
+          const carouselHtml = buildCarouselHtml(slides);
+          postDetails.innerHTML = `
+            ${carouselHtml}
+            ${item.post_text ? `<div class="card post-text">${escapeHtml(item.post_text)}</div>` : ''}
+            ${paramsHtml}
+            ${errorHtml}
+            <button id="regenImageBtn">🔄 Перегенерировать все слайды</button>
+            <button id="regenTextBtn">🔄 Перегенерировать текст</button>
+            <button id="deleteGenerationBtn" class="danger">🗑 Удалить</button>
+          `;
+          initCarousel(slides.length);
+          // Bind individual slide regen buttons
+          document.querySelectorAll('.carousel-regen-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+              const slideId = btn.dataset.slideId;
+              const slideNum = btn.dataset.slideNum;
+              setButtonLoading(btn, true, 'Отправка...');
+              try {
+                await request(API.regenerate, {
+                  method: 'POST',
+                  body: JSON.stringify({ generation_id: item.id, slide_id: slideId, slide_number: Number(slideNum) }),
+                });
+                showToast('✅ Слайд отправлен на перегенерацию');
+              } catch (e) {
+                showToast('Ошибка перегенерации слайда');
+              } finally {
+                setButtonLoading(btn, false);
+              }
+            });
+          });
+          bindPostButtons();
+        });
+        return;
+      }
 
       postDetails.innerHTML = `
         ${imageUrl ? `<img class="post-image" src="${escapeHtml(imageUrl)}" alt="Изображение поста">` : ''}
