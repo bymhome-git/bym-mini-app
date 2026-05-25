@@ -7,16 +7,18 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --bg: var(--tg-theme-bg-color, #0f1014);
-      --text: var(--tg-theme-text-color, #f2f3f7);
-      --hint: var(--tg-theme-hint-color, #8f93a3);
+      --bg: var(--tg-theme-bg-color, #111216);
+      --text: var(--tg-theme-text-color, #f0f0f5);
+      --hint: var(--tg-theme-hint-color, #7a7d8e);
       --button: var(--tg-theme-button-color, #6C63FF);
       --button-text: var(--tg-theme-button-text-color, #ffffff);
-      --card: var(--tg-theme-secondary-bg-color, #1a1c24);
+      --card: var(--tg-theme-secondary-bg-color, #1c1e27);
       --accent: #6C63FF;
+      --accent-soft: rgba(108, 99, 255, 0.15);
       --danger: #ff4d5d;
-      --ok: #39d98a;
-      --shadow: 0 12px 30px rgba(0, 0, 0, 0.24);
+      --ok: #34c47c;
+      --border: rgba(255, 255, 255, 0.07);
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     }
 
     * {
@@ -46,16 +48,18 @@
 
     button,
     .button {
-      min-height: 48px;
+      min-height: 50px;
       width: 100%;
       border: 0;
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 13px 16px;
       background: var(--button);
       color: var(--button-text);
-      font-weight: 700;
+      font-weight: 600;
+      font-size: 15px;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.18s ease;
+      letter-spacing: 0.01em;
     }
 
     button:active {
@@ -86,16 +90,15 @@
     #home.screen.active {
       display: flex;
       flex-direction: column;
-      justify-content: space-evenly;
-      height: 100vh;
+      justify-content: center;
+      gap: 40px;
+      min-height: calc(100vh - 80px);
     }
 
     .home-actions {
       display: flex;
       flex-direction: column;
-      justify-content: space-evenly;
-      min-height: 42vh;
-      gap: 18px;
+      gap: 14px;
     }
 
     @keyframes fade {
@@ -110,15 +113,19 @@
     }
 
     h1 {
-      margin: 0 0 18px;
-      font-size: 28px;
-      line-height: 1.16;
+      margin: 0 0 8px;
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -0.3px;
     }
 
     h2 {
-      margin: 0 0 16px;
-      font-size: 22px;
+      margin: 0 0 18px;
+      font-size: 20px;
+      font-weight: 700;
       line-height: 1.2;
+      letter-spacing: -0.2px;
     }
 
     .stack {
@@ -127,11 +134,11 @@
     }
 
     .card {
-      border-radius: 12px;
+      border-radius: 16px;
       background: var(--card);
-      box-shadow: var(--shadow);
-      padding: 14px;
-      transition: all 0.2s ease;
+      border: 1px solid var(--border);
+      padding: 16px;
+      transition: all 0.18s ease;
     }
 
     .tap-card {
@@ -143,9 +150,9 @@
     }
 
     .balance {
-      margin-bottom: 18px;
       color: var(--hint);
-      font-size: 15px;
+      font-size: 14px;
+      font-weight: 500;
     }
 
     .muted {
@@ -195,17 +202,19 @@
       min-height: 48px;
       align-items: center;
       justify-content: center;
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
       border-radius: 12px;
       background: var(--card);
       color: var(--hint);
-      font-weight: 700;
-      transition: all 0.2s ease;
+      font-weight: 600;
+      transition: all 0.18s ease;
+      font-size: 14px;
     }
 
     .segmented input:checked + span {
       border-color: var(--accent);
       color: var(--text);
+      background: var(--accent-soft);
       box-shadow: inset 0 0 0 1px var(--accent);
     }
 
@@ -220,19 +229,21 @@
     select,
     textarea {
       width: 100%;
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
       border-radius: 12px;
       outline: none;
-      padding: 12px;
+      padding: 13px 14px;
       background: var(--card);
       color: var(--text);
-      transition: all 0.2s ease;
+      transition: border-color 0.18s ease;
+      font-size: 15px;
     }
 
     input[type="text"]:focus,
     select:focus,
     textarea:focus {
       border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
     }
 
     textarea {
@@ -414,9 +425,10 @@
     }
 
     .secondary {
-      background: var(--card);
+      background: transparent;
       color: var(--text);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
+      font-weight: 500;
     }
 
     .file-input {
@@ -447,19 +459,24 @@
       position: fixed;
       left: 14px;
       right: 14px;
-      bottom: calc(16px + env(safe-area-inset-bottom));
+      bottom: calc(20px + env(safe-area-inset-bottom));
       z-index: 20;
       max-width: 560px;
       margin: 0 auto;
-      border-radius: 12px;
-      padding: 13px 15px;
-      background: rgba(28, 30, 38, 0.96);
+      border-radius: 14px;
+      padding: 14px 16px;
+      background: rgba(32, 34, 44, 0.97);
+      border: 1px solid var(--border);
       color: var(--text);
-      box-shadow: var(--shadow);
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       opacity: 0;
       pointer-events: none;
-      transform: translateY(10px);
-      transition: all 0.2s ease;
+      transform: translateY(12px);
+      transition: all 0.22s ease;
     }
 
     .toast.show {
@@ -596,8 +613,13 @@
       <h2>Добавить</h2>
       <div class="stack">
         <button id="photoAddBtn">📷 Добавить из фото</button>
-        <button id="newTypeBtn">Новый тип поста</button>
-        <button id="newThemeBtn">Новая тема поста</button>
+        <button id="newStyleBtn">🎨 Новый стиль</button>
+        <button id="newColorBtn">🎨 Новый цвет</button>
+        <button id="newPrintBtn">🖼 Новый принт</button>
+        <button id="newMaterialBtn">🧵 Новый материал</button>
+        <button id="newFasteningBtn">🔗 Новый тип крепления</button>
+        <button id="newTypeBtn">📋 Новый тип поста</button>
+        <button id="newThemeBtn">💡 Новая тема поста</button>
       </div>
     </section>
 
@@ -910,7 +932,7 @@
 
       pinterestManualBox.classList.toggle('active', selectedPlatform === 'pinterest' && mode === 'manual');
       const textParamsBox = document.getElementById('textParamsBox');
-      if (textParamsBox) textParamsBox.style.display = textPlatform ? 'grid' : 'none';
+      if (textParamsBox) textParamsBox.style.display = (textPlatform && mode === 'manual') ? 'grid' : 'none';
       autoCountBox.classList.toggle('hidden', textReady);
       instagramSubtypeBox.classList.toggle('hidden', selectedPlatform !== 'instagram' || textReady);
       carouselSlidesBox.classList.toggle('hidden', !isCarousel || selectedPlatform !== 'instagram' || textReady);
@@ -1531,6 +1553,11 @@
       });
       document.getElementById('addBtn').addEventListener('click', () => navigate('add'));
       document.getElementById('photoAddBtn').addEventListener('click', () => navigate('photo'));
+      document.getElementById('newStyleBtn').addEventListener('click', () => openSimpleForm('styles', 'Новый стиль'));
+      document.getElementById('newColorBtn').addEventListener('click', () => openSimpleForm('colors', 'Новый цвет'));
+      document.getElementById('newPrintBtn').addEventListener('click', () => openSimpleForm('prints', 'Новый принт'));
+      document.getElementById('newMaterialBtn').addEventListener('click', () => openSimpleForm('materials', 'Новый материал'));
+      document.getElementById('newFasteningBtn').addEventListener('click', () => openSimpleForm('fastening_types', 'Новый тип крепления'));
       document.getElementById('newTypeBtn').addEventListener('click', () => openSimpleForm('post_types', 'Новый тип поста'));
       document.getElementById('newThemeBtn').addEventListener('click', () => openSimpleForm('post_themes', 'Новая тема поста'));
       document.getElementById('choosePhotoBtn').addEventListener('click', choosePhoto);
