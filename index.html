@@ -4,1601 +4,1880 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Контент-завод</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --bg: var(--tg-theme-bg-color, #111216);
-      --text: var(--tg-theme-text-color, #f0f0f5);
-      --hint: var(--tg-theme-hint-color, #7a7d8e);
-      --button: var(--tg-theme-button-color, #6C63FF);
-      --button-text: var(--tg-theme-button-text-color, #ffffff);
-      --card: var(--tg-theme-secondary-bg-color, #1c1e27);
-      --accent: #6C63FF;
-      --accent-soft: rgba(108, 99, 255, 0.15);
-      --danger: #ff4d5d;
-      --ok: #34c47c;
-      --border: rgba(255, 255, 255, 0.07);
-      --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      --bg:           #0A0B14;
+      --bg2:          #0F1019;
+      --card:         #13141E;
+      --card2:        #1A1B28;
+      --border:       rgba(255,255,255,0.07);
+      --border2:      rgba(255,255,255,0.12);
+      --text:         #EEEEF6;
+      --text2:        #8A8AA8;
+      --accent:       #7B5CF6;
+      --accent-light: #9B7BFF;
+      --accent-glow:  rgba(123,92,246,0.28);
+      --accent-soft:  rgba(123,92,246,0.12);
+      --ok:           #22C55E;
+      --ok-soft:      rgba(34,197,94,0.12);
+      --danger:       #EF4444;
+      --danger-soft:  rgba(239,68,68,0.12);
+      --warn:         #F59E0B;
+      --warn-soft:    rgba(245,158,11,0.12);
+      --nav-h:        62px;
+      --radius:       16px;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    html,
-    body {
-      margin: 0;
+    html, body {
       min-height: 100%;
       background: var(--bg);
       color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-      letter-spacing: 0;
+      font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
-      padding: 18px 14px calc(26px + env(safe-area-inset-bottom));
+      padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 8px);
     }
 
-    button,
-    input,
-    select,
-    textarea {
-      font: inherit;
+    .app { max-width: 560px; margin: 0 auto; }
+
+    /* ─── SCREENS ─── */
+    .screen { display: none; }
+    .screen.active { display: block; animation: fadeUp .2s ease both; }
+    #home.screen.active { display: flex; flex-direction: column; }
+    #generations.screen.active,
+    #add.screen.active { display: flex; flex-direction: column; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
-    button,
-    .button {
-      min-height: 50px;
-      width: 100%;
-      border: 0;
-      border-radius: 14px;
-      padding: 13px 16px;
-      background: var(--button);
-      color: var(--button-text);
-      font-weight: 600;
-      font-size: 15px;
-      cursor: pointer;
-      transition: all 0.18s ease;
-      letter-spacing: 0.01em;
-    }
-
-    button:active {
-      transform: scale(0.98);
-    }
-
-    button:disabled {
-      cursor: default;
-      opacity: 0.55;
-      transform: none;
-    }
-
-    .app {
-      width: 100%;
-      max-width: 560px;
-      margin: 0 auto;
-    }
-
-    .screen {
-      display: none;
-      animation: fade 0.18s ease;
-    }
-
-    .screen.active {
-      display: block;
-    }
-
-    #home.screen.active {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 40px;
-      min-height: calc(100vh - 80px);
-    }
-
-    .home-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    @keyframes fade {
-      from {
-        opacity: 0;
-        transform: translateY(4px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    h1 {
-      margin: 0 0 8px;
-      font-size: 26px;
-      font-weight: 700;
-      line-height: 1.2;
-      letter-spacing: -0.3px;
-    }
-
-    h2 {
-      margin: 0 0 18px;
-      font-size: 20px;
-      font-weight: 700;
-      line-height: 1.2;
-      letter-spacing: -0.2px;
-    }
-
-    .stack {
-      display: grid;
-      gap: 12px;
-    }
-
-    .card {
-      border-radius: 16px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      padding: 16px;
-      transition: all 0.18s ease;
-    }
-
-    .tap-card {
-      cursor: pointer;
-    }
-
-    .tap-card:active {
-      transform: scale(0.99);
-    }
-
-    .balance {
-      color: var(--hint);
-      font-size: 14px;
-      font-weight: 500;
-    }
-
-    .muted {
-      color: var(--hint);
-    }
-
-    .row {
+    /* ─── TOP BAR (sub-screens) ─── */
+    .topbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      padding: 14px 16px 10px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: var(--bg);
     }
 
-    .platform-title,
-    .status {
+    .topbar h2 {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.2px;
+      text-align: center;
+      flex: 1;
+    }
+
+    .topbar-side { width: 40px; flex-shrink: 0; }
+
+    .step-pill {
+      font-size: 11px;
       font-weight: 700;
+      color: var(--text2);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 11px;
+      letter-spacing: 0.02em;
     }
 
-    .status.done {
-      color: var(--ok);
+    .status-pill {
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 20px;
+      padding: 4px 10px;
+      white-space: nowrap;
+    }
+    .sp-done       { background: var(--ok-soft);     color: var(--ok); }
+    .sp-processing { background: var(--accent-soft);  color: var(--accent-light); }
+    .sp-queue      { background: var(--warn-soft);    color: var(--warn); }
+    .sp-text_done  { background: var(--accent-soft);  color: var(--accent-light); }
+    .sp-error      { background: var(--danger-soft);  color: var(--danger); }
+
+    /* ─── BOTTOM NAV ─── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: calc(var(--nav-h) + env(safe-area-inset-bottom));
+      background: rgba(13,14,22,0.96);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      padding-top: 10px;
+      z-index: 90;
+      transition: transform .22s ease, opacity .22s ease;
+    }
+    .bottom-nav.off {
+      transform: translateY(100%);
+      opacity: 0;
+      pointer-events: none;
     }
 
-    .status.processing,
-    .status.queue {
-      color: var(--accent);
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      color: var(--text2);
+      transition: color .18s;
+      padding: 2px 4px;
+    }
+    .nav-item.on { color: var(--accent-light); }
+    .nav-item svg { width: 22px; height: 22px; }
+    .nav-label { font-size: 10px; font-weight: 700; letter-spacing: 0.02em; }
+
+    /* ─── HOME ─── */
+    .home-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 16px 0;
     }
 
-    .status.error {
+    .logo-mark {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+    .logo-icon {
+      width: 34px; height: 34px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-light));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px;
+      box-shadow: 0 4px 16px var(--accent-glow);
+    }
+
+    .bal-chip {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .bal-chip .bal-val { color: var(--accent-light); }
+
+    /* Hero */
+    .hero {
+      padding: 28px 16px 16px;
+      position: relative;
+      text-align: center;
+    }
+    .hero-haze {
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 300px; height: 200px;
+      background: radial-gradient(ellipse at 50% 30%, rgba(123,92,246,.16) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-gem {
+      width: 84px; height: 84px;
+      margin: 0 auto 22px;
+      background: linear-gradient(145deg, #1C1530, #281D48);
+      border-radius: 26px;
+      border: 1.5px solid rgba(123,92,246,.35);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 38px;
+      box-shadow: 0 0 48px rgba(123,92,246,.22), 0 12px 40px rgba(0,0,0,.5);
+      position: relative;
+    }
+    .hero-gem::before {
+      content: '';
+      position: absolute;
+      inset: 0; border-radius: 26px;
+      background: linear-gradient(145deg, rgba(123,92,246,.22), transparent 55%);
+    }
+    .hero h1 {
+      font-size: 23px;
+      font-weight: 800;
+      line-height: 1.25;
+      letter-spacing: -0.5px;
+      margin-bottom: 9px;
+    }
+    .hero p {
+      font-size: 14px;
+      color: var(--text2);
+      line-height: 1.55;
+    }
+
+    .home-actions {
+      padding: 8px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* ─── BUTTONS ─── */
+    button, .btn {
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: transform .16s, opacity .16s, box-shadow .16s;
+      letter-spacing: -0.1px;
+    }
+    button:active { transform: scale(0.975); opacity: .88; }
+    button:disabled { opacity: .38; cursor: default; transform: none !important; }
+
+    .btn-primary {
+      width: 100%; min-height: 52px; padding: 14px 20px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+      color: #fff;
+      box-shadow: 0 6px 24px var(--accent-glow);
+    }
+    .btn-primary:active { box-shadow: none; }
+
+    .btn-secondary {
+      width: 100%; min-height: 52px; padding: 14px 20px;
+      background: var(--card2);
+      color: var(--text);
+      border: 1px solid var(--border2);
+    }
+
+    .btn-ghost {
+      width: 100%; min-height: 46px; padding: 11px 16px;
+      background: transparent;
+      color: var(--text2);
+      border: 1px solid var(--border);
+      font-weight: 600;
+    }
+
+    .btn-danger {
+      width: 100%; min-height: 52px; padding: 14px 20px;
+      background: var(--danger-soft);
       color: var(--danger);
+      border: 1px solid rgba(239,68,68,.22);
     }
 
-    .segmented {
+    /* ─── SCREEN BODY ─── */
+    .sbody {
+      padding: 0 16px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* ─── PLATFORM GRID ─── */
+    .plat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .plat-card {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 12px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 11px;
+      cursor: pointer;
+      transition: border-color .18s, background .18s, transform .14s;
+    }
+    .plat-card:active { transform: scale(0.965); }
+    .plat-card.sel {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+
+    .plat-icon {
+      width: 54px; height: 54px;
+      border-radius: 15px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+    }
+    .pi-p { background: rgba(230,0,35,.14); }
+    .pi-t { background: rgba(42,171,238,.14); }
+    .pi-i { background: rgba(225,48,108,.14); }
+    .pi-d { background: rgba(255,102,51,.14); }
+
+    .plat-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* ─── SETTINGS FORM ─── */
+    .mode-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
-      margin-bottom: 14px;
     }
-
-    .segmented input {
-      position: absolute;
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    .segmented span {
-      display: flex;
-      min-height: 48px;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid var(--border);
+    .mode-opt input { position: absolute; opacity: 0; pointer-events: none; }
+    .mode-opt span {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 46px;
       border-radius: 12px;
+      border: 1.5px solid var(--border);
       background: var(--card);
-      color: var(--hint);
-      font-weight: 600;
-      transition: all 0.18s ease;
-      font-size: 14px;
+      color: var(--text2);
+      font-size: 14px; font-weight: 700;
+      transition: all .18s; cursor: pointer;
     }
-
-    .segmented input:checked + span {
+    .mode-opt input:checked + span {
       border-color: var(--accent);
-      color: var(--text);
       background: var(--accent-soft);
-      box-shadow: inset 0 0 0 1px var(--accent);
-    }
-
-    label.field {
-      display: grid;
-      gap: 7px;
-      color: var(--hint);
-      font-size: 13px;
-    }
-
-    input[type="text"],
-    select,
-    textarea {
-      width: 100%;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      outline: none;
-      padding: 13px 14px;
-      background: var(--card);
       color: var(--text);
-      transition: border-color 0.18s ease;
-      font-size: 15px;
+      box-shadow: 0 0 0 1px var(--accent);
     }
 
-    input[type="text"]:focus,
-    select:focus,
-    textarea:focus {
+    .sub-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .sub-opt input { position: absolute; opacity: 0; pointer-events: none; }
+    .sub-opt span {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 42px;
+      border-radius: 11px;
+      border: 1.5px solid var(--border);
+      background: var(--card);
+      color: var(--text2);
+      font-size: 13px; font-weight: 700;
+      transition: all .18s; cursor: pointer;
+      text-align: center; padding: 6px;
+    }
+    .sub-opt input:checked + span {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--text);
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .field .muted-note { font-size: 11px; text-transform: none; letter-spacing: 0; font-weight: 500; }
+
+    input[type="text"], select, textarea {
+      font-family: inherit;
+      font-size: 15px;
+      width: 100%;
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 13px 14px;
+      color: var(--text);
+      outline: none;
+      transition: border-color .18s, box-shadow .18s;
+      -webkit-appearance: none;
+    }
+    input:focus, select:focus, textarea:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 3px var(--accent-soft);
     }
-
-    textarea {
-      min-height: 96px;
-      resize: vertical;
-    }
-
-    .manual-box {
-      display: none;
-    }
-
-    .manual-box.active {
-      display: grid;
-    }
-
-    .hidden,
-    .platform-extra.hidden {
-      display: none !important;
-    }
-
-    .flow-block {
-      margin-top: 14px;
-    }
-
-    .inline-select {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .inline-select select {
-      width: 92px;
-    }
-
-    .generation-title {
-      margin-bottom: 12px;
-      font-weight: 700;
-      line-height: 1.3;
-    }
-
-    .carousel-container {
-      position: relative;
-      width: 100%;
-      overflow: hidden;
-      border-radius: 12px;
-      background: var(--tg-theme-secondary-bg-color);
-    }
-
-    .carousel-track {
-      display: flex;
-      transition: transform 0.3s ease;
-    }
-
-    .carousel-slide {
-      min-width: 100%;
-      position: relative;
-    }
-
-    .carousel-slide img {
-      width: 100%;
-      display: block;
-      border-radius: 12px;
-    }
-
-    .carousel-controls {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      margin-top: 10px;
-    }
-
-    .carousel-btn {
-      background: var(--tg-theme-secondary-bg-color);
-      border: none;
-      border-radius: 50%;
-      width: 36px;
-      height: 36px;
-      font-size: 16px;
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238A8AA8' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
       cursor: pointer;
-      color: var(--tg-theme-text-color);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    }
+    textarea { resize: vertical; min-height: 88px; }
+
+    .check-row {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 14px; font-weight: 600;
+    }
+    .check-row input[type="checkbox"] {
+      width: 18px; height: 18px; accent-color: var(--accent);
     }
 
-    .carousel-counter {
-      font-size: 13px;
-      color: var(--hint);
-      min-width: 40px;
+    .manual-box { display: none; }
+    .manual-box.active { display: flex; flex-direction: column; gap: 10px; }
+
+    .inline-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .inline-row label { font-size: 13px; font-weight: 600; color: var(--text2); flex: 1; }
+    .inline-row select { width: 90px; flex-shrink: 0; }
+
+    .flow-status {
       text-align: center;
+      font-size: 13px; font-weight: 600;
+      color: var(--text2);
+      padding: 8px 0 2px;
     }
+    #generatedTextArea { min-height: 150px; max-height: 250px; overflow: auto; }
 
-    .carousel-regen-btn {
-      font-size: 12px;
-      padding: 6px 12px;
-      margin-top: 8px;
-      width: 100%;
-      background: var(--tg-theme-secondary-bg-color);
-      color: var(--tg-theme-text-color);
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
+    /* ─── GENERATIONS LIST ─── */
+    .filter-bar {
+      display: flex;
+      gap: 7px;
+      padding: 4px 16px 12px;
+      overflow-x: auto;
+      scrollbar-width: none;
     }
+    .filter-bar::-webkit-scrollbar { display: none; }
 
-    .post-image {
-      width: 100%;
-      max-height: 460px;
-      object-fit: cover;
-      border-radius: 12px;
+    .ftab {
+      flex-shrink: 0;
+      padding: 6px 15px;
+      border-radius: 20px;
+      font-size: 12px; font-weight: 700;
       background: var(--card);
+      color: var(--text2);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all .18s;
+    }
+    .ftab.on {
+      background: var(--accent-soft);
+      color: var(--accent-light);
+      border-color: var(--accent);
+    }
+
+    .gen-card {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      padding: 13px 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      cursor: pointer;
+      transition: transform .14s, background .18s;
+    }
+    .gen-card:active { transform: scale(0.985); background: var(--card2); }
+
+    .gen-pi {
+      width: 44px; height: 44px;
+      border-radius: 13px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .gen-body { flex: 1; min-width: 0; }
+    .gen-title {
+      font-size: 14px; font-weight: 700;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 3px;
+    }
+    .gen-meta { font-size: 11px; color: var(--text2); }
+
+    .gen-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .gen-arrow { color: var(--text2); font-size: 14px; }
+
+    /* ─── POST DETAIL ─── */
+    .post-image {
+      width: 100%; max-height: 480px;
+      object-fit: cover;
       display: block;
+      background: var(--card);
     }
-
-    .post-text {
-      max-height: 240px;
-      overflow: auto;
-      white-space: pre-wrap;
-      line-height: 1.45;
+    .post-img-wrap {
+      border-radius: 14px;
+      overflow: hidden;
     }
-
-    #generatedTextArea {
-      min-height: 180px;
-      max-height: 280px;
-      overflow: auto;
-    }
-
-    .params {
-      display: grid;
-      gap: 8px;
-    }
-
-    .param-row {
-      display: grid;
-      grid-template-columns: minmax(110px, 0.7fr) 1fr;
-      gap: 10px;
+    .post-text-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
       font-size: 14px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      max-height: 220px;
+      overflow: auto;
     }
-
-    .param-key {
-      color: var(--hint);
-      word-break: break-word;
+    .error-box {
+      background: var(--danger-soft);
+      border: 1px solid rgba(239,68,68,.18);
+      border-radius: 14px;
+      padding: 14px 16px;
     }
-
-    .param-value {
-      word-break: break-word;
-    }
+    .error-title { color: var(--danger); font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+    .error-msg { color: var(--text2); font-size: 13px; line-height: 1.5; }
 
     .params-accordion {
-      padding: 12px 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
       cursor: pointer;
     }
-
     .params-accordion summary {
       list-style: none;
-      font-weight: 600;
-      font-size: 14px;
-      color: var(--hint);
-      padding: 2px 0;
+      padding: 13px 16px;
+      font-size: 13px; font-weight: 700;
+      color: var(--text2);
+    }
+    .params-accordion summary::-webkit-details-marker { display: none; }
+    .params-accordion[open] summary { border-bottom: 1px solid var(--border); }
+    .params-body { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+    .param-row { display: grid; grid-template-columns: .85fr 1fr; gap: 8px; font-size: 13px; }
+    .param-key { color: var(--text2); }
+
+    /* ─── CAROUSEL ─── */
+    .carousel-wrap { position: relative; overflow: hidden; border-radius: 14px; }
+    .carousel-track { display: flex; transition: transform .3s ease; }
+    .carousel-slide { min-width: 100%; }
+    .carousel-slide img { width: 100%; display: block; }
+    .slide-badge {
+      position: absolute; top: 10px; right: 10px;
+      background: rgba(0,0,0,.65);
+      color: #fff; font-size: 12px; font-weight: 700;
+      padding: 3px 9px; border-radius: 20px;
+      backdrop-filter: blur(8px);
+    }
+    .carousel-nav {
+      display: flex; align-items: center; justify-content: center;
+      gap: 16px; margin-top: 10px;
+    }
+    .car-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--text); display: flex; align-items: center; justify-content: center;
+      font-size: 13px; cursor: pointer;
+    }
+    .car-count { font-size: 13px; color: var(--text2); font-weight: 700; }
+    .carousel-regen-btn {
+      font-size: 12px; padding: 7px 14px; margin-top: 8px;
+      width: 100%;
+      background: var(--card); color: var(--text2);
+      border: 1px solid var(--border); border-radius: 9px;
+      cursor: pointer; font-family: inherit; font-weight: 600;
     }
 
-    .params-accordion summary::-webkit-details-marker {
-      display: none;
-    }
-
-    .params-accordion[open] summary {
-      margin-bottom: 10px;
-    }
-
-    .params-body {
-      display: grid;
-      gap: 8px;
-    }
-
-    .danger {
-      background: var(--danger);
-      color: #ffffff;
-    }
-
-    .secondary {
-      background: transparent;
-      color: var(--text);
+    /* ─── ADD SCREEN ─── */
+    .add-row {
+      display: flex; align-items: center; gap: 13px;
+      padding: 13px 15px;
+      background: var(--card);
       border: 1px solid var(--border);
-      font-weight: 500;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: transform .14s, background .18s;
+      width: 100%; text-align: left;
+      font-family: inherit;
     }
+    .add-row:active { transform: scale(0.98); background: var(--card2); }
+    .add-row-icon {
+      width: 42px; height: 42px; border-radius: 12px;
+      background: var(--accent-soft);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 19px; flex-shrink: 0;
+    }
+    .add-row-body { flex: 1; }
+    .add-row-title { font-size: 14px; font-weight: 700; color: var(--text); }
+    .add-row-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+    .add-row-arr { color: var(--text2); font-size: 16px; flex-shrink: 0; }
 
-    .file-input {
-      display: none;
-    }
+    /* ─── PHOTO RESULTS ─── */
+    .photo-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 
-    .check {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: var(--text);
-    }
-
-    .check input {
-      width: 18px;
-      height: 18px;
-      accent-color: var(--accent);
-    }
-
-    .empty,
-    .loading {
-      padding: 18px 0;
-      color: var(--hint);
-      text-align: center;
-    }
+    /* ─── MISC ─── */
+    .hidden { display: none !important; }
+    .file-input { display: none; }
+    .muted { color: var(--text2); font-size: 13px; }
+    .empty, .loading { padding: 36px 0; text-align: center; color: var(--text2); font-size: 14px; font-weight: 500; }
 
     .toast {
       position: fixed;
-      left: 14px;
-      right: 14px;
-      bottom: calc(20px + env(safe-area-inset-bottom));
-      z-index: 20;
+      left: 14px; right: 14px;
+      bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 10px);
+      z-index: 200;
       max-width: 560px;
       margin: 0 auto;
       border-radius: 14px;
-      padding: 14px 16px;
-      background: rgba(32, 34, 44, 0.97);
-      border: 1px solid var(--border);
-      color: var(--text);
-      font-size: 14px;
-      font-weight: 500;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      opacity: 0;
-      pointer-events: none;
+      padding: 13px 16px;
+      background: rgba(18,19,30,.97);
+      border: 1px solid var(--border2);
+      font-size: 14px; font-weight: 600;
+      box-shadow: 0 8px 36px rgba(0,0,0,.55);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      opacity: 0; pointer-events: none;
       transform: translateY(12px);
-      transition: all 0.22s ease;
+      transition: all .22s ease;
     }
+    .toast.show { opacity: 1; transform: translateY(0); }
 
-    .toast.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    @media (max-width: 380px) {
-      body {
-        padding-left: 10px;
-        padding-right: 10px;
-      }
-
-      h1 {
-        font-size: 24px;
-      }
-
-      .segmented {
-        grid-template-columns: 1fr;
-      }
-
-      .param-row {
-        grid-template-columns: 1fr;
-      }
+    @media (max-width: 360px) {
+      .hero h1 { font-size: 20px; }
+      .plat-grid { gap: 8px; }
     }
   </style>
 </head>
 <body>
-  <main class="app">
-    <section id="home" class="screen active">
-      <h1>🏭 Контент-завод</h1>
-      <div id="balance" class="balance">💰 Баланс OpenRouter: $—</div>
-      <div class="home-actions">
-        <button id="createBtn">Создать пост</button>
-        <button id="generationsBtn">Генерации</button>
-        <button id="addBtn">Добавить</button>
+<main class="app">
+
+  <!-- ════ HOME ════ -->
+  <section id="home" class="screen active">
+    <div class="home-header">
+      <div class="logo-mark">
+        <div class="logo-icon">🏭</div>
+        Контент-завод
       </div>
-    </section>
+      <div id="balance" class="bal-chip">
+        <span class="bal-val" id="balanceValue">—</span>&thinsp;$
+      </div>
+    </div>
 
-    <section id="platform" class="screen">
-      <h2>Выберите платформу</h2>
-      <div id="platformList" class="stack"></div>
-    </section>
+    <div class="hero">
+      <div class="hero-haze"></div>
+      <div class="hero-gem">✨</div>
+      <h1>Создавай контент<br>быстро с ИИ</h1>
+      <p>Выбирай платформу, указывай тему<br>и получай готовые посты</p>
+    </div>
 
-    <section id="settings" class="screen">
-      <h2 id="settingsTitle">Платформа</h2>
-      <div class="segmented">
-        <label>
+    <div class="home-actions">
+      <button id="createBtn" class="btn-primary">+ Создать пост</button>
+      <button id="generationsBtn" class="btn-secondary">📋 Мои генерации</button>
+      <button id="balanceBtn" class="btn-secondary">💰 Баланс</button>
+    </div>
+  </section>
+
+  <!-- ════ BALANCE ════ -->
+  <section id="balanceScreen" class="screen">
+    <div class="topbar">
+      <div class="topbar-side"></div>
+      <h2>Баланс</h2>
+      <div class="topbar-side"></div>
+    </div>
+    <div class="sbody" style="align-items:center; padding-top:48px; gap:28px;">
+      <div style="text-align:center; width:100%;">
+        <div style="font-size:12px; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:14px;">Текущий баланс</div>
+        <div style="display:flex; align-items:baseline; justify-content:center; gap:8px;">
+          <span id="balanceScreenValue" style="font-size:56px; font-weight:800; letter-spacing:-2px; line-height:1;">—</span>
+          <span style="font-size:22px; font-weight:700; color:var(--text2);">USD</span>
+        </div>
+      </div>
+      <div style="width:100%; margin-top:8px;">
+        <button id="topUpBtn" class="btn-primary">💳 Пополнить баланс</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ PLATFORM ════ -->
+  <section id="platform" class="screen">
+    <div class="topbar">
+      <div class="topbar-side"><span class="step-pill">1 из 2</span></div>
+      <h2>Выбери платформу</h2>
+      <div class="topbar-side"></div>
+    </div>
+    <div class="sbody">
+      <div id="platformList" class="plat-grid"></div>
+    </div>
+  </section>
+
+  <!-- ════ SETTINGS ════ -->
+  <section id="settings" class="screen">
+    <div class="topbar">
+      <div class="topbar-side"><span class="step-pill">2 из 2</span></div>
+      <h2 id="settingsTitle">Настройки</h2>
+      <div class="topbar-side"></div>
+    </div>
+    <div class="sbody">
+
+      <div class="mode-row">
+        <label class="mode-opt">
           <input type="radio" name="mode" value="auto" checked>
           <span>⚡ Авто</span>
         </label>
-        <label>
+        <label class="mode-opt">
           <input type="radio" name="mode" value="manual">
-          <span>🎛 Ручная настройка</span>
+          <span>🎛 Ручная</span>
         </label>
       </div>
 
-      <div id="instagramSubtypeBox" class="flow-block hidden">
-        <div class="segmented">
-          <label>
+      <!-- Instagram subtype -->
+      <div id="instagramSubtypeBox" class="hidden">
+        <div class="sub-row">
+          <label class="sub-opt">
             <input type="radio" name="contentSubtype" value="single" checked>
             <span>📷 Одно фото</span>
           </label>
-          <label>
+          <label class="sub-opt">
             <input type="radio" name="contentSubtype" value="carousel">
             <span>🎠 Карусель</span>
           </label>
         </div>
-        <label id="carouselSlidesBox" class="field hidden">Количество слайдов
+        <label id="carouselSlidesBox" class="field hidden" style="margin-top:10px;">Количество слайдов
           <select id="carouselSlidesSelect">
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
+            <option value="2">2</option><option value="3">3</option>
+            <option value="4">4</option><option value="5">5</option>
+            <option value="6">6</option><option value="7">7</option>
             <option value="8">8</option>
           </select>
         </label>
       </div>
 
-      <label id="autoCountBox" class="field flow-block">Количество постов
+      <label id="autoCountBox" class="field">Количество постов
         <select id="autoPostCountSelect">
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
+          <option value="1">1</option><option value="2">2</option>
+          <option value="3">3</option><option value="4">4</option>
           <option value="5">5</option>
         </select>
       </label>
 
-      <div id="pinterestManualBox" class="manual-box stack">
+      <!-- Pinterest manual -->
+      <div id="pinterestManualBox" class="manual-box">
         <label class="field">Стиль<select id="styleSelect"></select></label>
         <label class="field">Цвет<select id="colorSelect"></select></label>
         <label class="field">Принт<select id="printSelect"></select></label>
         <label class="field">Материал<select id="materialSelect"></select></label>
       </div>
 
-      <div id="textParamsBox" class="stack" style="display:none; gap:12px; margin-bottom:14px;">
-        <label class="field">Тип поста <span class="muted" style="font-size:12px;">(необязательно)</span><select id="postTypeSelect"></select></label>
-        <label class="field">Тема поста <span class="muted" style="font-size:12px;">(необязательно)</span><select id="postThemeSelect"></select></label>
+      <!-- Text platforms manual -->
+      <div id="textParamsBox" style="display:none; flex-direction:column; gap:10px;">
+        <label class="field">Тип поста&ensp;<span class="muted-note muted">(необязательно)</span>
+          <select id="postTypeSelect"></select></label>
+        <label class="field">Тема поста&ensp;<span class="muted-note muted">(необязательно)</span>
+          <select id="postThemeSelect"></select></label>
       </div>
 
-      <div class="stack" style="margin-top: 14px;">
-        <button id="generateBtn">Сгенерировать</button>
-      </div>
+      <button id="generateBtn" class="btn-primary">Сгенерировать</button>
 
-      <div id="textFlowBox" class="stack flow-block hidden">
-        <div id="textStatus" class="loading">Ожидание текста...</div>
-        <label class="field">Текст поста<textarea id="generatedTextArea"></textarea></label>
-        <button id="regenerateTextBtn" class="secondary">🔄 Перегенерировать текст</button>
-        <label class="field inline-select">Количество вариантов картинки
+      <!-- Text flow -->
+      <div id="textFlowBox" style="display:none; flex-direction:column; gap:10px;">
+        <div id="textStatus" class="flow-status">Ожидание текста...</div>
+        <label class="field">Текст поста
+          <textarea id="generatedTextArea"></textarea>
+        </label>
+        <button id="regenerateTextBtn" class="btn-ghost">🔄 Перегенерировать текст</button>
+        <div class="inline-row">
+          <label>Количество вариантов картинки</label>
           <select id="imageCountSelect">
             <option value="1" selected>1</option>
             <option value="2">2</option>
             <option value="3">3</option>
           </select>
-        </label>
-        <button id="generateImageBtn">🎨 Сгенерировать картинку</button>
+        </div>
+        <button id="generateImageBtn" class="btn-primary">🎨 Сгенерировать картинку</button>
       </div>
-    </section>
 
-    <section id="generations" class="screen">
-      <h2>Генерации</h2>
-      <div id="generationsList" class="stack"></div>
-    </section>
+    </div>
+  </section>
 
-    <section id="post" class="screen">
-      <h2>Карточка поста</h2>
-      <div id="postDetails" class="stack"></div>
-    </section>
+  <!-- ════ GENERATIONS ════ -->
+  <section id="generations" class="screen">
+    <div class="topbar" style="padding-bottom: 4px;">
+      <div class="topbar-side"></div>
+      <h2>Мои генерации</h2>
+      <div class="topbar-side"></div>
+    </div>
+    <div class="filter-bar" id="filterBar">
+      <div class="ftab on" data-f="all">Все</div>
+      <div class="ftab" data-f="done">Готовые</div>
+      <div class="ftab" data-f="processing">В работе</div>
+      <div class="ftab" data-f="error">Ошибки</div>
+    </div>
+    <div class="sbody" style="padding-top:0;">
+      <div id="generationsList"></div>
+    </div>
+  </section>
 
-    <section id="add" class="screen">
+  <!-- ════ POST DETAIL ════ -->
+  <section id="post" class="screen">
+    <div class="topbar">
+      <div class="topbar-side"></div>
+      <h2 id="postPlatformTitle">Пост</h2>
+      <div class="topbar-side" id="postStatusWrap"></div>
+    </div>
+    <div id="postDetails" class="sbody"></div>
+  </section>
+
+  <!-- ════ ADD ════ -->
+  <section id="add" class="screen">
+    <div class="topbar" style="padding-bottom: 4px;">
+      <div class="topbar-side"></div>
       <h2>Добавить</h2>
-      <div class="stack">
-        <button id="photoAddBtn">📷 Добавить из фото</button>
-        <button id="newStyleBtn">🎨 Новый стиль</button>
-        <button id="newColorBtn">🎨 Новый цвет</button>
-        <button id="newPrintBtn">🖼 Новый принт</button>
-        <button id="newMaterialBtn">🧵 Новый материал</button>
-        <button id="newFasteningBtn">🔗 Новый тип крепления</button>
-        <button id="newTypeBtn">📋 Новый тип поста</button>
-        <button id="newThemeBtn">💡 Новая тема поста</button>
-      </div>
-    </section>
+      <div class="topbar-side"></div>
+    </div>
+    <div class="sbody">
+      <button id="photoAddBtn" class="add-row">
+        <div class="add-row-icon">📷</div>
+        <div class="add-row-body">
+          <div class="add-row-title">Добавить из фото</div>
+          <div class="add-row-sub">ИИ распознаёт стиль, цвет и материал</div>
+        </div>
+        <span class="add-row-arr">›</span>
+      </button>
+      <button id="newStyleBtn" class="add-row">
+        <div class="add-row-icon">🎨</div>
+        <div class="add-row-body"><div class="add-row-title">Новый стиль</div><div class="add-row-sub">Интерьерный стиль</div></div>
+        <span class="add-row-arr">›</span>
+      </button>
+      <button id="newColorBtn" class="add-row">
+        <div class="add-row-icon">🌈</div>
+        <div class="add-row-body"><div class="add-row-title">Новый цвет</div><div class="add-row-sub">Цвет шторки</div></div>
+        <span class="add-row-arr">›</span>
+      </button>
+      <button id="newPrintBtn" class="add-row">
+        <div class="add-row-icon">🖼</div>
+        <div class="add-row-body"><div class="add-row-title">Новый принт</div><div class="add-row-sub">Паттерн или принт</div></div>
+        <span class="add-row-arr">›</span>
+      </button>
+      <button id="newMaterialBtn" class="add-row">
+        <div class="add-row-icon">🧵</div>
+        <div class="add-row-body"><div class="add-row-title">Новый материал</div><div class="add-row-sub">Тип ткани</div></div>
+        <span class="add-row-arr">›</span>
+      </button>
+      <button id="newFasteningBtn" class="add-row">
+        <div class="add-row-icon">🔗</div>
+        <div class="add-row-body"><div class="add-row-title">Новый тип крепления</div><div class="add-row-sub">Способ крепления</div></div>
+        <span class="add-row-arr">›</span>
+      </button>
+      <button id="newTypeBtn" class="add-row">
+        <div class="add-row-icon">📋</div>
+        <div class="add-row-body"><div class="add-row-title">Новый тип поста</div><div class="add-row-sub">Формат публикации</div></div>
+        <span class="add-row-arr">›</span>
+      </button>
+      <button id="newThemeBtn" class="add-row">
+        <div class="add-row-icon">💡</div>
+        <div class="add-row-body"><div class="add-row-title">Новая тема поста</div><div class="add-row-sub">Тематика контента</div></div>
+        <span class="add-row-arr">›</span>
+      </button>
+    </div>
+  </section>
 
-    <section id="photo" class="screen">
+  <!-- ════ PHOTO ════ -->
+  <section id="photo" class="screen">
+    <div class="topbar">
+      <div class="topbar-side"></div>
       <h2>Добавить из фото</h2>
-      <div class="stack">
-        <button id="choosePhotoBtn">📷 Выбрать фото</button>
-        <input id="photoInput" class="file-input" type="file" accept="image/*">
-        <div id="photoResults" class="stack"></div>
-      </div>
-    </section>
+      <div class="topbar-side"></div>
+    </div>
+    <div class="sbody">
+      <button id="choosePhotoBtn" class="btn-primary">📷 Выбрать фото</button>
+      <input id="photoInput" class="file-input" type="file" accept="image/*">
+      <div id="photoResults" style="display:flex; flex-direction:column; gap:10px;"></div>
+    </div>
+  </section>
 
-    <section id="simpleForm" class="screen">
+  <!-- ════ SIMPLE FORM ════ -->
+  <section id="simpleForm" class="screen">
+    <div class="topbar">
+      <div class="topbar-side"></div>
       <h2 id="simpleTitle">Новая запись</h2>
-      <div class="stack">
-        <label class="field">Краткое название<input id="simpleName" type="text" autocomplete="off"></label>
-        <label class="field">Тех. описание<textarea id="simpleDescription"></textarea></label>
-        <label class="check"><input id="simpleActive" type="checkbox" checked> Активно</label>
-        <button id="simpleSaveBtn">Сохранить</button>
+      <div class="topbar-side"></div>
+    </div>
+    <div class="sbody">
+      <label class="field">Краткое название
+        <input id="simpleName" type="text" autocomplete="off">
+      </label>
+      <label class="field">Тех. описание
+        <textarea id="simpleDescription"></textarea>
+      </label>
+      <label class="check-row">
+        <input id="simpleActive" type="checkbox" checked> Активно
+      </label>
+      <button id="simpleSaveBtn" class="btn-primary">Сохранить</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- ════ BOTTOM NAV ════ -->
+<nav class="bottom-nav" id="bottomNav">
+  <div class="nav-item on" id="nav-home" onclick="navTo('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+      <polyline points="9 22 9 12 15 12 15 22"/>
+    </svg>
+    <span class="nav-label">Главная</span>
+  </div>
+  <div class="nav-item" id="nav-generations" onclick="navTo('generations')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="7" rx="1"/>
+      <rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="14" y="14" width="7" height="7" rx="1"/>
+      <rect x="3" y="14" width="7" height="7" rx="1"/>
+    </svg>
+    <span class="nav-label">Генерации</span>
+  </div>
+  <div class="nav-item" id="nav-add" onclick="navTo('add')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/>
+      <line x1="12" y1="8" x2="12" y2="16"/>
+      <line x1="8" y1="12" x2="16" y2="12"/>
+    </svg>
+    <span class="nav-label">Добавить</span>
+  </div>
+</nav>
+
+<div id="toast" class="toast"></div>
+
+<script>
+  const API = {
+    balance:           'https://bymzavod.online/webhook/openrouter-balance',
+    newGeneration:     'https://bymzavod.online/webhook/new-generation',
+    getGeneration:     'https://bymzavod.online/webhook/get-generation',
+    getGenerations:    'https://bymzavod.online/webhook/get-generations',
+    getReferences:     'https://bymzavod.online/webhook/get-references',
+    analyzePhoto:      'https://bymzavod.online/webhook/analyze-photo',
+    syncAirtable:      'https://bymzavod.online/webhook/pb-to-airtable',
+    saveElement:       'https://bymzavod.online/webhook/save-element',
+    deleteGen:         'https://bymzavod.online/webhook/delete-generation',
+    regenerate:        'https://bymzavod.online/webhook/regenerate-generation',
+    regenerateText:    'https://bymzavod.online/webhook/regenerate-text',
+    getCarouselSlides: 'https://bymzavod.online/webhook/get-carousel-slides',
+    regenerateSlide:   'https://bymzavod.online/webhook/regenerate-slide',
+  };
+
+  // ── DOM refs ──
+  const tg = window.Telegram?.WebApp ?? null;
+  const screens         = document.querySelectorAll('.screen');
+  const toastEl         = document.getElementById('toast');
+  const balanceEl       = document.getElementById('balance');
+  const balanceValueEl  = document.getElementById('balanceValue');
+  const platformList    = document.getElementById('platformList');
+  const settingsTitle   = document.getElementById('settingsTitle');
+  const pinterestManualBox   = document.getElementById('pinterestManualBox');
+  const autoCountBox         = document.getElementById('autoCountBox');
+  const autoPostCountSelect  = document.getElementById('autoPostCountSelect');
+  const instagramSubtypeBox  = document.getElementById('instagramSubtypeBox');
+  const carouselSlidesBox    = document.getElementById('carouselSlidesBox');
+  const carouselSlidesSelect = document.getElementById('carouselSlidesSelect');
+  const generateBtn          = document.getElementById('generateBtn');
+  const textFlowBox          = document.getElementById('textFlowBox');
+  const textStatus           = document.getElementById('textStatus');
+  const generatedTextArea    = document.getElementById('generatedTextArea');
+  const regenerateTextBtn    = document.getElementById('regenerateTextBtn');
+  const imageCountSelect     = document.getElementById('imageCountSelect');
+  const generateImageBtn     = document.getElementById('generateImageBtn');
+  const generationsList      = document.getElementById('generationsList');
+  const postDetails          = document.getElementById('postDetails');
+  const photoInput           = document.getElementById('photoInput');
+  const photoResults         = document.getElementById('photoResults');
+  const simpleTitle          = document.getElementById('simpleTitle');
+  const simpleName           = document.getElementById('simpleName');
+  const simpleDescription    = document.getElementById('simpleDescription');
+  const simpleActive         = document.getElementById('simpleActive');
+  const simpleSaveBtn        = document.getElementById('simpleSaveBtn');
+  const bottomNav            = document.getElementById('bottomNav');
+
+  const selects = {
+    style:     document.getElementById('styleSelect'),
+    color:     document.getElementById('colorSelect'),
+    print:     document.getElementById('printSelect'),
+    material:  document.getElementById('materialSelect'),
+    postType:  document.getElementById('postTypeSelect'),
+    postTheme: document.getElementById('postThemeSelect'),
+  };
+
+  // ── Data ──
+  const platformSVGs = {
+    pinterest: `<svg viewBox="0 0 24 24" width="28" height="28" fill="#E60023" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>`,
+    telegram:  `<svg viewBox="0 0 24 24" width="28" height="28" fill="#2AABEE" xmlns="http://www.w3.org/2000/svg"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>`,
+    instagram: `<svg viewBox="0 0 24 24" width="28" height="28" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ig" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#F77737"/><stop offset="30%" stop-color="#E1306C"/><stop offset="65%" stop-color="#833AB4"/><stop offset="100%" stop-color="#405DE6"/></linearGradient></defs><path fill="url(#ig)" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>`,
+    dzen:      `<svg viewBox="0 0 24 24" width="28" height="28" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#FC3F1D"/><path d="M12.48 11.52c.77-.2 1.62-.6 2.35-1.33.74-.73 1.13-1.58 1.33-2.35.04-.16.07-.31.1-.46H13c-.29 1.14-.77 1.98-1.38 2.59-.61.61-1.45 1.09-2.59 1.38v.31c1.14.29 1.98.77 2.59 1.38.61.61 1.09 1.45 1.38 2.59h3.26c-.03-.15-.06-.3-.1-.46-.2-.77-.59-1.62-1.33-2.35-.73-.73-1.58-1.12-2.35-1.3zM7 7.38c.03.15.06.3.1.46.2.77.6 1.62 1.33 2.35.73.73 1.58 1.13 2.35 1.33l.31-.01V8.25c-1.14-.29-1.98-.77-2.59-1.38-.01 0-.03-.02-.04-.03L7 7.38zm3.78 5.66c-.77.2-1.62.6-2.35 1.33-.73.73-1.13 1.58-1.33 2.35-.04.16-.07.31-.1.46l1.46-.46c.61-.61 1.45-1.09 2.59-1.38v-2.31l-.27.01z" fill="white"/></svg>`,
+  };
+  const platformSVGsSm = {
+    pinterest: `<svg viewBox="0 0 24 24" width="22" height="22" fill="#E60023" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>`,
+    telegram:  `<svg viewBox="0 0 24 24" width="22" height="22" fill="#2AABEE" xmlns="http://www.w3.org/2000/svg"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>`,
+    instagram: `<svg viewBox="0 0 24 24" width="22" height="22" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ig" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#F77737"/><stop offset="30%" stop-color="#E1306C"/><stop offset="65%" stop-color="#833AB4"/><stop offset="100%" stop-color="#405DE6"/></linearGradient></defs><path fill="url(#ig)" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>`,
+    dzen:      `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="12" fill="#FC3F1D"/><path d="M12.48 11.52c.77-.2 1.62-.6 2.35-1.33.74-.73 1.13-1.58 1.33-2.35.04-.16.07-.31.1-.46H13c-.29 1.14-.77 1.98-1.38 2.59-.61.61-1.45 1.09-2.59 1.38v.31c1.14.29 1.98.77 2.59 1.38.61.61 1.09 1.45 1.38 2.59h3.26c-.03-.15-.06-.3-.1-.46-.2-.77-.59-1.62-1.33-2.35-.73-.73-1.58-1.12-2.35-1.3zM7 7.38c.03.15.06.3.1.46.2.77.6 1.62 1.33 2.35.73.73 1.58 1.13 2.35 1.33l.31-.01V8.25c-1.14-.29-1.98-.77-2.59-1.38-.01 0-.03-.02-.04-.03L7 7.38zm3.78 5.66c-.77.2-1.62.6-2.35 1.33-.73.73-1.13 1.58-1.33 2.35-.04.16-.07.31-.1.46l1.46-.46c.61-.61 1.45-1.09 2.59-1.38v-2.31l-.27.01z" fill="white"/></svg>`,
+  };
+  const platforms = [
+    { key: 'pinterest', title: 'Pinterest',    cls: 'pi-p' },
+    { key: 'telegram',  title: 'Telegram',     cls: 'pi-t' },
+    { key: 'instagram', title: 'Instagram',    cls: 'pi-i' },
+    { key: 'dzen',      title: 'Яндекс.Дзен', cls: 'pi-d' },
+  ];
+
+  const statusMap = {
+    done:       '✅ Готово',
+    processing: '⏳ Обработка',
+    queue:      '🕐 Ожидание',
+    text_done:  '📝 Текст готов',
+    error:      '❌ Ошибка',
+  };
+
+  const statusPillClass = {
+    done:      'sp-done',
+    processing:'sp-processing',
+    queue:     'sp-queue',
+    text_done: 'sp-text_done',
+    error:     'sp-error',
+  };
+
+  const photoCollections = {
+    style:    { title: 'Стиль',    collection: 'styles' },
+    color:    { title: 'Цвет',     collection: 'colors' },
+    print:    { title: 'Принт',    collection: 'prints' },
+    material: { title: 'Материал', collection: 'materials' },
+  };
+
+  // ── State ──
+  let currentScreen       = 'home';
+  let screenHistory       = [];
+  let selectedPlatform    = null;
+  let references          = null;
+  let generations         = [];
+  let generationsFilter   = 'all';
+  let selectedGeneration  = null;
+  let pollingTimer        = null;
+  let textPollingTimer    = null;
+  let activeTextGeneration = null;
+  let activeTextParams    = {};
+  let simpleCollection    = 'post_types';
+  let toastTimer          = null;
+
+  const NAV_SCREENS = new Set(['home', 'generations', 'add']);
+
+  const logicalBack = {
+    platform:      'home',
+    balanceScreen: 'home',
+    settings:   'platform',
+    generations:'home',
+    post:       'generations',
+    add:        'home',
+    photo:      'add',
+    simpleForm: 'add',
+  };
+
+  // ── Init ──
+  function initTelegram() {
+    if (!tg) return;
+    tg.expand();
+    tg.BackButton.onClick(goBack);
+  }
+
+  // ── Navigation ──
+  function navigate(screen, push = true) {
+    if (push && currentScreen !== screen) screenHistory.push(currentScreen);
+    currentScreen = screen;
+    screens.forEach(s => s.classList.toggle('active', s.id === screen));
+
+    // bottom nav
+    const showNav = NAV_SCREENS.has(screen);
+    bottomNav.classList.toggle('off', !showNav);
+    document.querySelectorAll('.nav-item').forEach(el => {
+      el.classList.toggle('on', el.id === 'nav-' + screen);
+    });
+
+    if (tg) {
+      if (screen === 'home') tg.BackButton.hide();
+      else tg.BackButton.show();
+    }
+    if (screen !== 'generations') stopPolling();
+    if (screen !== 'settings') stopTextPolling();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function navTo(screen) {
+    if (screen === 'generations') {
+      navigate(screen);
+      loadGenerations();
+    } else {
+      navigate(screen);
+    }
+  }
+
+  function goBack() {
+    navigate(logicalBack[currentScreen] || 'home', false);
+  }
+
+  // ── Toast ──
+  function showToast(msg) {
+    clearTimeout(toastTimer);
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3000);
+  }
+
+  // ── HTTP ──
+  async function request(url, options = {}) {
+    const response = await fetch(url, {
+      ...options,
+      headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+    });
+    if (!response.ok) throw new Error('Ошибка сети');
+    const text = await response.text();
+    return text ? JSON.parse(text) : {};
+  }
+
+  // ── Button loader ──
+  function setButtonLoading(button, isLoading, text = 'Загрузка...') {
+    if (!button) return;
+    if (isLoading) {
+      button.dataset.text = button.textContent;
+      button.textContent = text;
+      button.disabled = true;
+    } else {
+      button.textContent = button.dataset.text || button.textContent;
+      button.disabled = false;
+    }
+  }
+
+  // ── Helpers ──
+  function platformData(key) {
+    return platforms.find(p => p.key === key) || { title: key, icon: '📄', cls: '' };
+  }
+  function platformName(key) { return platformData(key).title; }
+
+  function formatDate(value) {
+    if (!value) return '';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return String(value);
+    return d.toLocaleString('ru-RU', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+  }
+
+  function getImageUrl(item) {
+    if (!item?.image_url) return '';
+    if (/^https?:\/\//i.test(item.image_url)) return item.image_url;
+    return `https://pb.bymzavod.online/api/files/generations/${item.id}/${item.image_url}`;
+  }
+
+  function getGenerationTitle(item) {
+    const p = item.params && typeof item.params === 'object' ? item.params : {};
+    if (p.post_theme) return p.post_theme;
+    if (p.style && p.color) return `${p.style}, ${p.color}`;
+    return 'Авто-генерация';
+  }
+
+  function escapeHtml(v) {
+    return String(v ?? '')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+  }
+
+  function getGenerationId(data) {
+    return data.generation_id || data.id || data?.data?.generation_id || data?.data?.id || '';
+  }
+
+  // ── Balance ──
+  async function loadBalance() {
+    try {
+      const data = await request(API.balance);
+      const v = Number(data.balance);
+      const txt = Number.isFinite(v) ? v.toFixed(2) : '—';
+      balanceValueEl.textContent = txt;
+      const sv = document.getElementById('balanceScreenValue');
+      if (sv) sv.textContent = txt;
+    } catch {
+      balanceValueEl.textContent = '—';
+    }
+  }
+
+  async function openBalanceScreen() {
+    navigate('balanceScreen');
+    // Refresh balance when opening the screen
+    try {
+      const data = await request(API.balance);
+      const v = Number(data.balance);
+      const txt = Number.isFinite(v) ? v.toFixed(2) : '—';
+      balanceValueEl.textContent = txt;
+      const sv = document.getElementById('balanceScreenValue');
+      if (sv) sv.textContent = txt;
+    } catch { /* silent */ }
+  }
+
+  // ── Platforms ──
+  function renderPlatforms() {
+    platformList.innerHTML = platforms.map(p => `
+      <div class="plat-card" data-platform="${p.key}">
+        <div class="plat-icon ${p.cls}">${platformSVGs[p.key] || ''}</div>
+        <span class="plat-name">${p.title}</span>
       </div>
-    </section>
-  </main>
+    `).join('');
+  }
 
-  <div id="toast" class="toast"></div>
+  async function openSettings(key) {
+    selectedPlatform = key;
+    settingsTitle.textContent = platformName(key);
+    document.querySelector('input[name="mode"][value="auto"]').checked = true;
+    document.querySelector('input[name="contentSubtype"][value="single"]').checked = true;
+    resetTextFlow();
+    updateSettingsView();
+    navigate('settings');
+    if (!references) await loadReferences();
+  }
 
-  <script>
-    const API = {
-      balance:        'https://bymzavod.online/webhook/openrouter-balance',
-      newGeneration:  'https://bymzavod.online/webhook/new-generation',
-      getGeneration:  'https://bymzavod.online/webhook/get-generation',
-      getGenerations: 'https://bymzavod.online/webhook/get-generations',
-      getReferences:  'https://bymzavod.online/webhook/get-references',
-      analyzePhoto:   'https://bymzavod.online/webhook/analyze-photo',
-      syncAirtable:   'https://bymzavod.online/webhook/pb-to-airtable',
-      saveElement:    'https://bymzavod.online/webhook/save-element',
-      deleteGen:      'https://bymzavod.online/webhook/delete-generation',
-      regenerate:     'https://bymzavod.online/webhook/regenerate-generation',
-      regenerateText: 'https://bymzavod.online/webhook/regenerate-text',
-      getCarouselSlides: 'https://bymzavod.online/webhook/get-carousel-slides',
-      regenerateSlide: 'https://bymzavod.online/webhook/regenerate-slide',
-    };
+  // ── References ──
+  async function loadReferences() {
+    setButtonLoading(generateBtn, true);
+    try {
+      const data = await request(API.getReferences);
+      references = { ...data, post_types: data.post_types || [], post_themes: data.post_themes || [] };
+      fillSelect(selects.style,     references.styles     || []);
+      fillSelect(selects.color,     references.colors     || []);
+      fillSelect(selects.print,     references.prints     || []);
+      fillSelect(selects.material,  references.materials  || []);
+      fillSelect(selects.postType,  references.post_types || []);
+      fillSelect(selects.postTheme, references.post_themes || []);
+    } catch (err) {
+      showToast(err.message || 'Не удалось загрузить справочники');
+    } finally {
+      setButtonLoading(generateBtn, false);
+    }
+  }
 
-    const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
-    const screens = document.querySelectorAll('.screen');
-    const toastEl = document.getElementById('toast');
-    const balanceEl = document.getElementById('balance');
-    const platformList = document.getElementById('platformList');
-    const settingsTitle = document.getElementById('settingsTitle');
-    const pinterestManualBox = document.getElementById('pinterestManualBox');
-    const textManualBox = document.getElementById('textManualBox');
-    const autoCountBox = document.getElementById('autoCountBox');
-    const autoPostCountSelect = document.getElementById('autoPostCountSelect');
-    const instagramSubtypeBox = document.getElementById('instagramSubtypeBox');
-    const carouselSlidesBox = document.getElementById('carouselSlidesBox');
-    const carouselSlidesSelect = document.getElementById('carouselSlidesSelect');
-    const generateBtn = document.getElementById('generateBtn');
-    const textFlowBox = document.getElementById('textFlowBox');
-    const textStatus = document.getElementById('textStatus');
-    const generatedTextArea = document.getElementById('generatedTextArea');
-    const regenerateTextBtn = document.getElementById('regenerateTextBtn');
-    const imageCountSelect = document.getElementById('imageCountSelect');
-    const generateImageBtn = document.getElementById('generateImageBtn');
-    const generationsList = document.getElementById('generationsList');
-    const postDetails = document.getElementById('postDetails');
-    const photoInput = document.getElementById('photoInput');
-    const photoResults = document.getElementById('photoResults');
-    const simpleTitle = document.getElementById('simpleTitle');
-    const simpleName = document.getElementById('simpleName');
-    const simpleDescription = document.getElementById('simpleDescription');
-    const simpleActive = document.getElementById('simpleActive');
-    const simpleSaveBtn = document.getElementById('simpleSaveBtn');
+  function fillSelect(select, items) {
+    select.innerHTML = '<option value="">Не выбрано</option>' + items.map(item =>
+      `<option value="${escapeHtml(item.id || item.short_name)}" data-name="${escapeHtml(item.short_name)}" data-description="${escapeHtml(item.tech_description || '')}">${escapeHtml(item.short_name)}</option>`
+    ).join('');
+  }
 
-    const selects = {
-      style: document.getElementById('styleSelect'),
-      color: document.getElementById('colorSelect'),
-      print: document.getElementById('printSelect'),
-      material: document.getElementById('materialSelect'),
-      postType: document.getElementById('postTypeSelect'),
-      postTheme: document.getElementById('postThemeSelect'),
-    };
+  function getSelected(select) {
+    const opt = select.options[select.selectedIndex];
+    return { name: opt?.dataset.name || '', description: opt?.dataset.description || '' };
+  }
 
-    const platforms = [
-      { key: 'pinterest', title: 'Pinterest', label: '📌 Pinterest' },
-      { key: 'telegram', title: 'Telegram', label: '✈️ Telegram' },
-      { key: 'instagram', title: 'Instagram', label: '📸 Instagram' },
-      { key: 'dzen', title: 'Яндекс.Дзен', label: '📖 Яндекс.Дзен' },
-    ];
+  function getMode() { return document.querySelector('input[name="mode"]:checked').value; }
+  function isTextPlatform() { return selectedPlatform !== 'pinterest'; }
 
-    const statusMap = {
-      done: '✅ Готово',
-      processing: '⏳ Обработка',
-      queue: '🕐 Ожидание',
-      text_done: '📝 Текст готов',
-      error: '❌ Ошибка',
-    };
+  // ── Settings view ──
+  function updateSettingsView() {
+    const mode        = getMode();
+    const textPlatform = isTextPlatform();
+    const textReady   = activeTextGeneration && !textFlowBox.classList.contains('hidden');
+    const isCarousel  = document.querySelector('input[name="contentSubtype"]:checked')?.value === 'carousel';
 
-    const photoCollections = {
-      style: { title: 'Стиль', collection: 'styles' },
-      color: { title: 'Цвет', collection: 'colors' },
-      print: { title: 'Принт', collection: 'prints' },
-      material: { title: 'Материал', collection: 'materials' },
-    };
+    pinterestManualBox.classList.toggle('active', selectedPlatform === 'pinterest' && mode === 'manual');
 
-    let currentScreen = 'home';
-    let screenHistory = [];
-    let selectedPlatform = null;
-    let references = null;
-    let generations = [];
-    let selectedGeneration = null;
-    let pollingTimer = null;
-    let textPollingTimer = null;
-    let activeTextGeneration = null;
-    let activeTextParams = {};
-    let simpleCollection = 'post_types';
-    let toastTimer = null;
-
-    function initTelegram() {
-      if (!tg) return;
-      tg.expand();
-      tg.BackButton.onClick(goBack);
+    const textParamsBox = document.getElementById('textParamsBox');
+    if (textParamsBox) {
+      textParamsBox.style.display = (textPlatform && mode === 'manual') ? 'flex' : 'none';
     }
 
-    function showToast(message) {
-      clearTimeout(toastTimer);
-      toastEl.textContent = message;
-      toastEl.classList.add('show');
-      toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3000);
-    }
+    autoCountBox.classList.toggle('hidden', textReady);
+    instagramSubtypeBox.classList.toggle('hidden', selectedPlatform !== 'instagram' || textReady);
+    carouselSlidesBox.classList.toggle('hidden', !isCarousel || selectedPlatform !== 'instagram' || textReady);
+    generateBtn.textContent = textPlatform ? 'Сгенерировать текст' : 'Сгенерировать';
+  }
 
-    async function request(url, options = {}) {
-      const response = await fetch(url, {
-        ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          ...(options.headers || {}),
-        },
-      });
-      if (!response.ok) throw new Error('Ошибка сети');
-      const text = await response.text();
-      return text ? JSON.parse(text) : {};
-    }
+  // ── Text flow ──
+  function resetTextFlow() {
+    stopTextPolling();
+    activeTextGeneration = null;
+    activeTextParams = {};
+    generatedTextArea.value = '';
+    textStatus.textContent = 'Ожидание текста...';
+    textStatus.classList.remove('hidden');
+    textFlowBox.style.display = 'none';
+    generateBtn.style.display = '';
+  }
 
-    function setButtonLoading(button, isLoading, text = 'Загрузка...') {
-      if (!button) return;
-      if (isLoading) {
-        button.dataset.text = button.textContent;
-        button.textContent = text;
-        button.disabled = true;
-      } else {
-        button.textContent = button.dataset.text || button.textContent;
-        button.disabled = false;
-      }
-    }
+  function showTextLoading() {
+    generateBtn.style.display = 'none';
+    textFlowBox.style.display = 'flex';
+    textStatus.classList.remove('hidden');
+    textStatus.textContent = 'Генерация текста...';
+    generatedTextArea.value = '';
+    generatedTextArea.disabled = true;
+    regenerateTextBtn.textContent = '🔄 Перегенерировать текст';
+    regenerateTextBtn.disabled = true;
+    generateImageBtn.textContent = '🎨 Сгенерировать картинку';
+    generateImageBtn.disabled = true;
+    updateSettingsView();
+  }
 
-    function navigate(screen, push = true) {
-      if (push && currentScreen !== screen) screenHistory.push(currentScreen);
-      currentScreen = screen;
-      screens.forEach(item => item.classList.toggle('active', item.id === screen));
-      if (tg) {
-        if (screen === 'home') tg.BackButton.hide();
-        else tg.BackButton.show();
-      }
-      if (screen !== 'generations') stopPolling();
-      if (screen !== 'settings') stopTextPolling();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+  function showTextReady(item) {
+    stopTextPolling();
+    textStatus.textContent = '📝 Текст готов';
+    generatedTextArea.value = item.post_text || '';
+    generatedTextArea.disabled = false;
+    regenerateTextBtn.disabled = false;
+    generateImageBtn.disabled = false;
+    if (item.params && typeof item.params === 'object') activeTextParams = item.params;
+  }
 
-    const logicalBack = {
-      platform: 'home',
-      settings: 'platform',
-      generations: 'home',
-      post: 'generations',
-      add: 'home',
-      photo: 'add',
-      simpleForm: 'add',
-    };
-
-    function goBack() {
-      const back = logicalBack[currentScreen] || 'home';
-      navigate(back, false);
-    }
-
-    function platformName(key) {
-      const item = platforms.find(platform => platform.key === key);
-      return item ? item.title : key || 'Не указано';
-    }
-
-    function formatDate(value) {
-      if (!value) return 'Дата не указана';
-      const date = new Date(value);
-      if (Number.isNaN(date.getTime())) return String(value);
-      return date.toLocaleString('ru-RU', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    }
-
-    function getImageUrl(item) {
-      if (!item?.image_url) return '';
-      if (/^https?:\/\//i.test(item.image_url)) return item.image_url;
-      return `https://pb.bymzavod.online/api/files/generations/${item.id}/${item.image_url}`;
-    }
-
-    function getGenerationTitle(item) {
-      const params = item.params && typeof item.params === 'object' ? item.params : {};
-      if (params.post_theme) return params.post_theme;
-      if (params.style && params.color) return `${params.style}, ${params.color}`;
-      return 'Авто-генерация';
-    }
-
-    function escapeHtml(value) {
-      return String(value ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-
-    async function loadBalance() {
-      try {
-        const data = await request(API.balance);
-        const value = Number(data.balance);
-        balanceEl.textContent = `💰 Баланс OpenRouter: $${Number.isFinite(value) ? value.toFixed(2) : '—'}`;
-      } catch (error) {
-        showToast(error.message || 'Не удалось загрузить баланс');
-      }
-    }
-
-    function renderPlatforms() {
-      platformList.innerHTML = platforms.map(platform => (
-        `<button data-platform="${platform.key}">${platform.label}</button>`
-      )).join('');
-    }
-
-    async function openSettings(platformKey) {
-      selectedPlatform = platformKey;
-      settingsTitle.textContent = platformName(platformKey);
-      document.querySelector('input[name="mode"][value="auto"]').checked = true;
-      document.querySelector('input[name="contentSubtype"][value="single"]').checked = true;
-      resetTextFlow();
-      updateSettingsView();
-      navigate('settings');
-      if (!references) await loadReferences();
-    }
-
-    async function loadReferences() {
-      setButtonLoading(generateBtn, true);
-      try {
-        const data = await request(API.getReferences);
-        references = {
-          ...data,
-          post_types: data.post_types || [],
-          post_themes: data.post_themes || [],
-        };
-        fillSelect(selects.style, references.styles || []);
-        fillSelect(selects.color, references.colors || []);
-        fillSelect(selects.print, references.prints || []);
-        fillSelect(selects.material, references.materials || []);
-        fillSelect(selects.postType, references.post_types || []);
-        fillSelect(selects.postTheme, references.post_themes || []);
-      } catch (error) {
-        showToast(error.message || 'Не удалось загрузить справочники');
-      } finally {
-        setButtonLoading(generateBtn, false);
-      }
-    }
-
-    function fillSelect(select, items) {
-      select.innerHTML = '<option value="">Не выбрано</option>' + items.map(item => (
-        `<option value="${escapeHtml(item.id || item.short_name)}" data-name="${escapeHtml(item.short_name)}" data-description="${escapeHtml(item.tech_description || '')}">${escapeHtml(item.short_name)}</option>`
-      )).join('');
-    }
-
-    function getSelected(select) {
-      const option = select.options[select.selectedIndex];
-      return {
-        name: option ? option.dataset.name || '' : '',
-        description: option ? option.dataset.description || '' : '',
-      };
-    }
-
-    function getMode() {
-      return document.querySelector('input[name="mode"]:checked').value;
-    }
-
-    function isTextPlatform() {
-      return selectedPlatform !== 'pinterest';
-    }
-
-    function resetTextFlow() {
-      stopTextPolling();
-      activeTextGeneration = null;
-      activeTextParams = {};
-      generatedTextArea.value = '';
-      textStatus.textContent = 'Ожидание текста...';
-      textStatus.classList.remove('hidden');
-      textFlowBox.classList.add('hidden');
-      generateBtn.classList.remove('hidden');
-    }
-
-    function updateSettingsView() {
-      const mode = getMode();
-      const textPlatform = isTextPlatform();
-      const textReady = activeTextGeneration && !textFlowBox.classList.contains('hidden');
-      const isCarousel = document.querySelector('input[name="contentSubtype"]:checked')?.value === 'carousel';
-
-      pinterestManualBox.classList.toggle('active', selectedPlatform === 'pinterest' && mode === 'manual');
-      const textParamsBox = document.getElementById('textParamsBox');
-      if (textParamsBox) textParamsBox.style.display = (textPlatform && mode === 'manual') ? 'grid' : 'none';
-      autoCountBox.classList.toggle('hidden', textReady);
-      instagramSubtypeBox.classList.toggle('hidden', selectedPlatform !== 'instagram' || textReady);
-      carouselSlidesBox.classList.toggle('hidden', !isCarousel || selectedPlatform !== 'instagram' || textReady);
-      generateBtn.textContent = textPlatform ? 'Сгенерировать текст' : 'Сгенерировать';
-    }
-
-    function getGenerationId(data) {
-      return data.generation_id || data.id || data?.data?.generation_id || data?.data?.id || '';
-    }
-
-    function buildTextParams() {
-      const mode = getMode();
-      const postType = getSelected(selects.postType);
-      const postTheme = getSelected(selects.postTheme);
-      const params = {
-        post_type: postType.name || '',
-        post_type_description: postType.description || '',
-        post_theme: postTheme.name || '',
-        post_theme_description: postTheme.description || '',
-      };
-
-      if (selectedPlatform === 'instagram') {
-        const subtype = document.querySelector('input[name="contentSubtype"]:checked')?.value || 'single';
-        if (subtype === 'carousel') {
-          params.post_subtype = 'carousel';
-          params.image_count = Number(carouselSlidesSelect.value);
-        }
-      }
-
-      return params;
-    }
-
-    function buildPinterestParams(mode) {
-      if (mode !== 'manual') return {};
-      const style = getSelected(selects.style);
-      const color = getSelected(selects.color);
-      const print = getSelected(selects.print);
-      const material = getSelected(selects.material);
-      return {
-        style: style.name,
-        style_description: style.description,
-        color: color.name,
-        color_description: color.description,
-        print: print.name,
-        print_description: print.description,
-        material: material.name,
-        material_description: material.description,
-      };
-    }
-
-    async function postNewGeneration(payload) {
-      return request(API.newGeneration, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      });
-    }
-
-    async function createGeneration() {
-      if (selectedPlatform === 'pinterest') {
-        await createPinterestGeneration();
-      } else {
-        await createTextGeneration();
-      }
-    }
-
-    async function createPinterestGeneration() {
-      const mode = getMode();
-      const count = Number(autoPostCountSelect.value);
-      const params = buildPinterestParams(mode);
-      setButtonLoading(generateBtn, true, 'Отправка...');
-      try {
-        for (let index = 0; index < count; index += 1) {
-          await postNewGeneration({
-            platform: selectedPlatform,
-            mode,
-            params,
-          });
-        }
-        showToast(count > 1 ? `✅ Добавлено ${count} задачи в очередь` : '✅ Задача добавлена в очередь');
-        navigate('home');
-      } catch (error) {
-        showToast(error.message || 'Не удалось создать задачу');
-      } finally {
-        setButtonLoading(generateBtn, false);
-      }
-    }
-
-    async function createTextGeneration() {
-      const mode = getMode();
-      const count = Number(autoPostCountSelect.value);
-      const params = buildTextParams();
-      setButtonLoading(generateBtn, true, 'Отправка...');
-      try {
-        for (let index = 0; index < count; index += 1) {
-          await postNewGeneration({
-            platform: selectedPlatform,
-            mode,
-            params,
-          });
-        }
-        showToast(count > 1 ? `✅ Добавлено ${count} задачи в очередь` : '✅ Задача добавлена в очередь');
-        navigate('home');
-      } catch (error) {
-        showToast(error.message || 'Не удалось создать задачу');
-      } finally {
-        setButtonLoading(generateBtn, false);
-      }
-    }
-
-    function showTextLoading() {
-      generateBtn.classList.add('hidden');
-      textFlowBox.classList.remove('hidden');
-      textStatus.classList.remove('hidden');
-      textStatus.textContent = 'Генерация текста...';
-      generatedTextArea.value = '';
-      generatedTextArea.disabled = true;
-      regenerateTextBtn.textContent = '🔄 Перегенерировать текст';
-      regenerateTextBtn.disabled = true;
-      generateImageBtn.textContent = '🎨 Сгенерировать картинку';
-      generateImageBtn.disabled = true;
-      updateSettingsView();
-    }
-
-    function showTextReady(item) {
-      stopTextPolling();
-      textStatus.textContent = '📝 Текст готов';
-      generatedTextArea.value = item.post_text || '';
-      generatedTextArea.disabled = false;
-      regenerateTextBtn.disabled = false;
-      generateImageBtn.disabled = false;
-      if (item.params && typeof item.params === 'object') activeTextParams = item.params;
-    }
-
-    function startTextPolling(generationId) {
-      stopTextPolling();
-      pollTextGeneration(generationId);
-      textPollingTimer = setInterval(() => pollTextGeneration(generationId), 3000);
-    }
-
-    function stopTextPolling() {
-      if (!textPollingTimer) return;
-      clearInterval(textPollingTimer);
-      textPollingTimer = null;
-    }
-
-    async function pollTextGeneration(generationId) {
-      try {
-        const data = await request(`${API.getGeneration}?id=${encodeURIComponent(generationId)}`);
-        const item = Array.isArray(data) ? data[0] : data;
-        if (item.status === 'text_done') showTextReady(item);
-        if (item.status === 'error') {
-          stopTextPolling();
-          textStatus.textContent = item.error || 'Ошибка генерации текста';
-          showToast('Ошибка генерации текста');
-        }
-      } catch (error) {
+  function startTextPolling(id) {
+    stopTextPolling();
+    pollTextGeneration(id);
+    textPollingTimer = setInterval(() => pollTextGeneration(id), 3000);
+  }
+  function stopTextPolling() {
+    if (!textPollingTimer) return;
+    clearInterval(textPollingTimer);
+    textPollingTimer = null;
+  }
+  async function pollTextGeneration(id) {
+    try {
+      const data = await request(`${API.getGeneration}?id=${encodeURIComponent(id)}`);
+      const item = Array.isArray(data) ? data[0] : data;
+      if (item.status === 'text_done') showTextReady(item);
+      if (item.status === 'error') {
         stopTextPolling();
-        showToast(error.message || 'Не удалось проверить статус');
+        textStatus.textContent = item.error || 'Ошибка генерации текста';
+        showToast('Ошибка генерации текста');
+      }
+    } catch (err) {
+      stopTextPolling();
+      showToast(err.message || 'Не удалось проверить статус');
+    }
+  }
+
+  // ── Generation params ──
+  function buildTextParams() {
+    const mode = getMode();
+    const postType  = getSelected(selects.postType);
+    const postTheme = getSelected(selects.postTheme);
+    const params = {
+      post_type:             postType.name  || '',
+      post_type_description: postType.description || '',
+      post_theme:            postTheme.name || '',
+      post_theme_description:postTheme.description || '',
+    };
+    if (selectedPlatform === 'instagram') {
+      const subtype = document.querySelector('input[name="contentSubtype"]:checked')?.value || 'single';
+      if (subtype === 'carousel') {
+        params.post_subtype = 'carousel';
+        params.image_count  = Number(carouselSlidesSelect.value);
       }
     }
+    return params;
+  }
 
-    async function regenerateText() {
-      if (!activeTextGeneration) return;
-      setButtonLoading(regenerateTextBtn, true, 'Отправка...');
-      try {
-        const data = await postNewGeneration({
-          platform: selectedPlatform,
-          mode: getMode(),
-          params: activeTextParams,
-          regenerate: 'text',
-          generation_id: activeTextGeneration,
-        });
-        activeTextGeneration = getGenerationId(data) || activeTextGeneration;
-        showTextLoading();
-        startTextPolling(activeTextGeneration);
-      } catch (error) {
-        showToast(error.message || 'Не удалось перегенерировать текст');
-      } finally {
-        if (!textPollingTimer) setButtonLoading(regenerateTextBtn, false);
+  function buildPinterestParams(mode) {
+    if (mode !== 'manual') return {};
+    const style    = getSelected(selects.style);
+    const color    = getSelected(selects.color);
+    const print    = getSelected(selects.print);
+    const material = getSelected(selects.material);
+    return {
+      style: style.name, style_description: style.description,
+      color: color.name, color_description: color.description,
+      print: print.name, print_description: print.description,
+      material: material.name, material_description: material.description,
+    };
+  }
+
+  async function postNewGeneration(payload) {
+    return request(API.newGeneration, { method: 'POST', body: JSON.stringify(payload) });
+  }
+
+  async function createGeneration() {
+    if (selectedPlatform === 'pinterest') await createPinterestGeneration();
+    else await createTextGeneration();
+  }
+
+  async function createPinterestGeneration() {
+    const mode  = getMode();
+    const count = Number(autoPostCountSelect.value);
+    const params = buildPinterestParams(mode);
+    setButtonLoading(generateBtn, true, 'Отправка...');
+    try {
+      for (let i = 0; i < count; i++) {
+        await postNewGeneration({ platform: selectedPlatform, mode, params });
       }
+      showToast(count > 1 ? `✅ Добавлено ${count} задачи в очередь` : '✅ Задача добавлена в очередь');
+      navigate('home');
+    } catch (err) {
+      showToast(err.message || 'Не удалось создать задачу');
+    } finally {
+      setButtonLoading(generateBtn, false);
     }
+  }
 
-    async function generateImageOnly() {
-      if (!activeTextGeneration) return;
-      setButtonLoading(generateImageBtn, true, 'Отправка...');
-      try {
-        await postNewGeneration({
-          platform: selectedPlatform,
-          mode: 'image_only',
-          params: {
-            generation_id: activeTextGeneration,
-            image_count: Number(imageCountSelect.value),
-          },
-        });
-        showToast('✅ Задача добавлена в очередь');
-        navigate('home');
-      } catch (error) {
-        showToast(error.message || 'Не удалось создать картинку');
-      } finally {
-        setButtonLoading(generateImageBtn, false);
+  async function createTextGeneration() {
+    const mode  = getMode();
+    const count = Number(autoPostCountSelect.value);
+    const params = buildTextParams();
+    setButtonLoading(generateBtn, true, 'Отправка...');
+    try {
+      for (let i = 0; i < count; i++) {
+        await postNewGeneration({ platform: selectedPlatform, mode, params });
       }
+      showToast(count > 1 ? `✅ Добавлено ${count} задачи в очередь` : '✅ Задача добавлена в очередь');
+      navigate('home');
+    } catch (err) {
+      showToast(err.message || 'Не удалось создать задачу');
+    } finally {
+      setButtonLoading(generateBtn, false);
     }
+  }
 
-    async function loadGenerations(showLoading = true) {
-      if (showLoading) generationsList.innerHTML = '<div class="loading">Загрузка...</div>';
-      try {
-        const data = await request(API.getGenerations);
-        generations = Array.isArray(data) ? data : [];
-        renderGenerations();
-        const hasActive = generations.some(item => ['queue', 'processing', 'text_done'].includes(item.status));
-        if (hasActive) startPolling();
-        else stopPolling();
-      } catch (error) {
-        generationsList.innerHTML = '<div class="empty">Не удалось загрузить список</div>';
-        showToast(error.message || 'Ошибка загрузки');
-      }
+  async function regenerateText() {
+    if (!activeTextGeneration) return;
+    setButtonLoading(regenerateTextBtn, true, 'Отправка...');
+    try {
+      const data = await postNewGeneration({
+        platform: selectedPlatform,
+        mode: getMode(),
+        params: activeTextParams,
+        regenerate: 'text',
+        generation_id: activeTextGeneration,
+      });
+      activeTextGeneration = getGenerationId(data) || activeTextGeneration;
+      showTextLoading();
+      startTextPolling(activeTextGeneration);
+    } catch (err) {
+      showToast(err.message || 'Не удалось перегенерировать текст');
+    } finally {
+      if (!textPollingTimer) setButtonLoading(regenerateTextBtn, false);
     }
+  }
 
-    function renderGenerations() {
-      if (!generations.length) {
-        generationsList.innerHTML = '<div class="empty">Генераций пока нет</div>';
-        return;
-      }
-      generationsList.innerHTML = generations.map(item => {
-        const status = item.status || 'queue';
-        return `
-          <article class="card tap-card" data-generation="${escapeHtml(item.id)}">
-            <div class="generation-title">${escapeHtml(getGenerationTitle(item))}</div>
-            <div class="row">
-              <div class="muted">${escapeHtml(platformName(item.platform))}</div>
-              <div class="status ${escapeHtml(status)}">${statusMap[status] || status}</div>
-            </div>
-          </article>
-        `;
-      }).join('');
+  async function generateImageOnly() {
+    if (!activeTextGeneration) return;
+    setButtonLoading(generateImageBtn, true, 'Отправка...');
+    try {
+      await postNewGeneration({
+        platform: selectedPlatform,
+        mode: 'image_only',
+        params: { generation_id: activeTextGeneration, image_count: Number(imageCountSelect.value) },
+      });
+      showToast('✅ Задача добавлена в очередь');
+      navigate('home');
+    } catch (err) {
+      showToast(err.message || 'Не удалось создать картинку');
+    } finally {
+      setButtonLoading(generateImageBtn, false);
     }
+  }
 
-    function startPolling() {
-      if (pollingTimer) return;
-      pollingTimer = setInterval(() => loadGenerations(false), 5000);
+  // ── Generations list ──
+  function getFilteredGenerations() {
+    if (generationsFilter === 'done')       return generations.filter(g => g.status === 'done');
+    if (generationsFilter === 'processing') return generations.filter(g => ['queue','processing','text_done'].includes(g.status));
+    if (generationsFilter === 'error')      return generations.filter(g => g.status === 'error');
+    return generations;
+  }
+
+  async function loadGenerations(showLoading = true) {
+    if (showLoading) generationsList.innerHTML = '<div class="loading">Загрузка...</div>';
+    try {
+      const data = await request(API.getGenerations);
+      generations = Array.isArray(data) ? data : [];
+      renderGenerations();
+      const hasActive = generations.some(g => ['queue','processing','text_done'].includes(g.status));
+      if (hasActive) startPolling(); else stopPolling();
+    } catch (err) {
+      generationsList.innerHTML = '<div class="empty">Не удалось загрузить список</div>';
+      showToast(err.message || 'Ошибка загрузки');
     }
+  }
 
-    function stopPolling() {
-      if (!pollingTimer) return;
-      clearInterval(pollingTimer);
-      pollingTimer = null;
+  function renderGenerations() {
+    const list = getFilteredGenerations();
+    if (!list.length) {
+      generationsList.innerHTML = '<div class="empty">Генераций пока нет</div>';
+      return;
     }
-
-    function openPost(id) {
-      selectedGeneration = generations.find(item => String(item.id) === String(id));
-      if (!selectedGeneration) {
-        showToast('Запись не найдена');
-        return;
-      }
-      renderPost();
-      navigate('post');
-    }
-
-    async function loadCarouselSlides(generationId) {
-      try {
-        const res = await fetch(`${API.getCarouselSlides}?id=${generationId}`);
-        const data = await res.json();
-        return Array.isArray(data) ? data : [];
-      } catch {
-        return [];
-      }
-    }
-
-    function buildCarouselHtml(slides) {
-      if (!slides.length) return '';
-      let currentSlide = 0;
-
-      const slidesHtml = slides.map((slide, i) => {
-        const imgUrl = `https://pb.bymzavod.online/api/files/carousel_slides/${slide.id}/${slide.image}`;
-        return `
-          <div class="carousel-slide">
-            <img src="${escapeHtml(imgUrl)}" alt="Слайд ${i + 1}">
-            <button class="carousel-regen-btn" data-slide-id="${slide.id}" data-slide-num="${slide.slide_number}">🔄 Перегенерировать слайд ${slide.slide_number}</button>
-          </div>`;
-      }).join('');
-
+    generationsList.innerHTML = list.map(item => {
+      const status = item.status || 'queue';
+      const pd = platformData(item.platform);
+      const pillCls = statusPillClass[status] || 'sp-queue';
+      const piSvg = platformSVGsSm[item.platform] || '';
       return `
-        <div class="carousel-container" id="carouselContainer">
-          <div class="carousel-track" id="carouselTrack">
-            ${slidesHtml}
+        <div class="gen-card" data-generation="${escapeHtml(item.id)}">
+          <div class="gen-pi ${pd.cls}">${piSvg}</div>
+          <div class="gen-body">
+            <div class="gen-title">${escapeHtml(getGenerationTitle(item))}</div>
+            <div class="gen-meta">${escapeHtml(pd.title)} · ${formatDate(item.created)}</div>
+          </div>
+          <div class="gen-right">
+            <span class="status-pill ${pillCls}">${statusMap[status] || status}</span>
+            <span class="gen-arrow">›</span>
           </div>
         </div>
-        <div class="carousel-controls">
-          <button class="carousel-btn" id="carouselPrev">◀</button>
-          <span class="carousel-counter" id="carouselCounter">1 / ${slides.length}</span>
-          <button class="carousel-btn" id="carouselNext">▶</button>
-        </div>`;
-    }
-
-    function initCarousel(total) {
-      let current = 0;
-      const track = document.getElementById('carouselTrack');
-      const counter = document.getElementById('carouselCounter');
-      const prev = document.getElementById('carouselPrev');
-      const next = document.getElementById('carouselNext');
-      if (!track || !counter) return;
-
-      const update = () => {
-        track.style.transform = `translateX(-${current * 100}%)`;
-        counter.textContent = `${current + 1} / ${total}`;
-        prev.disabled = current === 0;
-        next.disabled = current === total - 1;
-      };
-
-      prev.addEventListener('click', () => { if (current > 0) { current--; update(); } });
-      next.addEventListener('click', () => { if (current < total - 1) { current++; update(); } });
-      update();
-    }
-
-    function renderPost() {
-      const item = selectedGeneration;
-      const params = item.params && typeof item.params === 'object' ? item.params : {};
-      const imageUrl = getImageUrl(item);
-
-      const visibleParams = Object.entries(params).filter(([key]) => !key.endsWith('_description'));
-      const paramsHtml = visibleParams.length
-        ? `<details class="card params-accordion">
-            <summary>📋 Параметры генерации</summary>
-            <div class="params-body">
-              ${visibleParams.map(([key, value]) => `
-                <div class="param-row">
-                  <div class="param-key">${escapeHtml(key)}</div>
-                  <div class="param-value">${escapeHtml(typeof value === 'object' ? JSON.stringify(value) : String(value))}</div>
-                </div>
-              `).join('')}
-            </div>
-          </details>`
-        : `<div class="muted" style="font-size:13px; padding: 4px 0;">Авто-режим — параметры выбраны ИИ</div>`;
-
-      const errorHtml = item.status === 'error'
-        ? `<div class="card"><div class="status error">❌ Ошибка</div><div class="muted" style="margin-top: 8px;">${escapeHtml(item.error_message || item.error || 'Текст ошибки не указан')}</div></div><button id="retryBtn">🔁 Повторить</button>`
-        : '';
-
-      const imageReady = !!imageUrl;
-      const textOnlyReady = item.status === 'text_done' && !imageReady;
-      const regenImageLabel = textOnlyReady ? '🎨 Сгенерировать картинку' : '🔄 Перегенерировать картинку';
-
-      const isCarousel = item.platform === 'instagram' && item.params?.post_subtype === 'carousel';
-
-      if (isCarousel && item.status === 'done') {
-        loadCarouselSlides(item.id).then(slides => {
-          const carouselHtml = buildCarouselHtml(slides);
-          postDetails.innerHTML = `
-            ${carouselHtml}
-            ${item.post_text ? `<div class="card post-text">${escapeHtml(item.post_text)}</div>` : ''}
-            ${paramsHtml}
-            ${errorHtml}
-            <button id="regenImageBtn">🔄 Перегенерировать все слайды</button>
-            <button id="regenTextBtn">🔄 Перегенерировать текст</button>
-            <button id="deleteGenerationBtn" class="danger">🗑 Удалить</button>
-          `;
-          initCarousel(slides.length);
-          // Bind individual slide regen buttons
-          document.querySelectorAll('.carousel-regen-btn').forEach(btn => {
-            btn.addEventListener('click', async () => {
-              const slideId = btn.dataset.slideId;
-              const slideNum = btn.dataset.slideNum;
-              setButtonLoading(btn, true, 'Отправка...');
-              try {
-                await request(API.regenerateSlide, {
-                  method: 'POST',
-                  body: JSON.stringify({ slide_id: slideId }),
-                });
-                showToast('✅ Слайд ' + slideNum + ' отправлен на перегенерацию');
-              } catch (e) {
-                showToast('Ошибка перегенерации слайда');
-              } finally {
-                setButtonLoading(btn, false);
-              }
-            });
-          });
-          bindPostButtons();
-        });
-        return;
-      }
-
-      postDetails.innerHTML = `
-        ${imageUrl ? `<img class="post-image" src="${escapeHtml(imageUrl)}" alt="Изображение поста">` : ''}
-        ${item.post_text ? `<div class="card post-text">${escapeHtml(item.post_text)}</div>` : ''}
-        ${paramsHtml}
-        ${errorHtml}
-        <button id="regenImageBtn">${regenImageLabel}</button>
-        ${item.platform === 'pinterest' ? '' : '<button id="regenTextBtn">🔄 Перегенерировать текст</button>'}
-        ${imageUrl ? '<button id="downloadImageBtn" class="secondary">⬇️ Скачать картинку</button>' : ''}
-        <button id="deleteGenerationBtn" class="danger">🗑 Удалить</button>
       `;
+    }).join('');
+  }
 
-      bindPostButtons();
-    }
+  function startPolling() {
+    if (pollingTimer) return;
+    pollingTimer = setInterval(() => loadGenerations(false), 5000);
+  }
+  function stopPolling() {
+    if (!pollingTimer) return;
+    clearInterval(pollingTimer);
+    pollingTimer = null;
+  }
 
-    function bindPostButtons() {
-      const item = selectedGeneration;
+  // ── Post detail ──
+  function openPost(id) {
+    selectedGeneration = generations.find(g => String(g.id) === String(id));
+    if (!selectedGeneration) { showToast('Запись не найдена'); return; }
 
-      document.getElementById('regenImageBtn')?.addEventListener('click', async event => {
-        const button = event.currentTarget;
-        setButtonLoading(button, true, 'Отправка...');
-        try {
-          await request(API.regenerate, {
-            method: 'POST',
-            body: JSON.stringify({ generation_id: item.id }),
-          });
-          showToast('✅ Задача добавлена в очередь');
-          navigate('generations');
-          await loadGenerations();
-        } catch (error) {
-          showToast(error.message || 'Не удалось отправить задачу');
-        } finally {
-          setButtonLoading(button, false);
-        }
-      });
+    // Update header
+    const pd = platformData(selectedGeneration.platform);
+    document.getElementById('postPlatformTitle').textContent = pd.title + ' пост';
+    const wrap = document.getElementById('postStatusWrap');
+    const s = selectedGeneration.status || 'queue';
+    wrap.innerHTML = `<span class="status-pill ${statusPillClass[s] || 'sp-queue'}">${statusMap[s] || s}</span>`;
 
-      document.getElementById('regenTextBtn')?.addEventListener('click', async event => {
-        const button = event.currentTarget;
-        setButtonLoading(button, true, 'Отправка...');
-        try {
-          await request(API.regenerateText, {
-            method: 'POST',
-            body: JSON.stringify({ generation_id: item.id }),
-          });
-          showToast('✅ Текст будет перегенерирован');
-          navigate('generations');
-          await loadGenerations();
-        } catch (error) {
-          showToast(error.message || 'Не удалось перегенерировать текст');
-        } finally {
-          setButtonLoading(button, false);
-        }
-      });
+    renderPost();
+    navigate('post');
+  }
 
-      document.getElementById('retryBtn')?.addEventListener('click', async event => {
-        const button = event.currentTarget;
-        setButtonLoading(button, true, 'Отправка...');
-        try {
-          await request(API.regenerate, {
-            method: 'POST',
-            body: JSON.stringify({ generation_id: item.id }),
-          });
-          showToast('✅ Повторная задача добавлена в очередь');
-          navigate('generations');
-          await loadGenerations();
-        } catch (error) {
-          showToast(error.message || 'Не удалось повторить');
-        } finally {
-          setButtonLoading(button, false);
-        }
-      });
+  async function loadCarouselSlides(generationId) {
+    try {
+      const res = await fetch(`${API.getCarouselSlides}?id=${generationId}`);
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    } catch { return []; }
+  }
 
-      document.getElementById('downloadImageBtn')?.addEventListener('click', downloadImage);
-      document.getElementById('deleteGenerationBtn')?.addEventListener('click', deleteGeneration);
-    }
+  function buildCarouselHtml(slides) {
+    if (!slides.length) return '';
+    const slidesHtml = slides.map((slide, i) => {
+      const imgUrl = `https://pb.bymzavod.online/api/files/carousel_slides/${slide.id}/${slide.image}`;
+      return `
+        <div class="carousel-slide">
+          <img src="${escapeHtml(imgUrl)}" alt="Слайд ${i+1}">
+          <button class="carousel-regen-btn" data-slide-id="${slide.id}" data-slide-num="${slide.slide_number}">🔄 Слайд ${slide.slide_number}</button>
+        </div>`;
+    }).join('');
+    return `
+      <div class="carousel-wrap" id="carouselContainer">
+        <div class="carousel-track" id="carouselTrack">${slidesHtml}</div>
+        <span class="slide-badge" id="carouselCounter">1 / ${slides.length}</span>
+      </div>
+      <div class="carousel-nav">
+        <button class="car-btn" id="carouselPrev">◀</button>
+        <span class="car-count" id="carouselCounterText">1 / ${slides.length}</span>
+        <button class="car-btn" id="carouselNext">▶</button>
+      </div>`;
+  }
 
-    async function postGeneration(payload, button) {
-      setButtonLoading(button, true, 'Отправка...');
-      try {
-        await request(API.newGeneration, {
-          method: 'POST',
-          body: JSON.stringify(payload),
-        });
-        showToast('✅ Задача добавлена в очередь');
-        navigate('home');
-      } catch (error) {
-        showToast(error.message || 'Не удалось отправить задачу');
-      } finally {
-        setButtonLoading(button, false);
-      }
-    }
+  function initCarousel(total) {
+    let cur = 0;
+    const track   = document.getElementById('carouselTrack');
+    const counter = document.getElementById('carouselCounter');
+    const counterTxt = document.getElementById('carouselCounterText');
+    const prev    = document.getElementById('carouselPrev');
+    const next    = document.getElementById('carouselNext');
+    if (!track) return;
+    const update = () => {
+      track.style.transform = `translateX(-${cur*100}%)`;
+      const txt = `${cur+1} / ${total}`;
+      if (counter)    counter.textContent = txt;
+      if (counterTxt) counterTxt.textContent = txt;
+      prev.disabled = cur === 0;
+      next.disabled = cur === total - 1;
+    };
+    prev.addEventListener('click', () => { if (cur > 0)          { cur--; update(); } });
+    next.addEventListener('click', () => { if (cur < total - 1)  { cur++; update(); } });
+    update();
+  }
 
-    async function deleteGeneration(event) {
-      const button = event.currentTarget;
-      setButtonLoading(button, true, 'Удаление...');
-      try {
-        await request(API.deleteGen, {
-          method: 'POST',
-          body: JSON.stringify({ generation_id: selectedGeneration.id }),
-        });
-        showToast('✅ Удалено');
-        navigate('generations');
-        await loadGenerations();
-      } catch (error) {
-        showToast(error.message || 'Не удалось удалить');
-      } finally {
-        setButtonLoading(button, false);
-      }
-    }
+  function renderPost() {
+    const item = selectedGeneration;
+    const params = item.params && typeof item.params === 'object' ? item.params : {};
+    const imageUrl = getImageUrl(item);
 
-    function downloadImage() {
-      if (!selectedGeneration?.image_url) return;
-      const link = document.createElement('a');
-      link.href = getImageUrl(selectedGeneration);
-      link.download = `post-${selectedGeneration.id || Date.now()}.jpg`;
-      link.target = '_blank';
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    }
+    const visibleParams = Object.entries(params).filter(([k]) => !k.endsWith('_description'));
+    const paramsHtml = visibleParams.length
+      ? `<details class="params-accordion">
+          <summary>📋 Параметры генерации</summary>
+          <div class="params-body">
+            ${visibleParams.map(([k, v]) => `
+              <div class="param-row">
+                <div class="param-key">${escapeHtml(k)}</div>
+                <div>${escapeHtml(typeof v === 'object' ? JSON.stringify(v) : String(v))}</div>
+              </div>`).join('')}
+          </div>
+        </details>`
+      : `<p class="muted">Авто-режим — параметры выбраны ИИ</p>`;
 
-    function openSimpleForm(collection, title) {
-      simpleCollection = collection;
-      simpleTitle.textContent = title;
-      simpleName.value = '';
-      simpleDescription.value = '';
-      simpleActive.checked = true;
-      navigate('simpleForm');
-    }
+    const errorHtml = item.status === 'error'
+      ? `<div class="error-box">
+          <div class="error-title">❌ Ошибка генерации</div>
+          <div class="error-msg">${escapeHtml(item.error_message || item.error || 'Текст ошибки не указан')}</div>
+        </div>
+        <button id="retryBtn" class="btn-primary">🔁 Повторить</button>`
+      : '';
 
-    async function saveSimple() {
-      const shortName = simpleName.value.trim();
-      if (!shortName) {
-        showToast('Укажите краткое название');
-        return;
-      }
-      setButtonLoading(simpleSaveBtn, true);
-      try {
-        await request(API.saveElement, {
-          method: 'POST',
-          body: JSON.stringify({
-            collection: simpleCollection,
-            short_name: shortName,
-            tech_description: simpleDescription.value.trim(),
-            active: simpleActive.checked,
-          }),
-        });
-        showToast('✅ Сохранено');
-        navigate('add');
-      } catch (error) {
-        showToast(error.message || 'Не удалось сохранить');
-      } finally {
-        setButtonLoading(simpleSaveBtn, false);
-      }
-    }
+    const imageReady = !!imageUrl;
+    const textOnlyReady = item.status === 'text_done' && !imageReady;
+    const regenImageLabel = textOnlyReady ? '🎨 Сгенерировать картинку' : '🔄 Перегенерировать картинку';
+    const isCarousel = item.platform === 'instagram' && item.params?.post_subtype === 'carousel';
 
-    function choosePhoto() {
-      photoInput.click();
-    }
-
-    function fileToBase64(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error('Не удалось прочитать фото'));
-        reader.readAsDataURL(file);
-      });
-    }
-
-    async function analyzePhoto(file) {
-      if (!file) return;
-      const button = document.getElementById('choosePhotoBtn');
-      setButtonLoading(button, true, 'Анализ...');
-      photoResults.innerHTML = '';
-      try {
-        const image = await fileToBase64(file);
-        const data = await request(API.analyzePhoto, {
-          method: 'POST',
-          body: JSON.stringify({ image }),
-        });
-        renderPhotoResults(data);
-      } catch (error) {
-        showToast(error.message || 'Не удалось проанализировать фото');
-      } finally {
-        setButtonLoading(button, false);
-        photoInput.value = '';
-      }
-    }
-
-    function renderPhotoResults(data) {
-      photoResults.innerHTML = Object.entries(photoCollections).map(([key, meta]) => {
-        const item = data[key] || {};
-        return `
-          <article class="card stack" data-photo-card="${key}">
-            <div class="platform-title">${meta.title}</div>
-            <label class="field">Название<input type="text" value="${escapeHtml(item.name || '')}" data-role="name"></label>
-            <label class="field">Тех. описание<textarea data-role="description">${escapeHtml(item.tech_description || '')}</textarea></label>
-            <button data-role="save">💾 Сохранить</button>
-          </article>
+    if (isCarousel && item.status === 'done') {
+      loadCarouselSlides(item.id).then(slides => {
+        postDetails.innerHTML = `
+          ${buildCarouselHtml(slides)}
+          ${item.post_text ? `<div class="post-text-box">${escapeHtml(item.post_text)}</div>` : ''}
+          ${paramsHtml}
+          ${errorHtml}
+          <button id="regenImageBtn" class="btn-secondary">🔄 Перегенерировать все слайды</button>
+          <button id="regenTextBtn" class="btn-secondary">🔄 Перегенерировать текст</button>
+          <button id="deleteGenerationBtn" class="btn-danger">🗑 Удалить</button>
         `;
-      }).join('');
-    }
-
-    async function savePhotoCard(card) {
-      const key = card.dataset.photoCard;
-      const meta = photoCollections[key];
-      const button = card.querySelector('[data-role="save"]');
-      const shortName = card.querySelector('[data-role="name"]').value.trim();
-      const description = card.querySelector('[data-role="description"]').value.trim();
-      if (!shortName) {
-        showToast('Укажите название');
-        return;
-      }
-      setButtonLoading(button, true);
-      try {
-        await request(API.saveElement, {
-          method: 'POST',
-          body: JSON.stringify({
-            collection: meta.collection,
-            short_name: shortName,
-            tech_description: description,
-            active: true,
-          }),
+        initCarousel(slides.length);
+        document.querySelectorAll('.carousel-regen-btn').forEach(btn => {
+          btn.addEventListener('click', async () => {
+            const slideId  = btn.dataset.slideId;
+            const slideNum = btn.dataset.slideNum;
+            setButtonLoading(btn, true, 'Отправка...');
+            try {
+              await request(API.regenerateSlide, { method:'POST', body: JSON.stringify({ slide_id: slideId }) });
+              showToast('✅ Слайд ' + slideNum + ' отправлен на перегенерацию');
+            } catch { showToast('Ошибка перегенерации слайда'); }
+            finally  { setButtonLoading(btn, false); }
+          });
         });
-        button.textContent = '✅ Сохранено';
-        button.disabled = true;
-      } catch (error) {
-        showToast(error.message || 'Не удалось сохранить');
-        setButtonLoading(button, false);
-      }
+        bindPostButtons();
+      });
+      return;
     }
 
-    function bindEvents() {
-      document.getElementById('createBtn').addEventListener('click', () => navigate('platform'));
-      document.getElementById('generationsBtn').addEventListener('click', async () => {
+    postDetails.innerHTML = `
+      ${imageUrl ? `<div class="post-img-wrap"><img class="post-image" src="${escapeHtml(imageUrl)}" alt="Изображение поста"></div>` : ''}
+      ${item.post_text ? `<div class="post-text-box">${escapeHtml(item.post_text)}</div>` : ''}
+      ${paramsHtml}
+      ${errorHtml}
+      <button id="regenImageBtn" class="btn-secondary">${regenImageLabel}</button>
+      ${item.platform !== 'pinterest' ? '<button id="regenTextBtn" class="btn-secondary">🔄 Перегенерировать текст</button>' : ''}
+      ${imageUrl ? '<button id="downloadImageBtn" class="btn-ghost">⬇️ Скачать картинку</button>' : ''}
+      <button id="deleteGenerationBtn" class="btn-danger">🗑 Удалить</button>
+    `;
+    bindPostButtons();
+  }
+
+  function bindPostButtons() {
+    const item = selectedGeneration;
+
+    document.getElementById('regenImageBtn')?.addEventListener('click', async ev => {
+      const btn = ev.currentTarget;
+      setButtonLoading(btn, true, 'Отправка...');
+      try {
+        await request(API.regenerate, { method:'POST', body: JSON.stringify({ generation_id: item.id }) });
+        showToast('✅ Задача добавлена в очередь');
         navigate('generations');
         await loadGenerations();
-      });
-      document.getElementById('addBtn').addEventListener('click', () => navigate('add'));
-      document.getElementById('photoAddBtn').addEventListener('click', () => navigate('photo'));
-      document.getElementById('newStyleBtn').addEventListener('click', () => openSimpleForm('styles', 'Новый стиль'));
-      document.getElementById('newColorBtn').addEventListener('click', () => openSimpleForm('colors', 'Новый цвет'));
-      document.getElementById('newPrintBtn').addEventListener('click', () => openSimpleForm('prints', 'Новый принт'));
-      document.getElementById('newMaterialBtn').addEventListener('click', () => openSimpleForm('materials', 'Новый материал'));
-      document.getElementById('newFasteningBtn').addEventListener('click', () => openSimpleForm('fastening_types', 'Новый тип крепления'));
-      document.getElementById('newTypeBtn').addEventListener('click', () => openSimpleForm('post_types', 'Новый тип поста'));
-      document.getElementById('newThemeBtn').addEventListener('click', () => openSimpleForm('post_themes', 'Новая тема поста'));
-      document.getElementById('choosePhotoBtn').addEventListener('click', choosePhoto);
-      simpleSaveBtn.addEventListener('click', saveSimple);
-      generateBtn.addEventListener('click', () => createGeneration());
-      regenerateTextBtn.addEventListener('click', regenerateText);
-      generateImageBtn.addEventListener('click', generateImageOnly);
-      photoInput.addEventListener('change', event => analyzePhoto(event.target.files[0]));
+      } catch (err) { showToast(err.message || 'Не удалось отправить задачу'); }
+      finally { setButtonLoading(btn, false); }
+    });
 
-      platformList.addEventListener('click', event => {
-        const button = event.target.closest('[data-platform]');
-        if (button) openSettings(button.dataset.platform);
-      });
+    document.getElementById('regenTextBtn')?.addEventListener('click', async ev => {
+      const btn = ev.currentTarget;
+      setButtonLoading(btn, true, 'Отправка...');
+      try {
+        await request(API.regenerateText, { method:'POST', body: JSON.stringify({ generation_id: item.id }) });
+        showToast('✅ Текст будет перегенерирован');
+        navigate('generations');
+        await loadGenerations();
+      } catch (err) { showToast(err.message || 'Не удалось перегенерировать текст'); }
+      finally { setButtonLoading(btn, false); }
+    });
 
-      document.querySelectorAll('input[name="mode"]').forEach(input => {
-        input.addEventListener('change', () => {
-          resetTextFlow();
-          updateSettingsView();
-        });
-      });
+    document.getElementById('retryBtn')?.addEventListener('click', async ev => {
+      const btn = ev.currentTarget;
+      setButtonLoading(btn, true, 'Отправка...');
+      try {
+        await request(API.regenerate, { method:'POST', body: JSON.stringify({ generation_id: item.id }) });
+        showToast('✅ Повторная задача добавлена в очередь');
+        navigate('generations');
+        await loadGenerations();
+      } catch (err) { showToast(err.message || 'Не удалось повторить'); }
+      finally { setButtonLoading(btn, false); }
+    });
 
-      document.querySelectorAll('input[name="contentSubtype"]').forEach(input => {
-        input.addEventListener('change', updateSettingsView);
-      });
+    document.getElementById('downloadImageBtn')?.addEventListener('click', downloadImage);
+    document.getElementById('deleteGenerationBtn')?.addEventListener('click', deleteGeneration);
+  }
 
-      generationsList.addEventListener('click', event => {
-        const card = event.target.closest('[data-generation]');
-        if (card) openPost(card.dataset.generation);
-      });
+  async function postGeneration(payload, button) {
+    setButtonLoading(button, true, 'Отправка...');
+    try {
+      await request(API.newGeneration, { method:'POST', body: JSON.stringify(payload) });
+      showToast('✅ Задача добавлена в очередь');
+      navigate('home');
+    } catch (err) { showToast(err.message || 'Не удалось отправить задачу'); }
+    finally { setButtonLoading(button, false); }
+  }
 
-      photoResults.addEventListener('click', event => {
-        const button = event.target.closest('[data-role="save"]');
-        const card = event.target.closest('[data-photo-card]');
-        if (button && card) savePhotoCard(card);
-      });
-    }
+  async function deleteGeneration(ev) {
+    const btn = ev.currentTarget;
+    setButtonLoading(btn, true, 'Удаление...');
+    try {
+      await request(API.deleteGen, { method:'POST', body: JSON.stringify({ generation_id: selectedGeneration.id }) });
+      showToast('✅ Удалено');
+      navigate('generations');
+      await loadGenerations();
+    } catch (err) { showToast(err.message || 'Не удалось удалить'); }
+    finally { setButtonLoading(btn, false); }
+  }
 
-    initTelegram();
-    renderPlatforms();
-    bindEvents();
-    loadBalance();
-  </script>
+  function downloadImage() {
+    if (!selectedGeneration?.image_url) return;
+    const link = document.createElement('a');
+    link.href = getImageUrl(selectedGeneration);
+    link.download = `post-${selectedGeneration.id || Date.now()}.jpg`;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+
+  // ── Simple form ──
+  function openSimpleForm(collection, title) {
+    simpleCollection = collection;
+    simpleTitle.textContent = title;
+    simpleName.value = '';
+    simpleDescription.value = '';
+    simpleActive.checked = true;
+    navigate('simpleForm');
+  }
+
+  async function saveSimple() {
+    const shortName = simpleName.value.trim();
+    if (!shortName) { showToast('Укажите краткое название'); return; }
+    setButtonLoading(simpleSaveBtn, true);
+    try {
+      await request(API.saveElement, {
+        method: 'POST',
+        body: JSON.stringify({ collection: simpleCollection, short_name: shortName, tech_description: simpleDescription.value.trim(), active: simpleActive.checked }),
+      });
+      showToast('✅ Сохранено');
+      navigate('add');
+    } catch (err) { showToast(err.message || 'Не удалось сохранить'); }
+    finally { setButtonLoading(simpleSaveBtn, false); }
+  }
+
+  // ── Photo analysis ──
+  function choosePhoto() { photoInput.click(); }
+
+  function fileToBase64(file) {
+    return new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload  = () => res(r.result);
+      r.onerror = () => rej(new Error('Не удалось прочитать фото'));
+      r.readAsDataURL(file);
+    });
+  }
+
+  async function analyzePhoto(file) {
+    if (!file) return;
+    const btn = document.getElementById('choosePhotoBtn');
+    setButtonLoading(btn, true, 'Анализ...');
+    photoResults.innerHTML = '';
+    try {
+      const image = await fileToBase64(file);
+      const data  = await request(API.analyzePhoto, { method:'POST', body: JSON.stringify({ image }) });
+      renderPhotoResults(data);
+    } catch (err) { showToast(err.message || 'Не удалось проанализировать фото'); }
+    finally { setButtonLoading(btn, false); photoInput.value = ''; }
+  }
+
+  function renderPhotoResults(data) {
+    photoResults.innerHTML = Object.entries(photoCollections).map(([key, meta]) => {
+      const item = data[key] || {};
+      return `
+        <div class="photo-card" data-photo-card="${key}">
+          <div style="font-size:14px; font-weight:700;">${meta.title}</div>
+          <label class="field">Название<input type="text" value="${escapeHtml(item.name || '')}" data-role="name"></label>
+          <label class="field">Тех. описание<textarea data-role="description">${escapeHtml(item.tech_description || '')}</textarea></label>
+          <button class="btn-primary" data-role="save">💾 Сохранить</button>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function savePhotoCard(card) {
+    const key   = card.dataset.photoCard;
+    const meta  = photoCollections[key];
+    const btn   = card.querySelector('[data-role="save"]');
+    const shortName   = card.querySelector('[data-role="name"]').value.trim();
+    const description = card.querySelector('[data-role="description"]').value.trim();
+    if (!shortName) { showToast('Укажите название'); return; }
+    setButtonLoading(btn, true);
+    try {
+      await request(API.saveElement, { method:'POST', body: JSON.stringify({ collection: meta.collection, short_name: shortName, tech_description: description, active: true }) });
+      btn.textContent = '✅ Сохранено';
+      btn.disabled = true;
+    } catch (err) { showToast(err.message || 'Не удалось сохранить'); setButtonLoading(btn, false); }
+  }
+
+  // ── Events ──
+  function bindEvents() {
+    document.getElementById('createBtn').addEventListener('click', () => navigate('platform'));
+    document.getElementById('balanceBtn').addEventListener('click', openBalanceScreen);
+    document.getElementById('topUpBtn').addEventListener('click', () => window.open('https://openrouter.ai/settings/credits', '_blank'));
+    document.getElementById('generationsBtn').addEventListener('click', async () => {
+      navigate('generations');
+      await loadGenerations();
+    });
+    document.getElementById('addBtn') && document.getElementById('addBtn').addEventListener('click', () => navigate('add'));
+    document.getElementById('photoAddBtn').addEventListener('click', () => navigate('photo'));
+    document.getElementById('newStyleBtn').addEventListener('click',    () => openSimpleForm('styles',         'Новый стиль'));
+    document.getElementById('newColorBtn').addEventListener('click',    () => openSimpleForm('colors',         'Новый цвет'));
+    document.getElementById('newPrintBtn').addEventListener('click',    () => openSimpleForm('prints',         'Новый принт'));
+    document.getElementById('newMaterialBtn').addEventListener('click', () => openSimpleForm('materials',      'Новый материал'));
+    document.getElementById('newFasteningBtn').addEventListener('click',() => openSimpleForm('fastening_types','Новый тип крепления'));
+    document.getElementById('newTypeBtn').addEventListener('click',     () => openSimpleForm('post_types',     'Новый тип поста'));
+    document.getElementById('newThemeBtn').addEventListener('click',    () => openSimpleForm('post_themes',    'Новая тема поста'));
+    document.getElementById('choosePhotoBtn').addEventListener('click', choosePhoto);
+    simpleSaveBtn.addEventListener('click', saveSimple);
+    generateBtn.addEventListener('click', () => createGeneration());
+    regenerateTextBtn.addEventListener('click', regenerateText);
+    generateImageBtn.addEventListener('click', generateImageOnly);
+    photoInput.addEventListener('change', ev => analyzePhoto(ev.target.files[0]));
+
+    // Platform click
+    platformList.addEventListener('click', ev => {
+      const card = ev.target.closest('[data-platform]');
+      if (card) openSettings(card.dataset.platform);
+    });
+
+    // Mode toggle
+    document.querySelectorAll('input[name="mode"]').forEach(inp => inp.addEventListener('change', () => {
+      resetTextFlow();
+      updateSettingsView();
+    }));
+    document.querySelectorAll('input[name="contentSubtype"]').forEach(inp => inp.addEventListener('change', updateSettingsView));
+
+    // Generation card click
+    generationsList.addEventListener('click', ev => {
+      const card = ev.target.closest('[data-generation]');
+      if (card) openPost(card.dataset.generation);
+    });
+
+    // Photo results
+    photoResults.addEventListener('click', ev => {
+      const btn  = ev.target.closest('[data-role="save"]');
+      const card = ev.target.closest('[data-photo-card]');
+      if (btn && card) savePhotoCard(card);
+    });
+
+    // Filter tabs
+    document.getElementById('filterBar').addEventListener('click', ev => {
+      const tab = ev.target.closest('[data-f]');
+      if (!tab) return;
+      generationsFilter = tab.dataset.f;
+      document.querySelectorAll('.ftab').forEach(t => t.classList.toggle('on', t.dataset.f === generationsFilter));
+      renderGenerations();
+    });
+  }
+
+  // ── Boot ──
+  initTelegram();
+  renderPlatforms();
+  bindEvents();
+  loadBalance();
+</script>
 </body>
 </html>
