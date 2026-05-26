@@ -971,6 +971,7 @@
     regenerateSlide:   'https://bymzavod.online/webhook/regenerate-slide',
     getPause:          'https://bymzavod.online/webhook/get-pause',
     togglePause:       'https://bymzavod.online/webhook/toggle-pause',
+    editText:          'https://bymzavod.online/webhook/edit-text',
   };
 
   // ── DOM refs ──
@@ -1783,20 +1784,14 @@
     if (btn) setButtonLoading(btn, true, 'Думаю...');
     if (resultBlock) resultBlock.style.display = 'none';
 
-    const prompt = `Вот текст поста:\n\n${item.post_text}\n\nЗадача: ${instruction}.${comment ? `\n\nКомментарий: ${comment}` : ''}\n\nВерни только готовый текст поста без пояснений.`;
+    const prompt = undefined; void prompt;
 
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const data = await request(API.editText, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          messages: [{ role: 'user', content: prompt }]
-        })
+        body: JSON.stringify({ text: item.post_text, instruction, comment })
       });
-      const data = await res.json();
-      const text = data.content?.find(b => b.type === 'text')?.text || '';
+      const text = data.text || '';
       if (!text) throw new Error('Пустой ответ');
       if (resultTextarea) resultTextarea.value = text;
       if (resultBlock) resultBlock.style.display = 'flex';
