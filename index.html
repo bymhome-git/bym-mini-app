@@ -486,6 +486,7 @@
       border-radius: 14px;
       cursor: pointer;
       transition: transform .14s, background .18s;
+      margin-bottom: 8px;
     }
     .gen-card:active { transform: scale(0.985); background: var(--card2); }
 
@@ -647,6 +648,38 @@
       .hero h1 { font-size: 20px; }
       .plat-grid { gap: 8px; }
     }
+
+    /* ─── AUTOPOST SLIDERS ─── */
+    .ap-slider {
+      -webkit-appearance: none; appearance: none;
+      width: 130px; height: 4px; border-radius: 4px;
+      background: var(--border2); outline: none; cursor: pointer;
+    }
+    .ap-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--accent-light);
+      box-shadow: 0 1px 6px var(--accent-glow); cursor: pointer;
+    }
+    .ap-val {
+      font-size: 15px; font-weight: 800;
+      color: var(--accent-light); min-width: 18px; text-align: center;
+    }
+    .day-chip { cursor: pointer; }
+    .day-chip input { position: absolute; opacity: 0; pointer-events: none; }
+    .day-chip span {
+      display: flex; align-items: center; justify-content: center;
+      width: 38px; height: 38px; border-radius: 10px;
+      border: 1.5px solid var(--border);
+      background: var(--card2);
+      font-size: 13px; font-weight: 700; color: var(--text2);
+      transition: all .18s;
+    }
+    .day-chip input:checked + span {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--text);
+    }
   </style>
 </head>
 <body>
@@ -656,19 +689,19 @@
   <section id="home" class="screen active">
     <div class="home-header">
       <div class="logo-mark">
-        <div class="logo-icon">🏭</div>
-        Контент-завод
+        <div class="logo-icon" style="background:linear-gradient(135deg,#1a0533,#3d0f6b);border-radius:10px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(123,92,246,.35);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 9C3 7.34315 4.34315 6 6 6H18C19.6569 6 21 7.34315 21 9V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V9Z" stroke="#c4a0ff" stroke-width="1.8"/><path d="M8 6V4C8 2.89543 8.89543 2 10 2H14C15.1046 2 16 2.89543 16 4V6" stroke="#c4a0ff" stroke-width="1.8"/><circle cx="12" cy="13.5" r="2.5" fill="#9B7BFF"/></svg>
+        </div>
+        <span style="background:linear-gradient(90deg,#c4a0ff,#7B5CF6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:16px;font-weight:800;letter-spacing:-0.3px;">BYM Home</span>
       </div>
       <div style="display:flex;align-items:center;gap:8px;"><div id="queueStatus" style="display:flex;align-items:center;gap:5px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:6px 10px;font-size:12px;font-weight:700;color:var(--text2);"><span id="queueStatusDot" style="width:8px;height:8px;border-radius:50%;background:var(--text2);flex-shrink:0;"></span><span id="queueStatusText">--</span></div><div id="balance" class="bal-chip">
         <span class="bal-val" id="balanceValue">—</span>&thinsp;$
       </div></div>
     </div>
 
-    <div class="hero">
+    <div class="hero" style="padding-bottom:8px;">
       <div class="hero-haze"></div>
       <div class="hero-gem">✨</div>
-      <h1>Создавай контент<br>быстро с ИИ</h1>
-      <p>Выбирай платформу, указывай тему<br>и получай готовые посты</p>
     </div>
 
     <div id="lowBalanceAlert" class="hidden" style="margin:0 16px 4px;background:var(--warn-soft);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:11px 14px;font-size:13px;font-weight:600;color:var(--warn);">
@@ -676,9 +709,18 @@
     </div>
 
     <div class="home-actions">
+      <div id="pauseSwitchRow" onclick="togglePause()" style="display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;cursor:pointer;user-select:none;">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--text);">Очередь генерации</div>
+          <div id="pauseStatusLabel" style="font-size:12px;font-weight:600;color:var(--ok);margin-top:2px;">● Активна</div>
+        </div>
+        <div id="pauseToggleTrack" style="width:48px;height:27px;border-radius:20px;background:var(--ok);position:relative;transition:background .2s;flex-shrink:0;">
+          <div id="pauseToggleThumb" style="position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);transform:translateX(21px);"></div>
+        </div>
+      </div>
       <button id="createBtn" class="btn-primary">+ Создать пост</button>
       <button id="generationsBtn" class="btn-secondary">📋 Мои генерации <span id="queueBadge" class="hidden" style="display:inline-block;background:var(--warn);color:#000;font-size:11px;font-weight:800;border-radius:20px;padding:1px 7px;margin-left:6px;vertical-align:middle;"></span></button>
-      <button id="pauseBtn" class="btn-secondary">⏸ Пауза очереди</button>
+      <button id="autopostBtn" class="btn-secondary">🕐 Автопост</button>
       <button id="balanceBtn" class="btn-secondary">💰 Баланс</button>
     </div>
   </section>
@@ -884,6 +926,12 @@
         <div class="add-row-body"><div class="add-row-title">Новая тема поста</div><div class="add-row-sub">Тематика контента</div></div>
         <span class="add-row-arr">›</span>
       </button>
+      <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+      <button id="exportRefsBtn" class="add-row">
+        <div class="add-row-icon" style="background:var(--ok-soft);">📥</div>
+        <div class="add-row-body"><div class="add-row-title">Экспорт справочников</div><div class="add-row-sub">Скачать все стили, цвета, принты и т.д. в CSV</div></div>
+        <span class="add-row-arr">›</span>
+      </button>
     </div>
   </section>
 
@@ -919,6 +967,128 @@
         <input id="simpleActive" type="checkbox" checked> Активно
       </label>
       <button id="simpleSaveBtn" class="btn-primary">Сохранить</button>
+    </div>
+  </section>
+
+  <!-- ════ AUTOPOST ════ -->
+  <section id="autopost" class="screen">
+    <div class="topbar">
+      <div class="topbar-side"></div>
+      <h2>Автопост</h2>
+      <div class="topbar-side"></div>
+    </div>
+    <div class="sbody">
+
+      <!-- Master toggle -->
+      <div onclick="toggleAutopost()" style="display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;cursor:pointer;user-select:none;">
+        <div>
+          <div style="font-size:15px;font-weight:700;">Автопост</div>
+          <div id="autopostStatusLabel" style="font-size:12px;font-weight:600;color:var(--text2);margin-top:3px;">Выключен</div>
+        </div>
+        <div id="autopostToggleTrack" style="width:48px;height:27px;border-radius:20px;background:var(--border2);position:relative;transition:background .2s;flex-shrink:0;">
+          <div id="autopostToggleThumb" style="position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);"></div>
+        </div>
+      </div>
+
+      <!-- Next run -->
+      <div id="nextRunRow" style="display:none;background:var(--accent-soft);border:1px solid rgba(123,92,246,.3);border-radius:12px;padding:11px 14px;font-size:13px;font-weight:600;color:var(--accent-light);">
+        🕐 Следующий запуск: <span id="nextRunText">—</span>
+      </div>
+
+      <!-- Schedule -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:14px;">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;">Расписание</div>
+
+        <label class="field">Час запуска
+          <select id="autopostHour" style="font-size:16px;" onchange="updateNextRun()">
+            <!-- filled by JS -->
+          </select>
+          <span style="font-size:11px;font-weight:500;color:var(--text2);margin-top:4px;display:block;">Время N8N (Europe/Moscow): <span id="n8nCurrentTime" style="font-weight:700;">—</span></span>
+        </label>
+
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Дни недели</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <label class="day-chip"><input class="day-chip-input" type="checkbox" value="mon" checked onchange="updateNextRun()"><span>Пн</span></label>
+            <label class="day-chip"><input class="day-chip-input" type="checkbox" value="tue" checked onchange="updateNextRun()"><span>Вт</span></label>
+            <label class="day-chip"><input class="day-chip-input" type="checkbox" value="wed" checked onchange="updateNextRun()"><span>Ср</span></label>
+            <label class="day-chip"><input class="day-chip-input" type="checkbox" value="thu" checked onchange="updateNextRun()"><span>Чт</span></label>
+            <label class="day-chip"><input class="day-chip-input" type="checkbox" value="fri" checked onchange="updateNextRun()"><span>Пт</span></label>
+            <label class="day-chip"><input class="day-chip-input" type="checkbox" value="sat" onchange="updateNextRun()"><span>Сб</span></label>
+            <label class="day-chip"><input class="day-chip-input" type="checkbox" value="sun" onchange="updateNextRun()"><span>Вс</span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Platform counts -->
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:16px;">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;">Постов в день</div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="plat-icon pi-p" style="width:34px;height:34px;border-radius:10px;flex-shrink:0;"><svg viewBox="0 0 24 24" width="18" height="18" fill="#E60023"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg></div>
+            <span style="font-size:14px;font-weight:700;">Pinterest</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <input type="range" id="ap-pinterest" min="0" max="10" value="0" class="ap-slider" oninput="apSlider(this,'ap-pinterest-val')">
+            <span id="ap-pinterest-val" class="ap-val">0</span>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="plat-icon pi-t" style="width:34px;height:34px;border-radius:10px;flex-shrink:0;"><svg viewBox="0 0 24 24" width="18" height="18" fill="#2AABEE"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg></div>
+            <span style="font-size:14px;font-weight:700;">Telegram</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <input type="range" id="ap-telegram" min="0" max="10" value="0" class="ap-slider" oninput="apSlider(this,'ap-telegram-val')">
+            <span id="ap-telegram-val" class="ap-val">0</span>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="plat-icon pi-d" style="width:34px;height:34px;border-radius:10px;flex-shrink:0;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none"><circle cx="12" cy="12" r="12" fill="#FC3F1D"/><path d="M12.48 11.52c.77-.2 1.62-.6 2.35-1.33.74-.73 1.13-1.58 1.33-2.35.04-.16.07-.31.1-.46H13c-.29 1.14-.77 1.98-1.38 2.59-.61.61-1.45 1.09-2.59 1.38v.31c1.14.29 1.98.77 2.59 1.38.61.61 1.09 1.45 1.38 2.59h3.26c-.03-.15-.06-.3-.1-.46-.2-.77-.59-1.62-1.33-2.35-.73-.73-1.58-1.12-2.35-1.3zM7 7.38c.03.15.06.3.1.46.2.77.6 1.62 1.33 2.35.73.73 1.58 1.13 2.35 1.33l.31-.01V8.25c-1.14-.29-1.98-.77-2.59-1.38-.01 0-.03-.02-.04-.03L7 7.38zm3.78 5.66c-.77.2-1.62.6-2.35 1.33-.73.73-1.13 1.58-1.33 2.35-.04.16-.07.31-.1.46l1.46-.46c.61-.61 1.45-1.09 2.59-1.38v-2.31l-.27.01z" fill="white"/></svg></div>
+            <span style="font-size:14px;font-weight:700;">Яндекс.Дзен</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <input type="range" id="ap-dzen" min="0" max="10" value="0" class="ap-slider" oninput="apSlider(this,'ap-dzen-val')">
+            <span id="ap-dzen-val" class="ap-val">0</span>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="plat-icon pi-i" style="width:34px;height:34px;border-radius:10px;flex-shrink:0;"><svg viewBox="0 0 24 24" width="18" height="18"><defs><linearGradient id="ig3" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#F77737"/><stop offset="50%" stop-color="#E1306C"/><stop offset="100%" stop-color="#405DE6"/></linearGradient></defs><path fill="url(#ig3)" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></div>
+            <span style="font-size:14px;font-weight:700;">Instagram</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <input type="range" id="ap-instagram" min="0" max="10" value="0" class="ap-slider" oninput="apSlider(this,'ap-instagram-val')">
+            <span id="ap-instagram-val" class="ap-val">0</span>
+          </div>
+        </div>
+
+        <!-- Instagram extras: shown when instagram > 0 -->
+        <div id="ap-carousel-row" style="display:none;flex-direction:column;gap:12px;padding-top:12px;border-top:1px solid var(--border);">
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;">Из них карусель</div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <input type="range" id="ap-instagram-carousel" min="0" max="10" value="0" class="ap-slider" oninput="apSlider(this,'ap-instagram-carousel-val')">
+              <span id="ap-instagram-carousel-val" class="ap-val">0</span>
+            </div>
+          </div>
+          <div id="ap-carousel-slides-row" style="display:none;">
+            <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;">Слайдов в каждой карусели</div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <input type="range" id="ap-carousel-slides" min="2" max="10" value="5" class="ap-slider" oninput="apSlider(this,'ap-carousel-slides-val')">
+              <span id="ap-carousel-slides-val" class="ap-val">5</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <button id="saveAutopostBtn" class="btn-primary">💾 Сохранить настройки</button>
     </div>
   </section>
 
@@ -969,6 +1139,8 @@
     regenerateText:    'https://bymzavod.online/webhook/regenerate-text',
     getCarouselSlides: 'https://bymzavod.online/webhook/get-carousel-slides',
     regenerateSlide:   'https://bymzavod.online/webhook/regenerate-slide',
+    getAutopost:       'https://bymzavod.online/webhook/get-autopost',
+    saveAutopost:      'https://bymzavod.online/webhook/save-autopost',
     getPause:          'https://bymzavod.online/webhook/get-pause',
     togglePause:       'https://bymzavod.online/webhook/toggle-pause',
     editText:          'https://bymzavod.online/webhook/edit-text',
@@ -1084,6 +1256,7 @@
     add:        'home',
     photo:      'add',
     simpleForm: 'add',
+    autopost:   'home',
   };
 
   // ── Init ──
@@ -1208,24 +1381,26 @@
   }
 
   function updatePauseBtn() {
-    const btn = document.getElementById('pauseBtn');
-    if (!btn) return;
+    const track = document.getElementById('pauseToggleTrack');
+    const thumb = document.getElementById('pauseToggleThumb');
+    const label = document.getElementById('pauseStatusLabel');
+    if (!track) return;
     if (queuePaused) {
-      btn.textContent = '▶ Возобновить очередь';
-      btn.style.background = 'var(--ok-soft)';
-      btn.style.color = 'var(--ok)';
-      btn.style.border = '1px solid rgba(34,197,94,.22)';
+      track.style.background = 'var(--warn)';
+      thumb.style.transform = 'translateX(0px)';
+      label.textContent = '⏸ Пауза';
+      label.style.color = 'var(--warn)';
     } else {
-      btn.textContent = '⏸ Пауза очереди';
-      btn.style.background = '';
-      btn.style.color = '';
-      btn.style.border = '';
+      track.style.background = 'var(--ok)';
+      thumb.style.transform = 'translateX(21px)';
+      label.textContent = '● Активна';
+      label.style.color = 'var(--ok)';
     }
   }
 
   async function togglePause() {
-    const btn = document.getElementById('pauseBtn');
-    setButtonLoading(btn, true, '...');
+    const track = document.getElementById('pauseToggleTrack');
+    if (track) track.style.opacity = '0.5';
     try {
       const newState = !queuePaused;
       const data = await request(API.togglePause, { method: 'POST', body: JSON.stringify({ queue_paused: newState }) });
@@ -1235,8 +1410,7 @@
     } catch (err) {
       showToast(err.message || 'Не удалось переключить паузу');
     } finally {
-      setButtonLoading(btn, false);
-      updatePauseBtn();
+      if (track) track.style.opacity = '1';
     }
   }
 
@@ -1716,7 +1890,6 @@
           ${paramsHtml}
           ${errorHtml}
           <button id="regenImageBtn" class="btn-secondary">🔄 Перегенерировать все слайды</button>
-          <button id="regenTextBtn" class="btn-secondary">🔄 Перегенерировать текст</button>
           <button id="deleteGenerationBtn" class="btn-danger">🗑 Удалить</button>
         `;
         initCarousel(slides.length);
@@ -1767,10 +1940,9 @@
       ${item.status === 'queue'
         ? '<button id="cancelGenerationBtn" class="btn-danger">✖ Отменить задачу</button>'
         : `<button id="regenImageBtn" class="btn-secondary">${regenImageLabel}</button>
-      ${item.platform !== 'pinterest' ? '<button id="regenTextBtn" class="btn-secondary">🔄 Перегенерировать текст</button>' : ''}
-      ${imageUrl ? '<button id="downloadImageBtn" class="btn-ghost">⬇️ Скачать картинку</button>' : ''}`
+      ${imageUrl ? '<button id="downloadImageBtn" class="btn-ghost">⬇️ Скачать картинку</button>' : ''}
+      <button id="deleteGenerationBtn" class="btn-danger">🗑 Удалить</button>`
       }
-      <button id="deleteGenerationBtn" class="btn-danger">🗑 Удалить</button>
     `;
     bindPostButtons();
   }
@@ -2006,11 +2178,199 @@
     } catch (err) { showToast(err.message || 'Не удалось сохранить'); setButtonLoading(btn, false); }
   }
 
+  // ── Export references ──
+  async function exportReferences() {
+    const btn = document.getElementById('exportRefsBtn');
+    setButtonLoading(btn, true, 'Загрузка...');
+    try {
+      const data = await request(API.getReferences);
+      const cols = { styles:'styles', colors:'colors', prints:'prints', materials:'materials', post_types:'post_types', post_themes:'post_themes' };
+      const rows = [['collection','short_name','tech_description','active']];
+      for (const [key, label] of Object.entries(cols)) {
+        for (const item of (data[key] || [])) {
+          rows.push([label, item.short_name||'', item.tech_description||'', item.active!==false?'true':'false']);
+        }
+      }
+      const csv = rows.map(r => r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+      const blob = new Blob(['\uFEFF'+csv], { type:'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `references_${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(link); link.click(); link.remove();
+      URL.revokeObjectURL(url);
+      showToast('✅ Файл скачан');
+    } catch (err) { showToast(err.message || 'Не удалось экспортировать'); }
+    finally { setButtonLoading(btn, false); }
+  }
+
+  // ── Autopost ──
+  let autopostEnabled = false;
+
+  function updateAutopostToggle() {
+    const track = document.getElementById('autopostToggleTrack');
+    const thumb = document.getElementById('autopostToggleThumb');
+    const label = document.getElementById('autopostStatusLabel');
+    if (!track) return;
+    if (autopostEnabled) {
+      track.style.background = 'var(--accent)';
+      thumb.style.transform = 'translateX(21px)';
+      label.textContent = '● Включён';
+      label.style.color = 'var(--accent-light)';
+    } else {
+      track.style.background = 'var(--border2)';
+      thumb.style.transform = 'translateX(0px)';
+      label.textContent = 'Выключен';
+      label.style.color = 'var(--text2)';
+    }
+  }
+
+  function toggleAutopost() {
+    autopostEnabled = !autopostEnabled;
+    updateAutopostToggle();
+    updateNextRun();
+  }
+
+  function apSlider(slider, labelId) {
+    const label = document.getElementById(labelId);
+    if (label) label.textContent = slider.value;
+    if (slider.id === 'ap-instagram') {
+      const row = document.getElementById('ap-carousel-row');
+      const n = Number(slider.value);
+      if (row) row.style.display = n > 0 ? 'flex' : 'none';
+      const carSlider = document.getElementById('ap-instagram-carousel');
+      if (carSlider) {
+        carSlider.max = n;
+        if (Number(carSlider.value) > n) {
+          carSlider.value = n;
+          const carLabel = document.getElementById('ap-instagram-carousel-val');
+          if (carLabel) carLabel.textContent = n;
+        }
+        // Hide slides row if carousel count drops to 0
+        const slidesRow = document.getElementById('ap-carousel-slides-row');
+        if (slidesRow) slidesRow.style.display = Number(carSlider.value) > 0 ? 'block' : 'none';
+      }
+    }
+    if (slider.id === 'ap-instagram-carousel') {
+      const slidesRow = document.getElementById('ap-carousel-slides-row');
+      if (slidesRow) slidesRow.style.display = Number(slider.value) > 0 ? 'block' : 'none';
+    }
+    updateNextRun();
+  }
+
+  function updateN8nTime() {
+    const el = document.getElementById('n8nCurrentTime');
+    if (!el) return;
+    try {
+      el.textContent = new Date().toLocaleTimeString('ru-RU', { timeZone: 'Europe/Moscow', hour: '2-digit', minute: '2-digit' });
+    } catch { el.textContent = '—'; }
+  }
+
+  function updateNextRun() {
+    const nextRow = document.getElementById('nextRunRow');
+    const nextText = document.getElementById('nextRunText');
+    if (!nextRow || !nextText) return;
+
+    if (!autopostEnabled) { nextRow.style.display = 'none'; return; }
+
+    const h = Number(document.getElementById('autopostHour')?.value || 9);
+    const checkedDays = [...document.querySelectorAll('.day-chip-input:checked')].map(el => el.value);
+    if (checkedDays.length === 0) { nextRow.style.display = 'none'; return; }
+
+    const dayNames = ['sun','mon','tue','wed','thu','fri','sat'];
+    const dayLabels = { mon:'пн', tue:'вт', wed:'ср', thu:'чт', fri:'пт', sat:'сб', sun:'вс' };
+    const moscowNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Moscow' }));
+    const currentHour = moscowNow.getHours();
+
+    for (let d = 0; d < 8; d++) {
+      const checkDate = new Date(moscowNow);
+      checkDate.setDate(checkDate.getDate() + d);
+      const checkDay = dayNames[checkDate.getDay()];
+      if (!checkedDays.includes(checkDay)) continue;
+      if (d === 0 && currentHour >= h) continue;
+      const hStr = String(h).padStart(2,'0') + ':00';
+      if (d === 0) { nextText.textContent = `сегодня в ${hStr}`; }
+      else if (d === 1) { nextText.textContent = `завтра в ${hStr}`; }
+      else { nextText.textContent = `${dayLabels[checkDay]} в ${hStr}`; }
+      nextRow.style.display = 'block';
+      return;
+    }
+    nextRow.style.display = 'none';
+  }
+
+  function fillAutopostHours() {
+    const sel = document.getElementById('autopostHour');
+    if (!sel || sel.options.length > 0) return;
+    for (let h = 0; h < 24; h++) {
+      const opt = document.createElement('option');
+      opt.value = String(h).padStart(2,'0');
+      opt.textContent = String(h).padStart(2,'0') + ':00';
+      sel.appendChild(opt);
+    }
+    sel.value = '09';
+  }
+
+  async function loadAutopost() {
+    fillAutopostHours();
+    updateN8nTime();
+    try {
+      const data = await request(API.getAutopost);
+      autopostEnabled = !!data.enabled;
+      const [h] = (data.time || '09:00').split(':');
+      const hourSel = document.getElementById('autopostHour');
+      if (hourSel) hourSel.value = h;
+      // Days
+      const days = Array.isArray(data.days) ? data.days : ['mon','tue','wed','thu','fri','sat','sun'];
+      document.querySelectorAll('.day-chip-input').forEach(el => {
+        el.checked = days.includes(el.value);
+      });
+      // Sliders
+      ['pinterest','telegram','instagram','dzen'].forEach(p => {
+        const el = document.getElementById('ap-' + p);
+        if (el) { el.value = data[p] || 0; apSlider(el, 'ap-' + p + '-val'); }
+      });
+      const carEl = document.getElementById('ap-instagram-carousel');
+      if (carEl) { carEl.value = data.instagram_carousel || 0; apSlider(carEl, 'ap-instagram-carousel-val'); }
+      const slidesEl = document.getElementById('ap-carousel-slides');
+      if (slidesEl) { slidesEl.value = data.carousel_slides || 5; document.getElementById('ap-carousel-slides-val').textContent = slidesEl.value; }
+      updateAutopostToggle();
+      updateNextRun();
+    } catch { fillAutopostHours(); updateNextRun(); }
+  }
+
+  async function saveAutopost() {
+    const btn = document.getElementById('saveAutopostBtn');
+    setButtonLoading(btn, true, 'Сохранение...');
+    const h = document.getElementById('autopostHour')?.value || '09';
+    const time = h + ':00';
+    const days = [...document.querySelectorAll('.day-chip-input:checked')].map(el => el.value);
+    try {
+      await request(API.saveAutopost, {
+        method: 'POST',
+        body: JSON.stringify({
+          enabled:            autopostEnabled,
+          time,
+          days,
+          pinterest:          Number(document.getElementById('ap-pinterest').value),
+          telegram:           Number(document.getElementById('ap-telegram').value),
+          instagram:          Number(document.getElementById('ap-instagram').value),
+          instagram_carousel: Number(document.getElementById('ap-instagram-carousel').value),
+          carousel_slides:    Number(document.getElementById('ap-carousel-slides')?.value || 5),
+          dzen:               Number(document.getElementById('ap-dzen').value),
+        }),
+      });
+      showToast('✅ Настройки автопоста сохранены');
+      updateNextRun();
+    } catch (err) { showToast(err.message || 'Не удалось сохранить'); }
+    finally { setButtonLoading(btn, false); }
+  }
+
   // ── Events ──
   function bindEvents() {
     document.getElementById('createBtn').addEventListener('click', () => navigate('platform'));
     document.getElementById('balanceBtn').addEventListener('click', openBalanceScreen);
-    document.getElementById('pauseBtn').addEventListener('click', togglePause);
+
+    document.getElementById('autopostBtn').addEventListener('click', () => { navigate('autopost'); loadAutopost(); });
     document.getElementById('topUpBtn').addEventListener('click', () => window.open('https://openrouter.ai/settings/credits', '_blank'));
     document.getElementById('generationsBtn').addEventListener('click', async () => {
       navigate('generations');
@@ -2025,6 +2385,8 @@
     document.getElementById('newFasteningBtn').addEventListener('click',() => openSimpleForm('fastening_types','Новый тип крепления'));
     document.getElementById('newTypeBtn').addEventListener('click',     () => openSimpleForm('post_types',     'Новый тип поста'));
     document.getElementById('newThemeBtn').addEventListener('click',    () => openSimpleForm('post_themes',    'Новая тема поста'));
+    document.getElementById('exportRefsBtn').addEventListener('click',  exportReferences);
+    document.getElementById('saveAutopostBtn').addEventListener('click', saveAutopost);
     document.getElementById('choosePhotoBtn').addEventListener('click', choosePhoto);
     simpleSaveBtn.addEventListener('click', saveSimple);
     generateBtn.addEventListener('click', () => createGeneration());
