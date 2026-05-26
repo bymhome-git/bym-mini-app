@@ -489,6 +489,23 @@
       margin-bottom: 8px;
     }
     .gen-card:active { transform: scale(0.985); background: var(--card2); }
+    .gen-card.selected {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+    .gen-check {
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 2px solid var(--border2);
+      background: var(--card2);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: all .18s;
+    }
+    .gen-card.selected .gen-check {
+      background: var(--accent); border-color: var(--accent);
+    }
+    .gen-card.selected .gen-check::after {
+      content: '✓'; color: #fff; font-size: 13px; font-weight: 800;
+    }
 
     .gen-pi {
       width: 44px; height: 44px;
@@ -852,8 +869,19 @@
     <div class="topbar" style="padding-bottom: 4px;">
       <div class="topbar-side"></div>
       <h2>Мои генерации</h2>
-      <div class="topbar-side"></div>
+      <div class="topbar-side">
+        <button id="selectModeBtn" onclick="toggleSelectMode()" style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:5px 13px;font-size:12px;font-weight:700;color:var(--text2);cursor:pointer;font-family:inherit;">Выбрать</button>
+      </div>
     </div>
+
+    <!-- Bulk action bar (shown in select mode) -->
+    <div id="bulkBar" style="display:none;padding:0 16px 10px;gap:8px;flex-direction:column;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <button onclick="selectAllGenerations()" style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:9px;font-size:13px;font-weight:700;color:var(--text2);cursor:pointer;font-family:inherit;">Выбрать все</button>
+        <button id="bulkDeleteBtn" onclick="bulkDeleteGenerations()" disabled style="flex:2;background:var(--danger-soft);border:1px solid rgba(239,68,68,.22);border-radius:10px;padding:9px;font-size:13px;font-weight:700;color:var(--danger);cursor:pointer;font-family:inherit;opacity:.4;">🗑 Удалить (<span id="selectedCount">0</span>)</button>
+      </div>
+    </div>
+
     <div class="filter-bar" id="filterBar">
       <div class="ftab on" data-f="all">Все</div>
       <div class="ftab" data-f="done">Готовые</div>
@@ -1244,6 +1272,8 @@
   let activeTextParams    = {};
   let simpleCollection    = 'post_types';
   let toastTimer          = null;
+  let selectMode          = false;
+  let selectedIds         = new Set();
 
   const NAV_SCREENS = new Set(['home', 'generations', 'add']);
 
@@ -1283,7 +1313,10 @@
       if (screen === 'home') tg.BackButton.hide();
       else tg.BackButton.show();
     }
-    if (screen !== 'generations') stopPolling();
+    if (screen !== 'generations') {
+      stopPolling();
+      if (selectMode) toggleSelectMode();
+    }
     if (screen !== 'settings') stopTextPolling();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -1756,8 +1789,11 @@
       const pd = platformData(item.platform);
       const pillCls = statusPillClass[status] || 'sp-queue';
       const piSvg = platformSVGsSm[item.platform] || '';
+      const isSelected = selectedIds.has(item.id);
+      const checkHtml = selectMode ? `<div class="gen-check"></div>` : '';
       return `
-        <div class="gen-card" data-generation="${escapeHtml(item.id)}">
+        <div class="gen-card${isSelected ? ' selected' : ''}" data-generation="${escapeHtml(item.id)}">
+          ${checkHtml}
           <div class="gen-pi ${pd.cls}">${piSvg}</div>
           <div class="gen-body">
             <div class="gen-title">${escapeHtml(getGenerationTitle(item))}</div>
@@ -1765,7 +1801,7 @@
           </div>
           <div class="gen-right">
             <span class="status-pill ${pillCls}">${statusMap[status] || status}</span>
-            <span class="gen-arrow">›</span>
+            ${selectMode ? '' : '<span class="gen-arrow">›</span>'}
           </div>
         </div>
       `;
@@ -2191,6 +2227,65 @@
     } catch (err) { showToast(err.message || 'Не удалось сохранить'); setButtonLoading(btn, false); }
   }
 
+  // ── Select mode ──
+  function toggleSelectMode() {
+    selectMode = !selectMode;
+    selectedIds.clear();
+    const btn = document.getElementById('selectModeBtn');
+    const bar = document.getElementById('bulkBar');
+    if (btn) {
+      btn.textContent = selectMode ? 'Отмена' : 'Выбрать';
+      btn.style.color = selectMode ? 'var(--accent-light)' : '';
+      btn.style.borderColor = selectMode ? 'var(--accent)' : '';
+    }
+    if (bar) bar.style.display = selectMode ? 'flex' : 'none';
+    updateBulkBar();
+    renderGenerations();
+  }
+
+  function updateBulkBar() {
+    const n = selectedIds.size;
+    const countEl = document.getElementById('selectedCount');
+    const btn = document.getElementById('bulkDeleteBtn');
+    if (countEl) countEl.textContent = n;
+    if (btn) {
+      btn.disabled = n === 0;
+      btn.style.opacity = n === 0 ? '0.4' : '1';
+    }
+  }
+
+  function selectAllGenerations() {
+    const list = getFilteredGenerations();
+    const allSelected = list.every(g => selectedIds.has(g.id));
+    if (allSelected) {
+      selectedIds.clear();
+    } else {
+      list.forEach(g => selectedIds.add(g.id));
+    }
+    updateBulkBar();
+    renderGenerations();
+  }
+
+  async function bulkDeleteGenerations() {
+    if (selectedIds.size === 0) return;
+    const ids = [...selectedIds];
+    const btn = document.getElementById('bulkDeleteBtn');
+    if (btn) { btn.disabled = true; btn.style.opacity = '0.4'; }
+    let done = 0;
+    const countEl = document.getElementById('selectedCount');
+    for (const id of ids) {
+      try {
+        await request(API.deleteGen, { method: 'POST', body: JSON.stringify({ generation_id: id }) });
+        selectedIds.delete(id);
+        done++;
+        if (countEl) countEl.textContent = ids.length - done;
+      } catch { /* continue deleting rest */ }
+    }
+    showToast(`✅ Удалено ${done} из ${ids.length}`);
+    toggleSelectMode();
+    await loadGenerations(false);
+  }
+
   // ── Export references ──
   async function exportReferences() {
     const btn = document.getElementById('exportRefsBtn');
@@ -2423,7 +2518,16 @@
     // Generation card click
     generationsList.addEventListener('click', ev => {
       const card = ev.target.closest('[data-generation]');
-      if (card) openPost(card.dataset.generation);
+      if (!card) return;
+      const id = card.dataset.generation;
+      if (selectMode) {
+        if (selectedIds.has(id)) selectedIds.delete(id);
+        else selectedIds.add(id);
+        updateBulkBar();
+        renderGenerations();
+      } else {
+        openPost(id);
+      }
     });
 
     // Photo results
