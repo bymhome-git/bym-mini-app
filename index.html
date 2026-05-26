@@ -659,9 +659,9 @@
         <div class="logo-icon">🏭</div>
         Контент-завод
       </div>
-      <div id="balance" class="bal-chip">
+      <div style="display:flex;align-items:center;gap:8px;"><div id="queueStatus" style="display:flex;align-items:center;gap:5px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:6px 10px;font-size:12px;font-weight:700;color:var(--text2);"><span id="queueStatusDot" style="width:8px;height:8px;border-radius:50%;background:var(--text2);flex-shrink:0;"></span><span id="queueStatusText">--</span></div><div id="balance" class="bal-chip">
         <span class="bal-val" id="balanceValue">—</span>&thinsp;$
-      </div>
+      </div></div>
     </div>
 
     <div class="hero">
@@ -671,9 +671,14 @@
       <p>Выбирай платформу, указывай тему<br>и получай готовые посты</p>
     </div>
 
+    <div id="lowBalanceAlert" class="hidden" style="margin:0 16px 4px;background:var(--warn-soft);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:11px 14px;font-size:13px;font-weight:600;color:var(--warn);">
+      ⚠️ Баланс OpenRouter ниже $5 — пополни счёт чтобы не прерывать генерацию
+    </div>
+
     <div class="home-actions">
       <button id="createBtn" class="btn-primary">+ Создать пост</button>
-      <button id="generationsBtn" class="btn-secondary">📋 Мои генерации</button>
+      <button id="generationsBtn" class="btn-secondary">📋 Мои генерации <span id="queueBadge" class="hidden" style="display:inline-block;background:var(--warn);color:#000;font-size:11px;font-weight:800;border-radius:20px;padding:1px 7px;margin-left:6px;vertical-align:middle;"></span></button>
+      <button id="pauseBtn" class="btn-secondary">⏸ Пауза очереди</button>
       <button id="balanceBtn" class="btn-secondary">💰 Баланс</button>
     </div>
   </section>
@@ -964,6 +969,8 @@
     regenerateText:    'https://bymzavod.online/webhook/regenerate-text',
     getCarouselSlides: 'https://bymzavod.online/webhook/get-carousel-slides',
     regenerateSlide:   'https://bymzavod.online/webhook/regenerate-slide',
+    getPause:          'https://bymzavod.online/webhook/get-pause',
+    togglePause:       'https://bymzavod.online/webhook/toggle-pause',
   };
 
   // ── DOM refs ──
@@ -1188,6 +1195,50 @@
     return data.generation_id || data.id || data?.data?.generation_id || data?.data?.id || '';
   }
 
+  // ── Pause ──
+  let queuePaused = false;
+
+  async function loadPause() {
+    try {
+      const data = await request(API.getPause);
+      queuePaused = !!data.queue_paused;
+      updatePauseBtn();
+    } catch { /* silent */ }
+  }
+
+  function updatePauseBtn() {
+    const btn = document.getElementById('pauseBtn');
+    if (!btn) return;
+    if (queuePaused) {
+      btn.textContent = '▶ Возобновить очередь';
+      btn.style.background = 'var(--ok-soft)';
+      btn.style.color = 'var(--ok)';
+      btn.style.border = '1px solid rgba(34,197,94,.22)';
+    } else {
+      btn.textContent = '⏸ Пауза очереди';
+      btn.style.background = '';
+      btn.style.color = '';
+      btn.style.border = '';
+    }
+  }
+
+  async function togglePause() {
+    const btn = document.getElementById('pauseBtn');
+    setButtonLoading(btn, true, '...');
+    try {
+      const newState = !queuePaused;
+      const data = await request(API.togglePause, { method: 'POST', body: JSON.stringify({ queue_paused: newState }) });
+      queuePaused = !!data.queue_paused;
+      updatePauseBtn();
+      showToast(queuePaused ? '⏸ Очередь поставлена на паузу' : '▶ Очередь возобновлена');
+    } catch (err) {
+      showToast(err.message || 'Не удалось переключить паузу');
+    } finally {
+      setButtonLoading(btn, false);
+      updatePauseBtn();
+    }
+  }
+
   // ── Balance ──
   async function loadBalance() {
     try {
@@ -1197,6 +1248,8 @@
       balanceValueEl.textContent = txt;
       const sv = document.getElementById('balanceScreenValue');
       if (sv) sv.textContent = txt;
+      const alertEl = document.getElementById('lowBalanceAlert');
+      if (alertEl) alertEl.classList.toggle('hidden', !Number.isFinite(v) || v >= 5);
     } catch {
       balanceValueEl.textContent = '—';
     }
@@ -1484,7 +1537,32 @@
       const data = await request(API.getGenerations);
       generations = Array.isArray(data) ? data : [];
       renderGenerations();
-      const hasActive = generations.some(g => ['queue','processing','text_done'].includes(g.status));
+      const activeCount = generations.filter(g => ['queue','processing','text_done'].includes(g.status)).length;
+      const badge = document.getElementById('queueBadge');
+      if (badge) {
+        if (activeCount > 0) { badge.textContent = activeCount; badge.classList.remove('hidden'); }
+        else { badge.classList.add('hidden'); }
+      }
+      const hasActive = activeCount > 0;
+      // Индикатор статуса воркера
+      const dot  = document.getElementById('queueStatusDot');
+      const text = document.getElementById('queueStatusText');
+      if (dot && text) {
+        if (activeCount === 0) {
+          dot.style.background = 'var(--text2)'; text.textContent = 'Простой';
+        } else {
+          const now = Date.now();
+          const stuck = generations.some(g =>
+            g.status === 'processing' && g.updated &&
+            (now - new Date(g.updated).getTime()) > 2 * 60 * 1000
+          );
+          if (stuck) {
+            dot.style.background = 'var(--danger)'; text.textContent = 'Завис';
+          } else {
+            dot.style.background = 'var(--ok)'; text.textContent = 'В работе';
+          }
+        }
+      }
       if (hasActive) startPolling(); else stopPolling();
     } catch (err) {
       generationsList.innerHTML = '<div class="empty">Не удалось загрузить список</div>';
@@ -1633,6 +1711,7 @@
         postDetails.innerHTML = `
           ${buildCarouselHtml(slides)}
           ${item.post_text ? `<div class="post-text-box">${escapeHtml(item.post_text)}</div>` : ''}
+          ${item.post_text ? `<button id="copyTextBtn" class="btn-ghost">📋 Скопировать текст</button>` : ''}
           ${paramsHtml}
           ${errorHtml}
           <button id="regenImageBtn" class="btn-secondary">🔄 Перегенерировать все слайды</button>
@@ -1660,18 +1739,111 @@
     postDetails.innerHTML = `
       ${imageUrl ? `<div class="post-img-wrap"><img class="post-image" src="${escapeHtml(imageUrl)}" alt="Изображение поста"></div>` : ''}
       ${item.post_text ? `<div class="post-text-box">${escapeHtml(item.post_text)}</div>` : ''}
+      ${item.post_text ? `<button id="copyTextBtn" class="btn-ghost">📋 Скопировать текст</button>` : ''}
+      ${item.post_text ? `
+        <div id="editTextBlock" style="display:flex;flex-direction:column;gap:8px;">
+          <label class="field">Комментарий для ИИ&ensp;<span class="muted-note muted">(необязательно)</span>
+            <textarea id="aiComment" placeholder="Например: сделай более дружелюбным, добавь про акцию..." style="min-height:64px;"></textarea>
+          </label>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+            <label class="sub-opt"><input type="radio" name="aiAction" value="shorten"><span>✂️ Укоротить</span></label>
+            <label class="sub-opt"><input type="radio" name="aiAction" value="lengthen"><span>📝 Удлинить</span></label>
+            <label class="sub-opt"><input type="radio" name="aiAction" value="tone"><span>🎭 Сменить тон</span></label>
+          </div>
+          <button id="applyAiBtn" class="btn-secondary" style="min-height:44px;">✨ Применить</button>
+          <div id="aiTextResult" style="display:none;flex-direction:column;gap:8px;">
+            <div class="field">Новый вариант
+              <textarea id="aiResultText" style="min-height:150px;max-height:300px;overflow:auto;"></textarea>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <button id="acceptTextBtn" class="btn-primary" style="min-height:42px;font-size:13px;">✅ Принять</button>
+              <button id="rejectTextBtn" class="btn-ghost" style="min-height:42px;font-size:13px;">✖ Отклонить</button>
+            </div>
+          </div>
+        </div>` : ''}
       ${paramsHtml}
       ${errorHtml}
-      <button id="regenImageBtn" class="btn-secondary">${regenImageLabel}</button>
+      ${item.status === 'queue'
+        ? '<button id="cancelGenerationBtn" class="btn-danger">✖ Отменить задачу</button>'
+        : `<button id="regenImageBtn" class="btn-secondary">${regenImageLabel}</button>
       ${item.platform !== 'pinterest' ? '<button id="regenTextBtn" class="btn-secondary">🔄 Перегенерировать текст</button>' : ''}
-      ${imageUrl ? '<button id="downloadImageBtn" class="btn-ghost">⬇️ Скачать картинку</button>' : ''}
+      ${imageUrl ? '<button id="downloadImageBtn" class="btn-ghost">⬇️ Скачать картинку</button>' : ''}`
+      }
       <button id="deleteGenerationBtn" class="btn-danger">🗑 Удалить</button>
     `;
     bindPostButtons();
   }
 
+  async function editTextWithAI(instruction) {
+    const item = selectedGeneration;
+    const comment = document.getElementById('aiComment')?.value.trim() || '';
+    const resultBlock = document.getElementById('aiTextResult');
+    const resultTextarea = document.getElementById('aiResultText');
+    const btn = document.getElementById('applyAiBtn');
+    if (btn) setButtonLoading(btn, true, 'Думаю...');
+    if (resultBlock) resultBlock.style.display = 'none';
+
+    const prompt = `Вот текст поста:\n\n${item.post_text}\n\nЗадача: ${instruction}.${comment ? `\n\nКомментарий: ${comment}` : ''}\n\nВерни только готовый текст поста без пояснений.`;
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      });
+      const data = await res.json();
+      const text = data.content?.find(b => b.type === 'text')?.text || '';
+      if (!text) throw new Error('Пустой ответ');
+      if (resultTextarea) resultTextarea.value = text;
+      if (resultBlock) resultBlock.style.display = 'flex';
+    } catch (err) {
+      showToast(err.message || 'Ошибка запроса к ИИ');
+    } finally {
+      const btn = document.getElementById('applyAiBtn');
+      if (btn) setButtonLoading(btn, false);
+    }
+  }
+
   function bindPostButtons() {
     const item = selectedGeneration;
+
+    // AI text edit buttons
+    document.getElementById('applyAiBtn')?.addEventListener('click', () => {
+      const action = document.querySelector('input[name="aiAction"]:checked')?.value;
+      if (!action) { showToast('Выбери действие'); return; }
+      const instructions = {
+        shorten: 'Укороти текст, сохранив смысл и стиль',
+        lengthen: 'Удлини текст, добавив деталей и живости',
+        tone: 'Перепиши текст в более живом и вовлекающем тоне',
+      };
+      editTextWithAI(instructions[action]);
+    });
+
+    document.getElementById('acceptTextBtn')?.addEventListener('click', async () => {
+      const newText = document.getElementById('aiResultText')?.value;
+      if (!newText) return;
+      const btn = document.getElementById('acceptTextBtn');
+      setButtonLoading(btn, true, 'Сохранение...');
+      try {
+        await request(`https://pb.bymzavod.online/api/collections/generations/records/${item.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ post_text: newText })
+        });
+        item.post_text = newText;
+        showToast('✅ Текст сохранён');
+        renderPost();
+      } catch (err) { showToast(err.message || 'Не удалось сохранить'); }
+      finally { setButtonLoading(btn, false); }
+    });
+
+    document.getElementById('rejectTextBtn')?.addEventListener('click', () => {
+      document.getElementById('aiTextResult').style.display = 'none';
+      document.getElementById('aiComment').value = '';
+    });
 
     document.getElementById('regenImageBtn')?.addEventListener('click', async ev => {
       const btn = ev.currentTarget;
@@ -1709,6 +1881,20 @@
       finally { setButtonLoading(btn, false); }
     });
 
+    document.getElementById('copyTextBtn')?.addEventListener('click', () => {
+      navigator.clipboard.writeText(item.post_text || '').then(() => showToast('✅ Текст скопирован'));
+    });
+    document.getElementById('cancelGenerationBtn')?.addEventListener('click', async ev => {
+      const btn = ev.currentTarget;
+      setButtonLoading(btn, true, 'Отмена...');
+      try {
+        await request(API.deleteGen, { method: 'POST', body: JSON.stringify({ generation_id: item.id }) });
+        showToast('✅ Задача отменена');
+        navigate('generations');
+        await loadGenerations();
+      } catch (err) { showToast(err.message || 'Не удалось отменить'); }
+      finally { setButtonLoading(btn, false); }
+    });
     document.getElementById('downloadImageBtn')?.addEventListener('click', downloadImage);
     document.getElementById('deleteGenerationBtn')?.addEventListener('click', deleteGeneration);
   }
@@ -1829,6 +2015,7 @@
   function bindEvents() {
     document.getElementById('createBtn').addEventListener('click', () => navigate('platform'));
     document.getElementById('balanceBtn').addEventListener('click', openBalanceScreen);
+    document.getElementById('pauseBtn').addEventListener('click', togglePause);
     document.getElementById('topUpBtn').addEventListener('click', () => window.open('https://openrouter.ai/settings/credits', '_blank'));
     document.getElementById('generationsBtn').addEventListener('click', async () => {
       navigate('generations');
@@ -1891,6 +2078,8 @@
   renderPlatforms();
   bindEvents();
   loadBalance();
+  loadGenerations(false);
+  loadPause();
 </script>
 </body>
 </html>
