@@ -1855,11 +1855,18 @@
   function buildCarouselHtml(slides) {
     if (!slides.length) return '';
     const slidesHtml = slides.map((slide, i) => {
-      const imgUrl = `https://pb.bymzavod.online/api/files/carousel_slides/${slide.id}/${slide.image}`;
+      const imgField = slide.image || slide.image_url || '';
+      const imgUrl = imgField ? `https://pb.bymzavod.online/api/files/carousel_slides/${slide.id}/${imgField}` : '';
       return `
         <div class="carousel-slide">
-          <img src="${escapeHtml(imgUrl)}" alt="Слайд ${i+1}">
-          <button class="carousel-regen-btn" data-slide-id="${slide.id}" data-slide-num="${slide.slide_number}">🔄 Слайд ${slide.slide_number}</button>
+          ${imgUrl ? `<img src="${escapeHtml(imgUrl)}" alt="Слайд ${i+1}">` : `<div style="aspect-ratio:1;background:var(--card2);display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:13px;">Нет изображения</div>`}
+          <div class="slide-regen-panel" data-slide-id="${slide.id}" data-slide-num="${slide.slide_number}">
+            <textarea class="slide-prompt-edit" placeholder="Промпт слайда..." style="font-family:inherit;font-size:12px;color:var(--text2);background:var(--card);border:1px solid var(--border);border-radius:10px;padding:8px;width:100%;min-height:60px;resize:vertical;margin-top:6px;">${escapeHtml(slide.prompt || '')}</textarea>
+            <label class="field" style="margin-top:6px;">Комментарий для ИИ&ensp;<span class="muted-note muted">(необязательно)</span>
+              <textarea class="slide-comment-input" placeholder="Что изменить в этом слайде..." style="min-height:48px;font-size:13px;"></textarea>
+            </label>
+            <button class="carousel-regen-btn" style="margin-top:6px;" data-slide-id="${slide.id}" data-slide-num="${slide.slide_number}">🔄 Перегенерировать слайд ${slide.slide_number}</button>
+          </div>
         </div>`;
     }).join('');
     return `
@@ -1899,40 +1906,27 @@
     const item = selectedGeneration;
     const params = item.params && typeof item.params === 'object' ? item.params : {};
     const imageUrl = getImageUrl(item);
-
-    const visibleParams = Object.entries(params).filter(([k]) => !k.endsWith('_description'));
-    const paramsHtml = visibleParams.length
-      ? `<details class="params-accordion">
-          <summary>📋 Параметры генерации</summary>
-          <div class="params-body">
-            ${visibleParams.map(([k, v]) => `
-              <div class="param-row">
-                <div class="param-key">${escapeHtml(k)}</div>
-                <div>${escapeHtml(typeof v === 'object' ? JSON.stringify(v) : String(v))}</div>
-              </div>`).join('')}
-          </div>
-        </details>`
-      : `<p class="muted">Авто-режим — параметры выбраны ИИ</p>`;
-
-    const errorHtml = item.status === 'error'
-      ? `<div class="error-box">
-          <div class="error-title">❌ Ошибка генерации</div>
-          <div class="error-msg">${escapeHtml(item.error_message || item.error || 'Текст ошибки не указан')}</div>
-        </div>
-        <button id="retryBtn" class="btn-primary">🔁 Повторить</button>`
-      : '';
-
-    const imageReady = !!imageUrl;
     const isCarousel = item.platform === 'carousel';
     const isText = item.platform === 'text';
-    const regenImageLabel = '🔄 Перегенерировать';
+    const isImage = item.platform === 'image';
 
+    const visibleParams = Object.entries(params).filter(([k]) => !k.endsWith('_description') && k !== 'ai_comment');
+    const paramsHtml = visibleParams.length
+      ? `<details class="params-accordion"><summary>📋 Параметры генерации</summary><div class="params-body">${
+          visibleParams.map(([k, v]) => `<div class="param-row"><div class="param-key">${escapeHtml(k)}</div><div>${escapeHtml(typeof v === 'object' ? JSON.stringify(v) : String(v))}</div></div>`).join('')
+        }</div></details>`
+      : '';
+
+    const errorHtml = item.status === 'error'
+      ? `<div class="error-box"><div class="error-title">❌ Ошибка генерации</div><div class="error-msg">${escapeHtml(item.error_message || item.error || 'Текст ошибки не указан')}</div></div>
+         <button id="retryBtn" class="btn-primary">🔁 Повторить</button>`
+      : '';
+
+    // ── CAROUSEL ──
     if (isCarousel && item.status === 'done') {
       loadCarouselSlides(item.id).then(slides => {
         postDetails.innerHTML = `
           ${buildCarouselHtml(slides)}
-          ${item.post_text ? `<div class="post-text-box">${escapeHtml(item.post_text)}</div>` : ''}
-          ${item.post_text ? `<button id="copyTextBtn" class="btn-ghost">📋 Скопировать текст</button>` : ''}
           ${paramsHtml}
           ${errorHtml}
           <button id="regenImageBtn" class="btn-secondary">🔄 Перегенерировать все слайды</button>
@@ -1941,14 +1935,24 @@
         initCarousel(slides.length);
         document.querySelectorAll('.carousel-regen-btn').forEach(btn => {
           btn.addEventListener('click', async () => {
-            const slideId  = btn.dataset.slideId;
+            const panel = btn.closest('.slide-regen-panel');
+            const slideId = btn.dataset.slideId;
             const slideNum = btn.dataset.slideNum;
+            const newPrompt = panel?.querySelector('.slide-prompt-edit')?.value.trim() || '';
+            const comment = panel?.querySelector('.slide-comment-input')?.value.trim() || '';
             setButtonLoading(btn, true, 'Отправка...');
             try {
-              await request(API.regenerateSlide, { method:'POST', body: JSON.stringify({ slide_id: slideId }) });
+              // Save updated prompt (with comment appended if provided)
+              const finalPrompt = comment ? newPrompt + (newPrompt ? '\n\nAdditional instruction: ' + comment : comment) : newPrompt;
+              if (finalPrompt) {
+                await request(`https://pb.bymzavod.online/api/collections/carousel_slides/records/${slideId}`, {
+                  method: 'PATCH', body: JSON.stringify({ prompt: finalPrompt })
+                });
+              }
+              await request(API.regenerateSlide, { method: 'POST', body: JSON.stringify({ slide_id: slideId }) });
               showToast('✅ Слайд ' + slideNum + ' отправлен на перегенерацию');
             } catch { showToast('Ошибка перегенерации слайда'); }
-            finally  { setButtonLoading(btn, false); }
+            finally { setButtonLoading(btn, false); }
           });
         });
         bindPostButtons();
@@ -1956,41 +1960,88 @@
       return;
     }
 
+    // ── TEXT ──
+    if (isText) {
+      postDetails.innerHTML = `
+        ${item.post_text ? `<div class="post-text-box">${escapeHtml(item.post_text)}</div>` : ''}
+        ${item.post_text ? `<button id="copyTextBtn" class="btn-ghost">📋 Скопировать текст</button>` : ''}
+        ${item.post_text ? `
+          <div id="editTextBlock" style="display:flex;flex-direction:column;gap:8px;">
+            <label class="field">Комментарий для ИИ&ensp;<span class="muted-note muted">(необязательно)</span>
+              <textarea id="aiComment" placeholder="Например: сделай более дружелюбным, добавь про акцию..." style="min-height:64px;"></textarea>
+            </label>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+              <label class="sub-opt"><input type="radio" name="aiAction" value="shorten"><span>✂️ Укоротить</span></label>
+              <label class="sub-opt"><input type="radio" name="aiAction" value="lengthen"><span>📝 Удлинить</span></label>
+              <label class="sub-opt"><input type="radio" name="aiAction" value="tone"><span>🎭 Сменить тон</span></label>
+            </div>
+            <button id="applyAiBtn" class="btn-secondary" style="min-height:44px;">✨ Применить</button>
+            <div id="aiTextResult" style="display:none;flex-direction:column;gap:8px;">
+              <div class="field">Новый вариант<textarea id="aiResultText" style="min-height:150px;max-height:300px;overflow:auto;"></textarea></div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <button id="acceptTextBtn" class="btn-primary" style="min-height:42px;font-size:13px;">✅ Принять</button>
+                <button id="rejectTextBtn" class="btn-ghost" style="min-height:42px;font-size:13px;">✖ Отклонить</button>
+              </div>
+            </div>
+          </div>` : ''}
+        ${paramsHtml}
+        ${errorHtml}
+        ${item.status === 'queue'
+          ? '<button id="cancelGenerationBtn" class="btn-danger">✖ Отменить задачу</button>'
+          : `<button id="regenTextBtn" class="btn-secondary">🔄 Перегенерировать текст</button>
+             <button id="deleteGenerationBtn" class="btn-danger">🗑 Удалить</button>`
+        }
+      `;
+      bindPostButtons();
+      return;
+    }
+
+    // ── IMAGE ──
+    const refsLoaded = references && references.styles;
+    const styleOpts = refsLoaded ? buildSelectOpts(references.styles, params.style) : '';
+    const colorOpts = refsLoaded ? buildSelectOpts(references.colors, params.color) : '';
+    const printOpts = refsLoaded ? buildSelectOpts(references.prints, params.print) : '';
+    const materialOpts = refsLoaded ? buildSelectOpts(references.materials, params.material) : '';
+    const fasteningOpts = refsLoaded ? buildSelectOpts(references.fastening_types, params.fastening_type) : '';
+    const arOpts = ['3:4','1:1','9:16','2:3'].map(ar =>
+      `<option value="${ar}"${(params.aspect_ratio || '3:4') === ar ? ' selected' : ''}>${ar}</option>`
+    ).join('');
+
     postDetails.innerHTML = `
       ${imageUrl ? `<div class="post-img-wrap"><img class="post-image" src="${escapeHtml(imageUrl)}" alt="Изображение поста"></div>` : ''}
-      ${item.post_text ? `<div class="post-text-box">${escapeHtml(item.post_text)}</div>` : ''}
-      ${item.post_text ? `<button id="copyTextBtn" class="btn-ghost">📋 Скопировать текст</button>` : ''}
-      ${item.post_text ? `
-        <div id="editTextBlock" style="display:flex;flex-direction:column;gap:8px;">
-          <label class="field">Комментарий для ИИ&ensp;<span class="muted-note muted">(необязательно)</span>
-            <textarea id="aiComment" placeholder="Например: сделай более дружелюбным, добавь про акцию..." style="min-height:64px;"></textarea>
-          </label>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
-            <label class="sub-opt"><input type="radio" name="aiAction" value="shorten"><span>✂️ Укоротить</span></label>
-            <label class="sub-opt"><input type="radio" name="aiAction" value="lengthen"><span>📝 Удлинить</span></label>
-            <label class="sub-opt"><input type="radio" name="aiAction" value="tone"><span>🎭 Сменить тон</span></label>
-          </div>
-          <button id="applyAiBtn" class="btn-secondary" style="min-height:44px;">✨ Применить</button>
-          <div id="aiTextResult" style="display:none;flex-direction:column;gap:8px;">
-            <div class="field">Новый вариант
-              <textarea id="aiResultText" style="min-height:150px;max-height:300px;overflow:auto;"></textarea>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-              <button id="acceptTextBtn" class="btn-primary" style="min-height:42px;font-size:13px;">✅ Принять</button>
-              <button id="rejectTextBtn" class="btn-ghost" style="min-height:42px;font-size:13px;">✖ Отклонить</button>
-            </div>
-          </div>
-        </div>` : ''}
+      ${imageUrl ? `<button id="downloadImageBtn" class="btn-ghost">⬇️ Скачать картинку</button>` : ''}
       ${paramsHtml}
       ${errorHtml}
-      ${item.status === 'queue'
-        ? '<button id="cancelGenerationBtn" class="btn-danger">✖ Отменить задачу</button>'
-        : `<button id="regenImageBtn" class="btn-secondary">${regenImageLabel}</button>
-      ${imageUrl ? '<button id="downloadImageBtn" class="btn-ghost">⬇️ Скачать картинку</button>' : ''}
-      <button id="deleteGenerationBtn" class="btn-danger">🗑 Удалить</button>`
-      }
+      ${item.status !== 'queue' ? `
+        <details class="params-accordion" id="regenPanel">
+          <summary>🔄 Перегенерировать</summary>
+          <div class="params-body" style="display:flex;flex-direction:column;gap:10px;padding-top:10px;">
+            <label class="field">Комментарий для ИИ&ensp;<span class="muted-note muted">(необязательно)</span>
+              <textarea id="regenComment" placeholder="Что изменить — цвет, атмосферу, детали..." style="min-height:56px;"></textarea>
+            </label>
+            ${refsLoaded ? `
+              <label class="field">Соотношение сторон<select id="regenAr">${arOpts}</select></label>
+              <label class="field">Стиль<select id="regenStyle">${styleOpts}</select></label>
+              <label class="field">Цвет<select id="regenColor">${colorOpts}</select></label>
+              <label class="field">Принт<select id="regenPrint">${printOpts}</select></label>
+              <label class="field">Материал<select id="regenMaterial">${materialOpts}</select></label>
+              <label class="field">Тип крепления<select id="regenFastening">${fasteningOpts}</select></label>
+            ` : '<div class="muted" style="font-size:13px;">Открой конструктор чтобы загрузить справочники</div>'}
+            <button id="regenImageBtn" class="btn-primary">⚡ Перегенерировать</button>
+          </div>
+        </details>
+        <button id="deleteGenerationBtn" class="btn-danger">🗑 Удалить</button>
+      ` : '<button id="cancelGenerationBtn" class="btn-danger">✖ Отменить задачу</button>'}
     `;
     bindPostButtons();
+  }
+
+  function buildSelectOpts(items, selectedName) {
+    const opts = '<option value="">Не выбрано</option>';
+    if (!items) return opts;
+    return opts + items.map(i =>
+      `<option value="${escapeHtml(i.id)}" data-name="${escapeHtml(i.short_name)}" data-description="${escapeHtml(i.tech_description || '')}"${i.short_name === selectedName ? ' selected' : ''}>${escapeHtml(i.short_name)}</option>`
+    ).join('');
   }
 
   async function editTextWithAI(instruction) {
@@ -2062,7 +2113,31 @@
       const btn = ev.currentTarget;
       setButtonLoading(btn, true, 'Отправка...');
       try {
-        await request(API.regenerate, { method:'POST', body: JSON.stringify({ generation_id: item.id }) });
+        // For image cards: save updated params first
+        if (item.platform === 'image') {
+          const comment = document.getElementById('regenComment')?.value.trim() || '';
+          const arEl = document.getElementById('regenAr');
+          const styleEl = document.getElementById('regenStyle');
+          const colorEl = document.getElementById('regenColor');
+          const printEl = document.getElementById('regenPrint');
+          const materialEl = document.getElementById('regenMaterial');
+          const fasteningEl = document.getElementById('regenFastening');
+          const getOpt = el => el ? { name: el.options[el.selectedIndex]?.dataset.name || '', description: el.options[el.selectedIndex]?.dataset.description || '' } : { name: '', description: '' };
+          const s = getOpt(styleEl), c = getOpt(colorEl), p = getOpt(printEl), m = getOpt(materialEl), f = getOpt(fasteningEl);
+          const newParams = { ...item.params,
+            aspect_ratio: arEl?.value || item.params?.aspect_ratio || '3:4',
+            ai_comment: comment,
+            ...(s.name ? { style: s.name, style_description: s.description } : {}),
+            ...(c.name ? { color: c.name, color_description: c.description } : {}),
+            ...(p.name ? { print: p.name, print_description: p.description } : {}),
+            ...(m.name ? { material: m.name, material_description: m.description } : {}),
+            ...(f.name ? { fastening_type: f.name, fastening_type_description: f.description } : {}),
+          };
+          await request(`https://pb.bymzavod.online/api/collections/generations/records/${item.id}`, {
+            method: 'PATCH', body: JSON.stringify({ params: newParams })
+          });
+        }
+        await request(API.regenerate, { method: 'POST', body: JSON.stringify({ generation_id: item.id }) });
         showToast('✅ Задача добавлена в очередь');
         navigate('generations');
         await loadGenerations();
