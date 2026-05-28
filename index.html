@@ -762,6 +762,11 @@
     .ar-btn span { font-size:10px; font-weight:600; color:var(--text2); }
     .ar-btn.active { border-color:var(--accent); background:var(--accent-soft); color:var(--text); }
     .ar-btn.active span { color:var(--accent-light); }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -917,12 +922,52 @@
       </div>
 
       <!-- ── VIDEO PANEL ── -->
-      <div id="panel-video" class="ctype-panel" style="display:none;">
-        <div style="text-align:center;padding:40px 0;color:var(--text2);">
-          <div style="font-size:44px;margin-bottom:14px;">🎬</div>
-          <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;">Видео — скоро</div>
-          <div style="font-size:13px;line-height:1.5;">Генерация видеороликов появится<br>в следующей версии</div>
+      <div id="panel-video" class="ctype-panel" style="display:none;flex-direction:column;gap:10px;">
+
+        <!-- Режим -->
+        <div class="field">Качество
+          <div class="ar-row" id="videoModeRow" style="grid-template-columns:repeat(3,1fr);">
+            <button class="ar-btn" data-vmode="std">std<span>720p</span></button>
+            <button class="ar-btn active" data-vmode="pro">pro<span>1080p</span></button>
+            <button class="ar-btn" data-vmode="4K">4K<span>Медленно</span></button>
+          </div>
         </div>
+
+        <!-- Формат -->
+        <div class="field">Формат кадра
+          <div class="ar-row" id="videoArRow" style="grid-template-columns:repeat(3,1fr);margin-top:6px;">
+            <button class="ar-btn active" data-var="9:16">9:16<span>Reels</span></button>
+            <button class="ar-btn" data-var="16:9">16:9<span>YouTube</span></button>
+            <button class="ar-btn" data-var="1:1">1:1<span>Instagram</span></button>
+          </div>
+        </div>
+
+        <!-- Длительность -->
+        <label class="field">Длительность:&ensp;<span id="video-dur-val" style="color:var(--accent-light);font-weight:800;">5 сек</span>
+          <input type="range" id="video-duration" min="3" max="15" value="5" class="ap-slider" style="width:100%;margin-top:6px;" oninput="document.getElementById('video-dur-val').textContent=this.value+' сек';updateSliderFill(this)">
+        </label>
+
+        <!-- Звук -->
+        <label class="check-row" style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;">
+          <input id="video-sound" type="checkbox">
+          <span style="font-size:14px;font-weight:600;">🔊 Со звуком</span>
+        </label>
+
+        <!-- Промт с кнопкой улучшения -->
+        <div class="field">Промт
+          <div style="position:relative;">
+            <textarea id="video-prompt" placeholder="Опиши что должно происходить в видео..." style="min-height:90px;padding-right:46px;" oninput="toggleVideoEnhanceBtn()"></textarea>
+            <button id="video-enhance-btn" onclick="enhanceVideoPrompt()" title="Улучшить промт с помощью ИИ" style="display:none;position:absolute;bottom:8px;right:8px;width:34px;height:34px;border-radius:9px;background:var(--accent-soft);border:1px solid var(--accent);color:var(--accent-light);font-size:16px;cursor:pointer;font-family:inherit;display:none;align-items:center;justify-content:center;transition:all .18s;">✨</button>
+          </div>
+          <div style="font-size:11px;color:var(--text2);margin-top:4px;">Нажми ✨ чтобы улучшить промт с помощью ИИ</div>
+        </div>
+
+        <!-- Кнопка генерации -->
+        <div id="video-cost-row" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:6px 0 2px;">
+          <span style="font-size:12px;font-weight:600;color:var(--text2);">Стоимость генерации:</span>
+          <span id="video-cost-val" style="font-size:15px;font-weight:800;color:var(--accent-light);">—</span>
+        </div>
+        <button id="video-generate-btn" class="btn-primary" style="margin-top:4px;">⚡ Сгенерировать видео</button>
       </div>
 
       <!-- ── COUNT + GENERATE ── -->
@@ -1574,6 +1619,11 @@
       const panel = document.getElementById('panel-' + selectedContentType);
       if (panel) panel.style.display = 'flex';
       document.getElementById('cons-actions').style.display = selectedContentType === 'video' ? 'none' : 'flex';
+      // Для видео — сброс полей
+      if (selectedContentType === 'video') {
+        document.getElementById('video-prompt').value = '';
+        toggleVideoEnhanceBtn();
+      }
       consCount = 1;
       document.getElementById('cons-count-val').textContent = '1';
     });
@@ -1742,6 +1792,18 @@
         params.fastening_type = f.name; params.fastening_type_description = f.description;
       }
       for (let i = 0; i < consCount; i++) payloads.push({ platform: 'carousel', mode, params });
+
+    } else if (type === 'video') {
+      const vmode = document.querySelector('#videoModeRow .ar-btn.active')?.dataset.vmode || 'pro';
+      const var_  = document.querySelector('#videoArRow .ar-btn.active')?.dataset.var || '9:16';
+      const params = {
+        prompt:       document.getElementById('video-prompt')?.value.trim() || '',
+        mode:         vmode,
+        aspect_ratio: var_,
+        duration:     String(document.getElementById('video-duration')?.value || '5'),
+        sound:        document.getElementById('video-sound')?.checked || false,
+      };
+      payloads.push({ platform: 'video', params });
     }
 
     return payloads;
@@ -1930,7 +1992,71 @@
          <button id="retryBtn" class="btn-primary">🔁 Повторить</button>`
       : '';
 
-    // ── PLATFORM (autopost) ──
+    // ── VIDEO ──
+    if (item.platform === 'video') {
+      const videoUrl = item.video_url || '';
+      const isDone = item.status === 'done';
+      const isQueue = item.status === 'queue' || item.status === 'processing';
+
+      postDetails.innerHTML = `
+        <div style="background:var(--danger-soft);border:1px solid rgba(239,68,68,.25);border-radius:12px;padding:11px 14px;font-size:13px;font-weight:600;color:var(--danger);line-height:1.4;">
+          ⚠️ Видео автоматически удалится через 24 часа — скачайте сейчас
+        </div>
+        ${isDone && videoUrl ? `
+          <video controls playsinline style="width:100%;border-radius:14px;background:#000;display:block;max-height:480px;" src="${escapeHtml(videoUrl)}">
+            Ваш браузер не поддерживает воспроизведение видео.
+          </video>
+          <button id="downloadVideoBtn" class="btn-ghost">⬇️ Скачать видео</button>
+        ` : ''}
+        ${isQueue ? `<div style="text-align:center;padding:32px 0;color:var(--text2);font-size:14px;">⏳ Видео генерируется...</div>` : ''}
+        ${item.status === 'error' ? `
+          <div class="error-box">
+            <div class="error-title">❌ Ошибка генерации</div>
+            <div class="error-msg">${escapeHtml(item.error_message || 'Ошибка генерации видео')}</div>
+          </div>
+          <button id="retryBtn" class="btn-primary">🔁 Повторить</button>
+        ` : ''}
+        ${paramsHtml}
+        ${isDone ? `<button id="deleteGenerationBtn" class="btn-danger">🗑 Удалить</button>` : ''}
+        ${isQueue ? `<button id="cancelGenerationBtn" class="btn-danger">✖ Отменить</button>` : ''}
+      `;
+
+      document.getElementById('downloadVideoBtn')?.addEventListener('click', () => {
+        const a = document.createElement('a');
+        a.href = videoUrl;
+        a.download = 'video-' + item.id + '.mp4';
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      });
+      document.getElementById('deleteGenerationBtn')?.addEventListener('click', deleteGeneration);
+      document.getElementById('cancelGenerationBtn')?.addEventListener('click', async ev => {
+        const btn = ev.currentTarget;
+        setButtonLoading(btn, true, 'Отмена...');
+        try {
+          await request(API.deleteGen, { method: 'POST', body: JSON.stringify({ generation_id: item.id }) });
+          showToast('✅ Задача отменена');
+          navigate('generations');
+          await loadGenerations();
+        } catch (err) { showToast(err.message || 'Не удалось отменить'); }
+        finally { setButtonLoading(btn, false); }
+      });
+      document.getElementById('retryBtn')?.addEventListener('click', async ev => {
+        const btn = ev.currentTarget;
+        setButtonLoading(btn, true, 'Отправка...');
+        try {
+          await request(API.regenerate, { method: 'POST', body: JSON.stringify({ generation_id: item.id }) });
+          showToast('✅ Повторная задача добавлена в очередь');
+          navigate('generations');
+          await loadGenerations();
+        } catch (err) { showToast(err.message || 'Не удалось повторить'); }
+        finally { setButtonLoading(btn, false); }
+      });
+      return;
+    }
+
+        // ── PLATFORM (autopost) ──
     if (PLATFORM_TYPES.has(item.platform) && item.status === 'done') {
       const isTelegram = item.platform === 'telegram';
       postDetails.innerHTML = `
@@ -2819,9 +2945,122 @@
     });
   }
 
+
+  // ── Video generation ──
+
+  // ═══════════════════════════════════════════════════════════════════
+  // СИСТЕМНЫЙ ПРОМТ АГЕНТА-УЛУЧШАЙЗЕРА ВИДЕО
+  // Отредактируй этот текст чтобы изменить поведение агента.
+  // Не меняй структуру: агент должен возвращать ТОЛЬКО улучшенный промт,
+  // без кавычек, без объяснений, без лишнего текста.
+  // ═══════════════════════════════════════════════════════════════════
+  const VIDEO_PROMPT_SYSTEM = `Ты — эксперт по написанию промтов для AI-генерации видео (модель Kling 3.0).
+Твоя задача: взять описание пользователя и переписать его в профессиональный промт для видеогенерации.
+
+Правила написания промтов для Kling 3.0:
+- Пиши на английском языке
+- Описывай движение камеры: slow zoom in, cinematic pan, static shot, dolly forward и т.д.
+- Указывай динамику сцены: flowing fabric, gentle sway, soft light changes
+- Описывай атмосферу и освещение: warm morning light, soft bokeh background, cozy interior
+- Упоминай стиль съёмки: cinematic, lifestyle, product photography style
+- Используй конкретные детали о шторке для ванной: цвет, текстура, паттерн если упомянуты пользователем
+- Длина промта: 2-4 предложения, максимально конкретно
+
+Контекст: магазин шторок для ванной комнаты. Видео используются для соцсетей (Instagram Reels, Pinterest, Telegram).
+
+Верни ТОЛЬКО улучшенный промт на английском языке. Никакого вступления, объяснений или кавычек.`;
+
+  let videoSelectedMode = 'pro';
+  let videoSelectedAr   = '9:16';
+
+  // ═══════════════════════════════════════════════════════════════════
+  // ЦЕНЫ KIE.AI — Kling 3.0 ($ за секунду видео)
+  // Обновляй при изменении тарифов в дашборде kie.ai
+  // ═══════════════════════════════════════════════════════════════════
+  const KIE_PRICING = {
+    std:  { silent: 0.07,  sound: 0.10  },
+    pro:  { silent: 0.09,  sound: 0.135 },
+    '4K': { silent: 0.335, sound: 0.335 },
+  };
+
+  function calcVideoCost() {
+    const mode     = document.querySelector('#videoModeRow .ar-btn.active')?.dataset.vmode || 'pro';
+    const duration = Number(document.getElementById('video-duration')?.value || 5);
+    const hasSound = document.getElementById('video-sound')?.checked || false;
+    const tier     = KIE_PRICING[mode] || KIE_PRICING.pro;
+    const perSec   = hasSound ? tier.sound : tier.silent;
+    const total    = (perSec * duration).toFixed(2);
+    const el       = document.getElementById('video-cost-val');
+    if (el) el.textContent = '$' + total;
+  }
+
+  function initVideoPanel() {
+    document.getElementById('videoModeRow')?.addEventListener('click', e => {
+      const btn = e.target.closest('[data-vmode]');
+      if (!btn) return;
+      videoSelectedMode = btn.dataset.vmode;
+      document.querySelectorAll('#videoModeRow .ar-btn').forEach(b => b.classList.toggle('active', b.dataset.vmode === videoSelectedMode));
+      calcVideoCost();
+    });
+    document.getElementById('videoArRow')?.addEventListener('click', e => {
+      const btn = e.target.closest('[data-var]');
+      if (!btn) return;
+      videoSelectedAr = btn.dataset.var;
+      document.querySelectorAll('#videoArRow .ar-btn').forEach(b => b.classList.toggle('active', b.dataset.var === videoSelectedAr));
+    });
+    document.getElementById('video-duration')?.addEventListener('input', calcVideoCost);
+    document.getElementById('video-sound')?.addEventListener('change', calcVideoCost);
+    document.getElementById('video-generate-btn')?.addEventListener('click', createGeneration);
+    const durSlider = document.getElementById('video-duration');
+    if (durSlider) updateSliderFill(durSlider);
+    calcVideoCost();
+  }
+
+  function toggleVideoEnhanceBtn() {
+    const ta  = document.getElementById('video-prompt');
+    const btn = document.getElementById('video-enhance-btn');
+    if (!btn) return;
+    const hasText = ta?.value.trim().length > 3;
+    btn.style.display = hasText ? 'flex' : 'none';
+  }
+
+  async function enhanceVideoPrompt() {
+    const ta  = document.getElementById('video-prompt');
+    const btn = document.getElementById('video-enhance-btn');
+    const userText = ta?.value.trim();
+    if (!userText) return;
+
+    const origContent = btn.innerHTML;
+    btn.innerHTML = '⟳';
+    btn.disabled = true;
+    btn.style.animation = 'spin .8s linear infinite';
+
+    try {
+      const res = await fetch('https://bymzavod.online/webhook/enhance-video-prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: userText, system: VIDEO_PROMPT_SYSTEM }),
+      });
+      const data = await res.json();
+      const improved = data.improved?.trim() || data.text?.trim() || data.choices?.[0]?.message?.content?.trim();
+      if (!improved) throw new Error('Пустой ответ');
+      ta.value = improved;
+      ta.style.borderColor = 'var(--accent)';
+      setTimeout(() => { ta.style.borderColor = ''; }, 1500);
+      showToast('\u2728 Промт улучшен');
+    } catch (err) {
+      showToast('Не удалось улучшить промт: ' + (err.message || 'ошибка'));
+    } finally {
+      btn.innerHTML = origContent;
+      btn.disabled = false;
+      btn.style.animation = '';
+    }
+  }
+
   // ── Boot ──
   initTelegram();
   initConstructor();
+  initVideoPanel();
   bindEvents();
   loadBalance();
   loadGenerations(false);
