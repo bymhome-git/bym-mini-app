@@ -961,6 +961,7 @@
 
     <div class="filter-bar" id="filterBar">
       <div class="ftab on" data-f="all">Все</div>
+      <div class="ftab" data-f="autopost">🤖 Автопост</div>
       <div class="ftab" data-f="done">Готовые</div>
       <div class="ftab" data-f="processing">В работе</div>
       <div class="ftab" data-f="error">Ошибки</div>
@@ -1139,93 +1140,79 @@
         </div>
       </div>
 
-      <!-- Next run -->
-      <div id="nextRunRow" style="display:none;background:var(--accent-soft);border:1px solid rgba(123,92,246,.3);border-radius:12px;padding:11px 14px;font-size:13px;font-weight:600;color:var(--accent-light);">
-        🕐 Следующий запуск: <span id="nextRunText">—</span>
-      </div>
-
       <!-- Schedule -->
       <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:14px;">
         <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;">Расписание</div>
 
-        <label class="field">Час запуска
-          <select id="autopostHour" style="font-size:16px;" onchange="updateNextRun()">
-            <!-- filled by JS -->
-          </select>
-          <span style="font-size:11px;font-weight:500;color:var(--text2);margin-top:4px;display:block;">Время N8N (Europe/Moscow): <span id="n8nCurrentTime" style="font-weight:700;">—</span></span>
-        </label>
-
         <div>
-          <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Дни недели</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            <label class="day-chip"><input class="day-chip-input" type="checkbox" value="mon" checked onchange="updateNextRun()"><span>Пн</span></label>
-            <label class="day-chip"><input class="day-chip-input" type="checkbox" value="tue" checked onchange="updateNextRun()"><span>Вт</span></label>
-            <label class="day-chip"><input class="day-chip-input" type="checkbox" value="wed" checked onchange="updateNextRun()"><span>Ср</span></label>
-            <label class="day-chip"><input class="day-chip-input" type="checkbox" value="thu" checked onchange="updateNextRun()"><span>Чт</span></label>
-            <label class="day-chip"><input class="day-chip-input" type="checkbox" value="fri" checked onchange="updateNextRun()"><span>Пт</span></label>
-            <label class="day-chip"><input class="day-chip-input" type="checkbox" value="sat" onchange="updateNextRun()"><span>Сб</span></label>
-            <label class="day-chip"><input class="day-chip-input" type="checkbox" value="sun" onchange="updateNextRun()"><span>Вс</span></label>
+          <div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Интервал запуска</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;" id="intervalBtns">
+            <button class="ar-btn active" data-interval="daily">Каждый день<span>24ч</span></button>
+            <button class="ar-btn" data-interval="12h">Каждые 12ч<span>2 раза в день</span></button>
+            <button class="ar-btn" data-interval="6h">Каждые 6ч<span>4 раза в день</span></button>
+            <button class="ar-btn" data-interval="1h">Каждый час<span>24 раза в день</span></button>
+            <button class="ar-btn" data-interval="minutes" style="grid-column:span 2;">Минуты<span>тестовый режим</span></button>
+          </div>
+          <div id="minutesRow" style="display:none;margin-top:8px;">
+            <label class="field">Интервал в минутах
+              <select id="autopostMinutes">
+                <option value="1">1 минута</option>
+                <option value="5">5 минут</option>
+                <option value="10">10 минут</option>
+                <option value="15">15 минут</option>
+                <option value="25">25 минут</option>
+                <option value="45" selected>45 минут</option>
+              </select>
+            </label>
           </div>
         </div>
       </div>
 
-      <!-- Content type counts -->
+      <!-- Platform counts -->
       <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:16px;">
-        <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;">Генераций в день</div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;">Постов за запуск</div>
 
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
           <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:34px;height:34px;border-radius:10px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">📝</div>
-            <span style="font-size:14px;font-weight:700;">Текст</span>
+            <div style="width:34px;height:34px;border-radius:10px;background:rgba(230,0,35,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg viewBox="0 0 24 24" width="18" height="18" fill="#E60023"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg></div>
+            <span style="font-size:14px;font-weight:700;">Pinterest</span>
           </div>
           <div style="display:flex;align-items:center;gap:10px;">
-            <input type="range" id="ap-text" min="0" max="10" value="0" class="ap-slider" oninput="apSlider(this,'ap-text-val')">
-            <span id="ap-text-val" class="ap-val">0</span>
-          </div>
-        </div>
-
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:34px;height:34px;border-radius:10px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🖼</div>
-            <span style="font-size:14px;font-weight:700;">Картинка</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <input type="range" id="ap-image" min="0" max="10" value="0" class="ap-slider" oninput="apSlider(this,'ap-image-val')">
-            <span id="ap-image-val" class="ap-val">0</span>
+            <input type="range" id="ap-pinterest" min="0" max="10" value="0" class="ap-slider" oninput="apSlider(this,'ap-pinterest-val')">
+            <span id="ap-pinterest-val" class="ap-val">0</span>
           </div>
         </div>
 
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
           <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:34px;height:34px;border-radius:10px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🎠</div>
-            <span style="font-size:14px;font-weight:700;">Карусель</span>
+            <div style="width:34px;height:34px;border-radius:10px;background:rgba(42,171,238,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg viewBox="0 0 24 24" width="18" height="18" fill="#2AABEE"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg></div>
+            <span style="font-size:14px;font-weight:700;">Telegram</span>
           </div>
           <div style="display:flex;align-items:center;gap:10px;">
-            <input type="range" id="ap-carousel" min="0" max="10" value="0" class="ap-slider" oninput="apSlider(this,'ap-carousel-val')">
-            <span id="ap-carousel-val" class="ap-val">0</span>
-          </div>
-        </div>
-
-        <!-- Slides count — shown when carousel > 0 -->
-        <div id="ap-carousel-slides-row" style="display:none;padding-top:12px;border-top:1px solid var(--border);">
-          <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;">Слайдов в каждой карусели</div>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <input type="range" id="ap-carousel-slides" min="3" max="10" value="5" class="ap-slider" oninput="apSlider(this,'ap-carousel-slides-val')">
-            <span id="ap-carousel-slides-val" class="ap-val">5</span>
+            <input type="range" id="ap-telegram" min="0" max="10" value="0" class="ap-slider" oninput="apSlider(this,'ap-telegram-val')">
+            <span id="ap-telegram-val" class="ap-val">0</span>
           </div>
         </div>
 
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;opacity:0.45;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
           <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:34px;height:34px;border-radius:10px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🎬</div>
-            <div>
-              <div style="font-size:14px;font-weight:700;">Видео</div>
-              <div style="font-size:11px;color:var(--text2);">скоро</div>
-            </div>
+            <div style="width:34px;height:34px;border-radius:10px;background:rgba(255,102,51,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg viewBox="0 0 24 24" width="18" height="18"><rect width="24" height="24" rx="5" fill="#202124"/><path d="M12 3C12.5 8 16 11.5 21 12C16 12.5 12.5 16 12 21C11.5 16 8 12.5 3 12C8 11.5 11.5 8 12 3Z" fill="white"/></svg></div>
+            <span style="font-size:14px;font-weight:700;">Яндекс.Дзен</span>
           </div>
           <div style="display:flex;align-items:center;gap:10px;">
-            <input type="range" id="ap-video" min="0" max="10" value="0" class="ap-slider" disabled>
-            <span class="ap-val">0</span>
+            <input type="range" id="ap-dzen" min="0" max="10" value="0" class="ap-slider" oninput="apSlider(this,'ap-dzen-val')">
+            <span id="ap-dzen-val" class="ap-val">0</span>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:34px;height:34px;border-radius:10px;background:rgba(225,48,108,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg viewBox="0 0 24 24" width="18" height="18"><defs><linearGradient id="igAp" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#F77737"/><stop offset="50%" stop-color="#E1306C"/><stop offset="100%" stop-color="#405DE6"/></linearGradient></defs><path fill="url(#igAp)" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></div>
+            <span style="font-size:14px;font-weight:700;">Instagram</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <input type="range" id="ap-instagram" min="0" max="10" value="0" class="ap-slider" oninput="apSlider(this,'ap-instagram-val')">
+            <span id="ap-instagram-val" class="ap-val">0</span>
           </div>
         </div>
 
@@ -1289,6 +1276,9 @@
     updateElement:     'https://bymzavod.online/webhook/update-element',
     deleteElement:     'https://bymzavod.online/webhook/delete-element',
     editText:          'https://bymzavod.online/webhook/edit-text',
+    platformRegenText:  'https://bymzavod.online/webhook/platform-regen-text',
+    platformRegenImage: 'https://bymzavod.online/webhook/platform-regen-image',
+    sendToTelegram:     'https://bymzavod.online/webhook/send-to-telegram',
   };
 
   // ── DOM refs ──
@@ -1310,11 +1300,25 @@
 
   // ── Data ──
   const contentTypes = {
-    text:     { title: 'Текст',     icon: '📝', color: 'rgba(123,92,246,.14)' },
-    image:    { title: 'Картинка',  icon: '🖼',  color: 'rgba(34,197,94,.14)'  },
-    carousel: { title: 'Карусель',  icon: '🎠', color: 'rgba(245,158,11,.14)'  },
-    video:    { title: 'Видео',     icon: '🎬', color: 'rgba(239,68,68,.14)'   },
+    text:      { title: 'Текст',     icon: '📝', color: 'rgba(123,92,246,.14)' },
+    image:     { title: 'Картинка',  icon: '🖼',  color: 'rgba(34,197,94,.14)'  },
+    carousel:  { title: 'Карусель',  icon: '🎠',  color: 'rgba(245,158,11,.14)' },
+    video:     { title: 'Видео',     icon: '🎬',  color: 'rgba(239,68,68,.14)'  },
+    pinterest: { title: 'Pinterest', icon: null, color: 'rgba(230,0,35,.12)',   isSvg: true },
+    telegram:  { title: 'Telegram',  icon: null, color: 'rgba(42,171,238,.12)', isSvg: true },
+    dzen:      { title: 'Дзен',      icon: null, color: 'rgba(255,102,51,.12)', isSvg: true },
+    instagram: { title: 'Instagram', icon: null, color: 'rgba(225,48,108,.12)', isSvg: true },
   };
+
+  const PLATFORM_TYPES = new Set(['pinterest', 'telegram', 'dzen', 'instagram']);
+
+  function getPlatformSvg(key) {
+    if (key === 'pinterest') return '<svg viewBox="0 0 24 24" width="20" height="20" fill="#E60023"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>';
+    if (key === 'telegram')  return '<svg viewBox="0 0 24 24" width="20" height="20" fill="#2AABEE"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>';
+    if (key === 'dzen')      return '<svg viewBox="0 0 24 24" width="20" height="20"><rect width="24" height="24" rx="5" fill="#202124"/><path d="M12 3C12.5 8 16 11.5 21 12C16 12.5 12.5 16 12 21C11.5 16 8 12.5 3 12C8 11.5 11.5 8 12 3Z" fill="white"/></svg>';
+    if (key === 'instagram') return '<svg viewBox="0 0 24 24" width="20" height="20"><defs><linearGradient id="igG" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#F77737"/><stop offset="50%" stop-color="#E1306C"/><stop offset="100%" stop-color="#405DE6"/></linearGradient></defs><path fill="url(#igG)" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>';
+    return '';
+  }
 
   function contentTypeData(key) {
     return contentTypes[key] || { title: key, icon: '📄', color: 'rgba(255,255,255,.08)' };
@@ -1745,9 +1749,10 @@
 
   // ── Generations list ──
   function getFilteredGenerations() {
-    if (generationsFilter === 'done')       return generations.filter(g => g.status === 'done');
-    if (generationsFilter === 'processing') return generations.filter(g => ['queue','processing','text_done'].includes(g.status));
-    if (generationsFilter === 'error')      return generations.filter(g => g.status === 'error');
+    if (generationsFilter === 'autopost')    return generations.filter(g => g.source === 'autopost');
+    if (generationsFilter === 'done')        return generations.filter(g => g.status === 'done');
+    if (generationsFilter === 'processing')  return generations.filter(g => ['queue','processing','text_done'].includes(g.status));
+    if (generationsFilter === 'error')       return generations.filter(g => g.status === 'error');
     return generations;
   }
 
@@ -1802,13 +1807,16 @@
       const pillCls = statusPillClass[status] || 'sp-queue';
       const isSelected = selectedIds.has(item.id);
       const checkHtml = selectMode ? `<div class="gen-check"></div>` : '';
+      const iconHtml = ct.isSvg
+        ? `<div class="gen-pi" style="background:${ct.color};width:44px;height:44px;border-radius:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${getPlatformSvg(item.platform)}</div>`
+        : `<div class="gen-pi" style="background:${ct.color};width:44px;height:44px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">${ct.icon}</div>`;
       return `
         <div class="gen-card${isSelected ? ' selected' : ''}" data-generation="${escapeHtml(item.id)}">
           ${checkHtml}
-          <div class="gen-pi" style="background:${ct.color};width:44px;height:44px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">${ct.icon}</div>
+          ${iconHtml}
           <div class="gen-body">
             <div class="gen-title">${escapeHtml(getGenerationTitle(item))}</div>
-            <div class="gen-meta">${escapeHtml(ct.title)} · ${formatDate(item.created)}</div>
+            <div class="gen-meta">${escapeHtml(ct.title)}${item.source === 'autopost' ? ' · 🤖' : ''} · ${formatDate(item.created)}</div>
           </div>
           <div class="gen-right">
             <span class="status-pill ${pillCls}">${statusMap[status] || status}</span>
@@ -1921,6 +1929,44 @@
       ? `<div class="error-box"><div class="error-title">❌ Ошибка генерации</div><div class="error-msg">${escapeHtml(item.error_message || item.error || 'Текст ошибки не указан')}</div></div>
          <button id="retryBtn" class="btn-primary">🔁 Повторить</button>`
       : '';
+
+    // ── PLATFORM (autopost) ──
+    if (PLATFORM_TYPES.has(item.platform) && item.status === 'done') {
+      const isTelegram = item.platform === 'telegram';
+      postDetails.innerHTML = `
+        ${imageUrl ? `<div class="post-img-wrap"><img class="post-image" src="${escapeHtml(imageUrl)}" alt="Изображение"></div>` : ''}
+        ${imageUrl ? `<button id="downloadImageBtn" class="btn-ghost">⬇️ Скачать</button>` : ''}
+        ${item.post_text ? `<div class="post-text-box">${escapeHtml(item.post_text)}</div>` : ''}
+        ${item.post_text ? `<button id="copyTextBtn" class="btn-ghost">📋 Скопировать текст</button>` : ''}
+        ${paramsHtml}
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;">
+          <label class="field">Комментарий&ensp;<span class="muted-note muted">(необязательно)</span>
+            <textarea id="platformComment" placeholder="Что изменить — тон, детали, акцент..." style="min-height:56px;"></textarea>
+          </label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            ${item.post_text && item.platform !== 'pinterest' ? `<button id="platformRegenTextBtn" class="btn-secondary" style="min-height:44px;font-size:13px;">✏️ Переделать текст</button>` : '<div></div>'}
+            <button id="platformRegenImageBtn" class="btn-secondary" style="min-height:44px;font-size:13px;">🖼 Переделать фото</button>
+          </div>
+        </div>
+        ${imageUrl ? `<button id="sendToTelegramBtn" class="btn-primary">✈️ Отправить в Telegram</button>` : ''}
+        <button id="deleteGenerationBtn" class="btn-danger">🗑 Удалить</button>
+      `;
+      bindPostButtons();
+      return;
+    }
+
+    // ── PLATFORM in queue/processing/error ──
+    if (PLATFORM_TYPES.has(item.platform)) {
+      postDetails.innerHTML = `
+        ${errorHtml}
+        ${item.status === 'queue' || item.status === 'processing'
+          ? `<div style="text-align:center;padding:32px 0;color:var(--text2);font-size:14px;">⏳ Генерируется...</div>
+             <button id="cancelGenerationBtn" class="btn-danger">✖ Отменить</button>`
+          : `<button id="deleteGenerationBtn" class="btn-danger">🗑 Удалить</button>`}
+      `;
+      bindPostButtons();
+      return;
+    }
 
     // ── CAROUSEL ──
     if (isCarousel && item.status === 'done') {
@@ -2075,7 +2121,47 @@
   function bindPostButtons() {
     const item = selectedGeneration;
 
-    // AI text edit buttons
+    // Platform regen text
+    document.getElementById('platformRegenTextBtn')?.addEventListener('click', async ev => {
+      const btn = ev.currentTarget;
+      const comment = document.getElementById('platformComment')?.value.trim() || '';
+      setButtonLoading(btn, true, 'Переделываю...');
+      try {
+        const data = await request(API.platformRegenText, { method: 'POST', body: JSON.stringify({ generation_id: item.id, comment }) });
+        // Reload record
+        const updated = await request(`https://pb.bymzavod.online/api/collections/generations/records/${item.id}`);
+        item.post_text = updated.post_text || item.post_text;
+        showToast('✅ Текст обновлён');
+        renderPost();
+      } catch (err) { showToast(err.message || 'Ошибка'); }
+      finally { setButtonLoading(btn, false); }
+    });
+
+    // Platform regen image
+    document.getElementById('platformRegenImageBtn')?.addEventListener('click', async ev => {
+      const btn = ev.currentTarget;
+      const comment = document.getElementById('platformComment')?.value.trim() || '';
+      setButtonLoading(btn, true, 'Генерирую...');
+      try {
+        await request(API.platformRegenImage, { method: 'POST', body: JSON.stringify({ generation_id: item.id, comment }) });
+        showToast('✅ Фото отправлено на перегенерацию');
+        navigate('generations');
+        await loadGenerations();
+      } catch (err) { showToast(err.message || 'Ошибка'); }
+      finally { setButtonLoading(btn, false); }
+    });
+
+    // Send to Telegram
+    document.getElementById('sendToTelegramBtn')?.addEventListener('click', async ev => {
+      const btn = ev.currentTarget;
+      setButtonLoading(btn, true, 'Отправка...');
+      try {
+        await request(API.sendToTelegram, { method: 'POST', body: JSON.stringify({ generation_id: item.id }) });
+        showToast('✅ Отправлено в Telegram');
+      } catch (err) { showToast(err.message || 'Ошибка отправки'); }
+      finally { setButtonLoading(btn, false); }
+    });
+
     document.getElementById('applyAiBtn')?.addEventListener('click', () => {
       const action = document.querySelector('input[name="aiAction"]:checked')?.value;
       if (!action) { showToast('Выбери действие'); return; }
@@ -2240,17 +2326,19 @@
     const shortName = simpleName.value.trim();
     if (!shortName) { showToast('Укажите краткое название'); return; }
     setButtonLoading(simpleSaveBtn, true);
-    const isPbOnly = PB_ONLY_COLS.has(simpleCollection);
     try {
       if (editItemId) {
-        // Always write directly to PocketBase when editing
-        await request(`https://pb.bymzavod.online/api/collections/${simpleCollection}/records/${editItemId}`, {
+        const resp = await fetch(`https://pb.bymzavod.online/api/collections/${simpleCollection}/records/${editItemId}`, {
           method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ short_name: shortName, tech_description: simpleDescription.value.trim(), active: simpleActive.checked }),
         });
+        if (!resp.ok) {
+          const errText = await resp.text();
+          throw new Error(`PB ${resp.status}: ${errText.substring(0, 100)}`);
+        }
         showToast('✅ Изменения сохранены');
       } else {
-        // Create new
         await request(API.saveElement, {
           method: 'POST',
           body: JSON.stringify({ collection: simpleCollection, short_name: shortName, tech_description: simpleDescription.value.trim(), active: simpleActive.checked }),
@@ -2617,11 +2705,6 @@
     if (label) label.textContent = slider.value;
     const pct = ((slider.value - slider.min) / (slider.max - slider.min) * 100).toFixed(1) + '%';
     slider.style.setProperty('--slider-fill', pct);
-    if (slider.id === 'ap-carousel') {
-      const row = document.getElementById('ap-carousel-slides-row');
-      if (row) row.style.display = Number(slider.value) > 0 ? 'block' : 'none';
-    }
-    updateNextRun();
   }
 
   function updateSliderFill(slider) {
@@ -2629,105 +2712,60 @@
     slider.style.setProperty('--slider-fill', pct);
   }
 
-  function updateN8nTime() {
-    const el = document.getElementById('n8nCurrentTime');
-    if (!el) return;
-    try {
-      el.textContent = new Date().toLocaleTimeString('ru-RU', { timeZone: 'Europe/Moscow', hour: '2-digit', minute: '2-digit' });
-    } catch { el.textContent = '—'; }
-  }
+  let selectedInterval = 'daily';
 
-  function updateNextRun() {
-    const nextRow = document.getElementById('nextRunRow');
-    const nextText = document.getElementById('nextRunText');
-    if (!nextRow || !nextText) return;
-
-    if (!autopostEnabled) { nextRow.style.display = 'none'; return; }
-
-    const h = Number(document.getElementById('autopostHour')?.value || 9);
-    const checkedDays = [...document.querySelectorAll('.day-chip-input:checked')].map(el => el.value);
-    if (checkedDays.length === 0) { nextRow.style.display = 'none'; return; }
-
-    const dayNames = ['sun','mon','tue','wed','thu','fri','sat'];
-    const dayLabels = { mon:'пн', tue:'вт', wed:'ср', thu:'чт', fri:'пт', sat:'сб', sun:'вс' };
-    const moscowNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Moscow' }));
-    const currentHour = moscowNow.getHours();
-
-    for (let d = 0; d < 8; d++) {
-      const checkDate = new Date(moscowNow);
-      checkDate.setDate(checkDate.getDate() + d);
-      const checkDay = dayNames[checkDate.getDay()];
-      if (!checkedDays.includes(checkDay)) continue;
-      if (d === 0 && currentHour >= h) continue;
-      const hStr = String(h).padStart(2,'0') + ':00';
-      if (d === 0) { nextText.textContent = `сегодня в ${hStr}`; }
-      else if (d === 1) { nextText.textContent = `завтра в ${hStr}`; }
-      else { nextText.textContent = `${dayLabels[checkDay]} в ${hStr}`; }
-      nextRow.style.display = 'block';
-      return;
-    }
-    nextRow.style.display = 'none';
-  }
-
-  function fillAutopostHours() {
-    const sel = document.getElementById('autopostHour');
-    if (!sel || sel.options.length > 0) return;
-    for (let h = 0; h < 24; h++) {
-      const opt = document.createElement('option');
-      opt.value = String(h).padStart(2,'0');
-      opt.textContent = String(h).padStart(2,'0') + ':00';
-      sel.appendChild(opt);
-    }
-    sel.value = '09';
+  function initAutopostIntervalBtns() {
+    document.getElementById('intervalBtns')?.addEventListener('click', ev => {
+      const btn = ev.target.closest('[data-interval]');
+      if (!btn) return;
+      selectedInterval = btn.dataset.interval;
+      document.querySelectorAll('#intervalBtns .ar-btn').forEach(b => b.classList.toggle('active', b.dataset.interval === selectedInterval));
+      const minutesRow = document.getElementById('minutesRow');
+      if (minutesRow) minutesRow.style.display = selectedInterval === 'minutes' ? 'block' : 'none';
+    });
   }
 
   async function loadAutopost() {
-    fillAutopostHours();
-    updateN8nTime();
+    initAutopostIntervalBtns();
     try {
       const data = await request(API.getAutopost);
       autopostEnabled = !!data.enabled;
-      const [h] = (data.time || '09:00').split(':');
-      const hourSel = document.getElementById('autopostHour');
-      if (hourSel) hourSel.value = h;
-      // Days
-      const days = Array.isArray(data.days) ? data.days : ['mon','tue','wed','thu','fri','sat','sun'];
-      document.querySelectorAll('.day-chip-input').forEach(el => {
-        el.checked = days.includes(el.value);
+
+      // Interval
+      selectedInterval = data.interval_type || 'daily';
+      document.querySelectorAll('#intervalBtns .ar-btn').forEach(b => b.classList.toggle('active', b.dataset.interval === selectedInterval));
+      const minutesRow = document.getElementById('minutesRow');
+      if (minutesRow) minutesRow.style.display = selectedInterval === 'minutes' ? 'block' : 'none';
+      const minSel = document.getElementById('autopostMinutes');
+      if (minSel && data.interval_minutes) minSel.value = String(data.interval_minutes);
+
+      // Platform sliders
+      ['pinterest', 'telegram', 'dzen', 'instagram'].forEach(p => {
+        const el = document.getElementById('ap-' + p);
+        if (el) { el.value = data[p] || 0; apSlider(el, 'ap-' + p + '-val'); }
       });
-      // Sliders
-      ['text','image','carousel'].forEach(t => {
-        const el = document.getElementById('ap-' + t);
-        if (el) { el.value = data[t] || 0; apSlider(el, 'ap-' + t + '-val'); }
-      });
-      const slidesEl = document.getElementById('ap-carousel-slides');
-      if (slidesEl) { slidesEl.value = data.carousel_slides || 5; document.getElementById('ap-carousel-slides-val').textContent = slidesEl.value; updateSliderFill(slidesEl); }
+
       updateAutopostToggle();
-      updateNextRun();
-    } catch { fillAutopostHours(); updateNextRun(); }
+    } catch { initAutopostIntervalBtns(); }
   }
 
   async function saveAutopost() {
     const btn = document.getElementById('saveAutopostBtn');
     setButtonLoading(btn, true, 'Сохранение...');
-    const h = document.getElementById('autopostHour')?.value || '09';
-    const time = h + ':00';
-    const days = [...document.querySelectorAll('.day-chip-input:checked')].map(el => el.value);
     try {
       await request(API.saveAutopost, {
         method: 'POST',
         body: JSON.stringify({
-          enabled:         autopostEnabled,
-          time,
-          days,
-          text:            Number(document.getElementById('ap-text').value),
-          image:           Number(document.getElementById('ap-image').value),
-          carousel:        Number(document.getElementById('ap-carousel').value),
-          carousel_slides: Number(document.getElementById('ap-carousel-slides')?.value || 5),
+          enabled:          autopostEnabled,
+          interval_type:    selectedInterval,
+          interval_minutes: Number(document.getElementById('autopostMinutes')?.value || 45),
+          pinterest:        Number(document.getElementById('ap-pinterest')?.value || 0),
+          telegram:         Number(document.getElementById('ap-telegram')?.value || 0),
+          dzen:             Number(document.getElementById('ap-dzen')?.value || 0),
+          instagram:        Number(document.getElementById('ap-instagram')?.value || 0),
         }),
       });
       showToast('✅ Настройки автопоста сохранены');
-      updateNextRun();
     } catch (err) { showToast(err.message || 'Не удалось сохранить'); }
     finally { setButtonLoading(btn, false); }
   }
