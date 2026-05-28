@@ -710,7 +710,8 @@
     .ap-slider {
       -webkit-appearance: none; appearance: none;
       width: 130px; height: 4px; border-radius: 4px;
-      background: var(--border2); outline: none; cursor: pointer;
+      background: linear-gradient(to right, var(--accent-light) var(--slider-fill, 0%), var(--border2) var(--slider-fill, 0%));
+      outline: none; cursor: pointer;
     }
     .ap-slider::-webkit-slider-thumb {
       -webkit-appearance: none; appearance: none;
@@ -883,6 +884,14 @@
         <label class="field">Комментарий для ИИ&ensp;<span class="muted-note muted">(необязательно)</span>
           <textarea id="cons-image-comment" placeholder="Например: пастельные тона, нежная атмосфера..." style="min-height:60px;"></textarea>
         </label>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;">Вариации</span>
+          <div style="display:flex;align-items:center;gap:14px;">
+            <button onclick="consVarChange(-1)" style="width:34px;height:34px;border-radius:10px;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:inherit;line-height:1;">−</button>
+            <span style="font-size:20px;font-weight:800;min-width:36px;text-align:center;"><span id="cons-var-val">1</span><span style="font-size:13px;font-weight:600;color:var(--text2);">/4</span></span>
+            <button onclick="consVarChange(1)" style="width:34px;height:34px;border-radius:10px;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:inherit;line-height:1;">+</button>
+          </div>
+        </div>
       </div>
 
       <!-- ── CAROUSEL PANEL ── -->
@@ -900,7 +909,7 @@
           <label class="field">Тип крепления<select id="cons-car-fastening"></select></label>
         </div>
         <label class="field">Слайдов:&ensp;<span id="cons-slides-val" style="color:var(--accent-light);font-weight:800;">5</span>
-          <input type="range" id="cons-slides" min="3" max="10" value="5" class="ap-slider" style="width:100%;margin-top:6px;" oninput="document.getElementById('cons-slides-val').textContent=this.value">
+          <input type="range" id="cons-slides" min="3" max="10" value="5" class="ap-slider" style="width:100%;margin-top:6px;" oninput="document.getElementById('cons-slides-val').textContent=this.value;updateSliderFill(this)">
         </label>
         <label class="field">Комментарий для ИИ&ensp;<span class="muted-note muted">(необязательно)</span>
           <textarea id="cons-carousel-comment" placeholder="Например: акцент на текстуру материала..." style="min-height:60px;"></textarea>
@@ -917,16 +926,16 @@
       </div>
 
       <!-- ── COUNT + GENERATE ── -->
-      <div id="cons-actions">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-          <span style="font-size:14px;font-weight:700;">Количество</span>
+      <div id="cons-actions" style="display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.05em;">Карточки</span>
           <div style="display:flex;align-items:center;gap:14px;">
             <button onclick="consCountChange(-1)" style="width:34px;height:34px;border-radius:10px;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:inherit;line-height:1;">−</button>
             <span id="cons-count-val" style="font-size:20px;font-weight:800;min-width:24px;text-align:center;">1</span>
             <button onclick="consCountChange(1)" style="width:34px;height:34px;border-radius:10px;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:inherit;line-height:1;">+</button>
           </div>
         </div>
-        <button id="cons-generate-btn" class="btn-primary">⚡ Сгенерировать</button>
+        <button id="cons-generate-btn" class="btn-primary" style="margin-top:4px;">⚡ Сгенерировать</button>
       </div>
 
     </div>
@@ -984,14 +993,6 @@
         <div class="add-row-body">
           <div class="add-row-title">Добавить из фото</div>
           <div class="add-row-sub">ИИ распознаёт стиль, цвет и материал</div>
-        </div>
-        <span class="add-row-arr">›</span>
-      </button>
-      <button id="addOwnBtn" class="add-row">
-        <div class="add-row-icon" style="background:var(--accent-soft);">✏️</div>
-        <div class="add-row-body">
-          <div class="add-row-title">Добавить своё</div>
-          <div class="add-row-sub">Стиль, цвет, материал, крепление и т.д.</div>
         </div>
         <span class="add-row-arr">›</span>
       </button>
@@ -1075,8 +1076,10 @@
       <button class="ref-tab" data-col="fastening_types">Крепления</button>
       <button class="ref-tab" data-col="post_types">Типы постов</button>
       <button class="ref-tab" data-col="post_themes">Темы постов</button>
+      <button class="ref-tab" data-col="carousel_styles">Дизайны карусели</button>
     </div>
     <div class="sbody" style="padding-top:0;">
+      <button id="addRefItemBtn" class="btn-ghost" style="margin-bottom:4px;">+ Добавить</button>
       <div id="refList" class="ref-list"><div class="loading">Загрузка...</div></div>
     </div>
   </section>
@@ -1603,6 +1606,12 @@
     document.getElementById('cons-count-val').textContent = consCount;
   }
 
+  let consVariations = 1;
+  function consVarChange(delta) {
+    consVariations = Math.max(1, Math.min(4, consVariations + delta));
+    document.getElementById('cons-var-val').textContent = consVariations;
+  }
+
   async function openConstructor() {
     navigate('constructor');
     if (!references) await loadReferences();
@@ -1705,7 +1714,7 @@
         params.material = m.name; params.material_description = m.description;
         params.fastening_type = f.name; params.fastening_type_description = f.description;
       }
-      for (let i = 0; i < consCount; i++) payloads.push({ platform: 'image', mode, params, aspect_ratio: selectedAspectRatio });
+      for (let i = 0; i < consCount; i++) payloads.push({ platform: 'image', mode, params, aspect_ratio: selectedAspectRatio, image_count: consVariations });
 
     } else if (type === 'carousel') {
       const mode = document.querySelector('[name="cons-car-mode"]:checked')?.value || 'auto';
@@ -2137,12 +2146,18 @@
   }
 
   // ── Simple form ──
-  function openSimpleForm(collection, title) {
+  let editItemId = null;
+  let editItemCollection = null;
+
+  function openSimpleForm(collection, title, editRecord = null) {
     simpleCollection = collection;
     simpleTitle.textContent = title;
-    simpleName.value = '';
-    simpleDescription.value = '';
-    simpleActive.checked = true;
+    editItemId = editRecord ? editRecord.id : null;
+    editItemCollection = editRecord ? collection : null;
+    simpleName.value = editRecord ? (editRecord.short_name || '') : '';
+    simpleDescription.value = editRecord ? (editRecord.tech_description || '') : '';
+    simpleActive.checked = editRecord ? editRecord.active !== false : true;
+    simpleSaveBtn.textContent = editRecord ? '💾 Сохранить изменения' : 'Сохранить';
     navigate('simpleForm');
   }
 
@@ -2150,15 +2165,28 @@
     const shortName = simpleName.value.trim();
     if (!shortName) { showToast('Укажите краткое название'); return; }
     setButtonLoading(simpleSaveBtn, true);
+    const isPbOnly = PB_ONLY_COLS.has(simpleCollection);
     try {
-      await request(API.saveElement, {
-        method: 'POST',
-        body: JSON.stringify({ collection: simpleCollection, short_name: shortName, tech_description: simpleDescription.value.trim(), active: simpleActive.checked }),
-      });
-      showToast('✅ Сохранено');
-      navigate('add');
+      if (editItemId) {
+        // Always write directly to PocketBase when editing
+        await request(`https://pb.bymzavod.online/api/collections/${simpleCollection}/records/${editItemId}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ short_name: shortName, tech_description: simpleDescription.value.trim(), active: simpleActive.checked }),
+        });
+        showToast('✅ Изменения сохранены');
+      } else {
+        // Create new
+        await request(API.saveElement, {
+          method: 'POST',
+          body: JSON.stringify({ collection: simpleCollection, short_name: shortName, tech_description: simpleDescription.value.trim(), active: simpleActive.checked }),
+        });
+        showToast('✅ Сохранено');
+      }
+      editItemId = null;
+      navigate(currentScreen === 'simpleForm' ? (refData ? 'manageRefs' : 'add') : 'add');
+      if (refData) { refData = null; loadManageRefs(); }
     } catch (err) { showToast(err.message || 'Не удалось сохранить'); }
-    finally { setButtonLoading(simpleSaveBtn, false); }
+    finally { setButtonLoading(simpleSaveBtn, false); simpleSaveBtn.textContent = 'Сохранить'; }
   }
 
   // ── Photo analysis ──
@@ -2290,14 +2318,27 @@
 
   // ── Manage References ──
   const REF_COLS = {
-    styles:         'Стили',
-    colors:         'Цвета',
-    prints:         'Принты',
-    materials:      'Материалы',
-    fastening_types:'Крепления',
-    post_types:     'Типы постов',
-    post_themes:    'Темы постов',
+    styles:          'Стили',
+    colors:          'Цвета',
+    prints:          'Принты',
+    materials:       'Материалы',
+    fastening_types: 'Крепления',
+    post_types:      'Типы постов',
+    post_themes:     'Темы постов',
+    carousel_styles: 'Дизайны карусели',
   };
+  const REF_TITLES = {
+    styles:          'Стиль',
+    colors:          'Цвет',
+    prints:          'Принт',
+    materials:       'Материал',
+    fastening_types: 'Тип крепления',
+    post_types:      'Тип поста',
+    post_themes:     'Тема поста',
+    carousel_styles: 'Дизайн карусели',
+  };
+  // PB-only collections (no Airtable sync)
+  const PB_ONLY_COLS = new Set(['carousel_styles']);
 
   let currentRefCol = 'styles';
   let refData = null;
@@ -2305,6 +2346,9 @@
   async function openManageRefs() {
     navigate('manageRefs');
     await loadManageRefs();
+    document.getElementById('addRefItemBtn')?.addEventListener('click', () => {
+      openSimpleForm(currentRefCol, 'Добавить: ' + (REF_TITLES[currentRefCol] || ''));
+    });
   }
 
   async function loadManageRefs() {
@@ -2336,6 +2380,7 @@
             ${item.tech_description ? `<div class="ref-item-desc">${escapeHtml(item.tech_description)}</div>` : ''}
           </div>
           <button class="ref-toggle ${isActive ? 'act' : 'inact'}" data-role="toggle">${isActive ? '● Вкл' : '○ Выкл'}</button>
+          <button class="ref-delete" data-role="edit" title="Редактировать" style="background:var(--accent-soft);color:var(--accent-light);">✏️</button>
           <button class="ref-delete" data-role="delete" title="Удалить">🗑</button>
         </div>`;
     }).join('');
@@ -2347,22 +2392,36 @@
     if (!item) return;
     const id = item.dataset.refId;
     const airtableId = item.dataset.airtable;
+    const isPbOnly = PB_ONLY_COLS.has(currentRefCol);
+
+    if (ev.target.closest('[data-role="edit"]')) {
+      const arr = refData[currentRefCol] || [];
+      const rec = arr.find(r => r.id === id);
+      if (!rec) return;
+      openSimpleForm(currentRefCol, 'Редактировать: ' + (REF_TITLES[currentRefCol] || ''), rec);
+      return;
+    }
 
     if (ev.target.closest('[data-role="toggle"]')) {
       const currentlyActive = !item.classList.contains('inactive');
       const btn = ev.target.closest('[data-role="toggle"]');
       btn.disabled = true; btn.style.opacity = '0.5';
       try {
-        await request(API.updateElement, {
-          method: 'POST',
-          body: JSON.stringify({ collection: currentRefCol, id, active: !currentlyActive, airtable_id: airtableId }),
-        });
-        // Update local refData
+        if (isPbOnly) {
+          await request(`https://pb.bymzavod.online/api/collections/${currentRefCol}/records/${id}`, {
+            method: 'PATCH', body: JSON.stringify({ active: !currentlyActive })
+          });
+        } else {
+          await request(API.updateElement, {
+            method: 'POST',
+            body: JSON.stringify({ collection: currentRefCol, id, active: !currentlyActive, airtable_id: airtableId }),
+          });
+        }
         const arr = refData[currentRefCol] || [];
         const rec = arr.find(r => r.id === id);
         if (rec) rec.active = !currentlyActive;
         renderRefList();
-        showToast((!currentlyActive ? '✅ Активировано' : '○ Деактивировано'));
+        showToast(!currentlyActive ? '✅ Активировано' : '○ Деактивировано');
       } catch (err) {
         showToast(err.message || 'Ошибка');
         btn.disabled = false; btn.style.opacity = '1';
@@ -2375,11 +2434,14 @@
       const btn = ev.target.closest('[data-role="delete"]');
       btn.disabled = true; btn.style.opacity = '0.5';
       try {
-        await request(API.deleteElement, {
-          method: 'POST',
-          body: JSON.stringify({ collection: currentRefCol, id, airtable_id: airtableId }),
-        });
-        // Remove from local refData
+        if (isPbOnly) {
+          await request(`https://pb.bymzavod.online/api/collections/${currentRefCol}/records/${id}`, { method: 'DELETE' });
+        } else {
+          await request(API.deleteElement, {
+            method: 'POST',
+            body: JSON.stringify({ collection: currentRefCol, id, airtable_id: airtableId }),
+          });
+        }
         if (refData[currentRefCol]) {
           refData[currentRefCol] = refData[currentRefCol].filter(r => r.id !== id);
         }
@@ -2407,7 +2469,7 @@
     setButtonLoading(btn, true, 'Загрузка...');
     try {
       const data = await request(API.getReferences);
-      const cols = { styles:'styles', colors:'colors', prints:'prints', materials:'materials', fastening_types:'fastening_types', post_types:'post_types', post_themes:'post_themes' };
+      const cols = { styles:'styles', colors:'colors', prints:'prints', materials:'materials', fastening_types:'fastening_types', post_types:'post_types', post_themes:'post_themes', carousel_styles:'carousel_styles' };
       const rows = [['collection','short_name','tech_description','active']];
       for (const [key, label] of Object.entries(cols)) {
         for (const item of (data[key] || [])) {
@@ -2457,11 +2519,18 @@
   function apSlider(slider, labelId) {
     const label = document.getElementById(labelId);
     if (label) label.textContent = slider.value;
+    const pct = ((slider.value - slider.min) / (slider.max - slider.min) * 100).toFixed(1) + '%';
+    slider.style.setProperty('--slider-fill', pct);
     if (slider.id === 'ap-carousel') {
       const row = document.getElementById('ap-carousel-slides-row');
       if (row) row.style.display = Number(slider.value) > 0 ? 'block' : 'none';
     }
     updateNextRun();
+  }
+
+  function updateSliderFill(slider) {
+    const pct = ((slider.value - slider.min) / (slider.max - slider.min) * 100).toFixed(1) + '%';
+    slider.style.setProperty('--slider-fill', pct);
   }
 
   function updateN8nTime() {
@@ -2536,7 +2605,7 @@
         if (el) { el.value = data[t] || 0; apSlider(el, 'ap-' + t + '-val'); }
       });
       const slidesEl = document.getElementById('ap-carousel-slides');
-      if (slidesEl) { slidesEl.value = data.carousel_slides || 5; document.getElementById('ap-carousel-slides-val').textContent = slidesEl.value; }
+      if (slidesEl) { slidesEl.value = data.carousel_slides || 5; document.getElementById('ap-carousel-slides-val').textContent = slidesEl.value; updateSliderFill(slidesEl); }
       updateAutopostToggle();
       updateNextRun();
     } catch { fillAutopostHours(); updateNextRun(); }
@@ -2623,6 +2692,8 @@
   loadBalance();
   loadGenerations(false);
   loadPause();
+  // Init slider fills for all range inputs with non-zero default values
+  document.querySelectorAll('input[type="range"].ap-slider').forEach(updateSliderFill);
 </script>
 </body>
 </html>
