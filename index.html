@@ -607,6 +607,46 @@
       cursor: pointer; font-family: inherit; font-weight: 600;
     }
 
+    /* ─── MANAGE REFS SCREEN ─── */
+    .ref-tabs {
+      display: flex; gap: 6px;
+      padding: 0 16px 12px;
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .ref-tabs::-webkit-scrollbar { display: none; }
+    .ref-tab {
+      flex-shrink: 0; font-size: 12px; font-weight: 700;
+      padding: 6px 12px; border-radius: 20px;
+      background: var(--card); border: 1.5px solid var(--border);
+      color: var(--text2); cursor: pointer;
+      transition: all .18s; font-family: inherit; white-space: nowrap;
+    }
+    .ref-tab.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-light); }
+    .ref-item {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 12px 14px; transition: opacity .18s;
+    }
+    .ref-item.inactive { opacity: .5; }
+    .ref-item-info { flex: 1; min-width: 0; }
+    .ref-item-name { font-size: 14px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ref-item-desc { font-size: 11px; color: var(--text2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ref-toggle {
+      flex-shrink: 0; padding: 5px 11px; border-radius: 20px;
+      font-size: 11px; font-weight: 800; cursor: pointer;
+      font-family: inherit; border: none; transition: all .18s;
+    }
+    .ref-toggle.act { background: var(--ok-soft); color: var(--ok); }
+    .ref-toggle.inact { background: var(--warn-soft); color: var(--warn); }
+    .ref-delete {
+      flex-shrink: 0; width: 32px; height: 32px; border-radius: 9px;
+      background: var(--danger-soft); border: none;
+      color: var(--danger); font-size: 14px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .18s; font-family: inherit;
+    }
+    .ref-list { display: flex; flex-direction: column; gap: 8px; }
+
     /* ─── ADD SCREEN ─── */
     .add-row {
       display: flex; align-items: center; gap: 13px;
@@ -697,6 +737,30 @@
       background: var(--accent-soft);
       color: var(--text);
     }
+
+    /* ─── CONSTRUCTOR ─── */
+    .ctype-row { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+    .ctype-btn {
+      display:flex; flex-direction:column; align-items:center; gap:5px;
+      padding:12px 6px; font-size:22px;
+      background:var(--card); border:2px solid var(--border);
+      border-radius:14px; color:var(--text2);
+      font-weight:700; cursor:pointer; transition:all .18s; font-family:inherit;
+    }
+    .ctype-btn span { font-size:11px; font-weight:700; }
+    .ctype-btn.active { border-color:var(--accent); background:var(--accent-soft); color:var(--text); box-shadow:0 0 0 1px var(--accent); }
+    .ctype-panel { display:flex; flex-direction:column; gap:10px; }
+    .ar-row { display:grid; grid-template-columns:repeat(4,1fr); gap:7px; margin-top:6px; }
+    .ar-btn {
+      display:flex; flex-direction:column; align-items:center; gap:3px;
+      padding:10px 4px; font-size:13px; font-weight:700;
+      background:var(--card); border:1.5px solid var(--border);
+      border-radius:11px; color:var(--text2); cursor:pointer;
+      transition:all .18s; font-family:inherit;
+    }
+    .ar-btn span { font-size:10px; font-weight:600; color:var(--text2); }
+    .ar-btn.active { border-color:var(--accent); background:var(--accent-soft); color:var(--text); }
+    .ar-btn.active span { color:var(--accent-light); }
   </style>
 </head>
 <body>
@@ -763,102 +827,106 @@
     </div>
   </section>
 
-  <!-- ════ PLATFORM ════ -->
-  <section id="platform" class="screen">
+  <!-- ════ CONSTRUCTOR ════ -->
+  <section id="constructor" class="screen">
     <div class="topbar">
-      <div class="topbar-side"><span class="step-pill">1 из 2</span></div>
-      <h2>Выбери платформу</h2>
       <div class="topbar-side"></div>
-    </div>
-    <div class="sbody">
-      <div id="platformList" class="plat-grid"></div>
-    </div>
-  </section>
-
-  <!-- ════ SETTINGS ════ -->
-  <section id="settings" class="screen">
-    <div class="topbar">
-      <div class="topbar-side"><span class="step-pill">2 из 2</span></div>
-      <h2 id="settingsTitle">Настройки</h2>
+      <h2>Новый контент</h2>
       <div class="topbar-side"></div>
     </div>
     <div class="sbody">
 
-      <div class="mode-row">
-        <label class="mode-opt">
-          <input type="radio" name="mode" value="auto" checked>
-          <span>⚡ Авто</span>
-        </label>
-        <label class="mode-opt">
-          <input type="radio" name="mode" value="manual">
-          <span>🎛 Ручная</span>
-        </label>
+      <!-- Content type tabs -->
+      <div class="ctype-row" id="ctypeRow">
+        <button class="ctype-btn active" data-type="text">📝<span>Текст</span></button>
+        <button class="ctype-btn" data-type="image">🖼<span>Картинка</span></button>
+        <button class="ctype-btn" data-type="carousel">🎠<span>Карусель</span></button>
+        <button class="ctype-btn" data-type="video">🎬<span>Видео</span></button>
       </div>
 
-      <!-- Instagram subtype -->
-      <div id="instagramSubtypeBox" class="hidden">
-        <div class="sub-row">
-          <label class="sub-opt">
-            <input type="radio" name="contentSubtype" value="single" checked>
-            <span>📷 Одно фото</span>
-          </label>
-          <label class="sub-opt">
-            <input type="radio" name="contentSubtype" value="carousel">
-            <span>🎠 Карусель</span>
-          </label>
+      <!-- ── TEXT PANEL ── -->
+      <div id="panel-text" class="ctype-panel">
+        <div class="mode-row">
+          <label class="mode-opt"><input type="radio" name="cons-text-mode" value="auto" checked><span>⚡ Авто</span></label>
+          <label class="mode-opt"><input type="radio" name="cons-text-mode" value="manual"><span>🎛 Ручная</span></label>
         </div>
-        <label id="carouselSlidesBox" class="field hidden" style="margin-top:10px;">Количество слайдов
-          <select id="carouselSlidesSelect">
-            <option value="2">2</option><option value="3">3</option>
-            <option value="4">4</option><option value="5">5</option>
-            <option value="6">6</option><option value="7">7</option>
-            <option value="8">8</option>
-          </select>
-        </label>
-      </div>
-
-      <label id="autoCountBox" class="field">Количество постов
-        <select id="autoPostCountSelect">
-          <option value="1">1</option><option value="2">2</option>
-          <option value="3">3</option><option value="4">4</option>
-          <option value="5">5</option>
-        </select>
-      </label>
-
-      <!-- Pinterest manual -->
-      <div id="pinterestManualBox" class="manual-box">
-        <label class="field">Стиль<select id="styleSelect"></select></label>
-        <label class="field">Цвет<select id="colorSelect"></select></label>
-        <label class="field">Принт<select id="printSelect"></select></label>
-        <label class="field">Материал<select id="materialSelect"></select></label>
-      </div>
-
-      <!-- Text platforms manual -->
-      <div id="textParamsBox" style="display:none; flex-direction:column; gap:10px;">
-        <label class="field">Тип поста&ensp;<span class="muted-note muted">(необязательно)</span>
-          <select id="postTypeSelect"></select></label>
-        <label class="field">Тема поста&ensp;<span class="muted-note muted">(необязательно)</span>
-          <select id="postThemeSelect"></select></label>
-      </div>
-
-      <button id="generateBtn" class="btn-primary">Сгенерировать</button>
-
-      <!-- Text flow -->
-      <div id="textFlowBox" style="display:none; flex-direction:column; gap:10px;">
-        <div id="textStatus" class="flow-status">Ожидание текста...</div>
-        <label class="field">Текст поста
-          <textarea id="generatedTextArea"></textarea>
-        </label>
-        <button id="regenerateTextBtn" class="btn-ghost">🔄 Перегенерировать текст</button>
-        <div class="inline-row">
-          <label>Количество вариантов картинки</label>
-          <select id="imageCountSelect">
-            <option value="1" selected>1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-          </select>
+        <div id="text-manual-fields" style="display:none;flex-direction:column;gap:10px;">
+          <label class="field">Тип поста&ensp;<span class="muted-note muted">(необязательно)</span><select id="cons-postType"></select></label>
+          <label class="field">Тема поста&ensp;<span class="muted-note muted">(необязательно)</span><select id="cons-postTheme"></select></label>
         </div>
-        <button id="generateImageBtn" class="btn-primary">🎨 Сгенерировать картинку</button>
+        <label class="field">Комментарий для ИИ&ensp;<span class="muted-note muted">(необязательно)</span>
+          <textarea id="cons-text-comment" placeholder="Например: сделай акцент на уют и атмосферу..." style="min-height:60px;"></textarea>
+        </label>
+      </div>
+
+      <!-- ── IMAGE PANEL ── -->
+      <div id="panel-image" class="ctype-panel" style="display:none;">
+        <div class="mode-row">
+          <label class="mode-opt"><input type="radio" name="cons-image-mode" value="auto" checked><span>⚡ Авто</span></label>
+          <label class="mode-opt"><input type="radio" name="cons-image-mode" value="manual"><span>🎛 Ручная</span></label>
+        </div>
+        <div id="image-manual-fields" style="display:none;flex-direction:column;gap:10px;">
+          <label class="field">Стиль<select id="cons-style"></select></label>
+          <label class="field">Цвет<select id="cons-color"></select></label>
+          <label class="field">Принт<select id="cons-print"></select></label>
+          <label class="field">Материал<select id="cons-material"></select></label>
+          <label class="field">Тип крепления<select id="cons-fastening"></select></label>
+        </div>
+        <div class="field">Соотношение сторон
+          <div class="ar-row" id="arRow">
+            <button class="ar-btn active" data-ar="3:4">3:4<span>Pinterest</span></button>
+            <button class="ar-btn" data-ar="1:1">1:1<span>Instagram</span></button>
+            <button class="ar-btn" data-ar="9:16">9:16<span>Stories</span></button>
+            <button class="ar-btn" data-ar="2:3">2:3<span>Portrait</span></button>
+          </div>
+        </div>
+        <label class="field">Комментарий для ИИ&ensp;<span class="muted-note muted">(необязательно)</span>
+          <textarea id="cons-image-comment" placeholder="Например: пастельные тона, нежная атмосфера..." style="min-height:60px;"></textarea>
+        </label>
+      </div>
+
+      <!-- ── CAROUSEL PANEL ── -->
+      <div id="panel-carousel" class="ctype-panel" style="display:none;flex-direction:column;gap:10px;">
+        <label class="field">Стиль карусели<select id="cons-carouselStyle"></select></label>
+        <div class="mode-row">
+          <label class="mode-opt"><input type="radio" name="cons-car-mode" value="auto" checked><span>⚡ Авто</span></label>
+          <label class="mode-opt"><input type="radio" name="cons-car-mode" value="manual"><span>🎛 Ручная</span></label>
+        </div>
+        <div id="carousel-manual-fields" style="display:none;flex-direction:column;gap:10px;">
+          <label class="field">Стиль<select id="cons-car-style"></select></label>
+          <label class="field">Цвет<select id="cons-car-color"></select></label>
+          <label class="field">Принт<select id="cons-car-print"></select></label>
+          <label class="field">Материал<select id="cons-car-material"></select></label>
+          <label class="field">Тип крепления<select id="cons-car-fastening"></select></label>
+        </div>
+        <label class="field">Слайдов:&ensp;<span id="cons-slides-val" style="color:var(--accent-light);font-weight:800;">5</span>
+          <input type="range" id="cons-slides" min="3" max="10" value="5" class="ap-slider" style="width:100%;margin-top:6px;" oninput="document.getElementById('cons-slides-val').textContent=this.value">
+        </label>
+        <label class="field">Комментарий для ИИ&ensp;<span class="muted-note muted">(необязательно)</span>
+          <textarea id="cons-carousel-comment" placeholder="Например: акцент на текстуру материала..." style="min-height:60px;"></textarea>
+        </label>
+      </div>
+
+      <!-- ── VIDEO PANEL ── -->
+      <div id="panel-video" class="ctype-panel" style="display:none;">
+        <div style="text-align:center;padding:40px 0;color:var(--text2);">
+          <div style="font-size:44px;margin-bottom:14px;">🎬</div>
+          <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;">Видео — скоро</div>
+          <div style="font-size:13px;line-height:1.5;">Генерация видеороликов появится<br>в следующей версии</div>
+        </div>
+      </div>
+
+      <!-- ── COUNT + GENERATE ── -->
+      <div id="cons-actions">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <span style="font-size:14px;font-weight:700;">Количество</span>
+          <div style="display:flex;align-items:center;gap:14px;">
+            <button onclick="consCountChange(-1)" style="width:34px;height:34px;border-radius:10px;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:inherit;line-height:1;">−</button>
+            <span id="cons-count-val" style="font-size:20px;font-weight:800;min-width:24px;text-align:center;">1</span>
+            <button onclick="consCountChange(1)" style="width:34px;height:34px;border-radius:10px;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:inherit;line-height:1;">+</button>
+          </div>
+        </div>
+        <button id="cons-generate-btn" class="btn-primary">⚡ Сгенерировать</button>
       </div>
 
     </div>
@@ -919,6 +987,41 @@
         </div>
         <span class="add-row-arr">›</span>
       </button>
+      <button id="addOwnBtn" class="add-row">
+        <div class="add-row-icon" style="background:var(--accent-soft);">✏️</div>
+        <div class="add-row-body">
+          <div class="add-row-title">Добавить своё</div>
+          <div class="add-row-sub">Стиль, цвет, материал, крепление и т.д.</div>
+        </div>
+        <span class="add-row-arr">›</span>
+      </button>
+      <button id="manageRefsBtn" class="add-row">
+        <div class="add-row-icon" style="background:rgba(245,158,11,.12);">🗂</div>
+        <div class="add-row-body">
+          <div class="add-row-title">Управление базами</div>
+          <div class="add-row-sub">Просмотр, удаление, активация элементов</div>
+        </div>
+        <span class="add-row-arr">›</span>
+      </button>
+      <button id="exportRefsBtn" class="add-row">
+        <div class="add-row-icon" style="background:var(--ok-soft);">📥</div>
+        <div class="add-row-body">
+          <div class="add-row-title">Экспорт справочников</div>
+          <div class="add-row-sub">Скачать все стили, цвета, принты и т.д. в CSV</div>
+        </div>
+        <span class="add-row-arr">›</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ════ ADD OWN ════ -->
+  <section id="addOwn" class="screen">
+    <div class="topbar">
+      <div class="topbar-side"></div>
+      <h2>Добавить своё</h2>
+      <div class="topbar-side"></div>
+    </div>
+    <div class="sbody">
       <button id="newStyleBtn" class="add-row">
         <div class="add-row-icon">🎨</div>
         <div class="add-row-body"><div class="add-row-title">Новый стиль</div><div class="add-row-sub">Интерьерный стиль</div></div>
@@ -954,12 +1057,27 @@
         <div class="add-row-body"><div class="add-row-title">Новая тема поста</div><div class="add-row-sub">Тематика контента</div></div>
         <span class="add-row-arr">›</span>
       </button>
-      <div style="height:1px;background:var(--border);margin:4px 0;"></div>
-      <button id="exportRefsBtn" class="add-row">
-        <div class="add-row-icon" style="background:var(--ok-soft);">📥</div>
-        <div class="add-row-body"><div class="add-row-title">Экспорт справочников</div><div class="add-row-sub">Скачать все стили, цвета, принты и т.д. в CSV</div></div>
-        <span class="add-row-arr">›</span>
-      </button>
+    </div>
+  </section>
+
+  <!-- ════ MANAGE REFS ════ -->
+  <section id="manageRefs" class="screen">
+    <div class="topbar">
+      <div class="topbar-side"></div>
+      <h2>Управление базами</h2>
+      <div class="topbar-side"></div>
+    </div>
+    <div class="ref-tabs" id="refTabs">
+      <button class="ref-tab on" data-col="styles">Стили</button>
+      <button class="ref-tab" data-col="colors">Цвета</button>
+      <button class="ref-tab" data-col="prints">Принты</button>
+      <button class="ref-tab" data-col="materials">Материалы</button>
+      <button class="ref-tab" data-col="fastening_types">Крепления</button>
+      <button class="ref-tab" data-col="post_types">Типы постов</button>
+      <button class="ref-tab" data-col="post_themes">Темы постов</button>
+    </div>
+    <div class="sbody" style="padding-top:0;">
+      <div id="refList" class="ref-list"><div class="loading">Загрузка...</div></div>
     </div>
   </section>
 
@@ -1048,69 +1166,63 @@
         </div>
       </div>
 
-      <!-- Platform counts -->
+      <!-- Content type counts -->
       <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:16px;">
-        <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;">Постов в день</div>
+        <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;">Генераций в день</div>
 
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
           <div style="display:flex;align-items:center;gap:10px;">
-            <div class="plat-icon pi-p" style="width:34px;height:34px;border-radius:10px;flex-shrink:0;"><svg viewBox="0 0 24 24" width="18" height="18" fill="#E60023"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg></div>
-            <span style="font-size:14px;font-weight:700;">Pinterest</span>
+            <div style="width:34px;height:34px;border-radius:10px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">📝</div>
+            <span style="font-size:14px;font-weight:700;">Текст</span>
           </div>
           <div style="display:flex;align-items:center;gap:10px;">
-            <input type="range" id="ap-pinterest" min="0" max="10" value="0" class="ap-slider" oninput="apSlider(this,'ap-pinterest-val')">
-            <span id="ap-pinterest-val" class="ap-val">0</span>
+            <input type="range" id="ap-text" min="0" max="10" value="0" class="ap-slider" oninput="apSlider(this,'ap-text-val')">
+            <span id="ap-text-val" class="ap-val">0</span>
           </div>
         </div>
 
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
           <div style="display:flex;align-items:center;gap:10px;">
-            <div class="plat-icon pi-t" style="width:34px;height:34px;border-radius:10px;flex-shrink:0;"><svg viewBox="0 0 24 24" width="18" height="18" fill="#2AABEE"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg></div>
-            <span style="font-size:14px;font-weight:700;">Telegram</span>
+            <div style="width:34px;height:34px;border-radius:10px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🖼</div>
+            <span style="font-size:14px;font-weight:700;">Картинка</span>
           </div>
           <div style="display:flex;align-items:center;gap:10px;">
-            <input type="range" id="ap-telegram" min="0" max="10" value="0" class="ap-slider" oninput="apSlider(this,'ap-telegram-val')">
-            <span id="ap-telegram-val" class="ap-val">0</span>
+            <input type="range" id="ap-image" min="0" max="10" value="0" class="ap-slider" oninput="apSlider(this,'ap-image-val')">
+            <span id="ap-image-val" class="ap-val">0</span>
           </div>
         </div>
 
         <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
           <div style="display:flex;align-items:center;gap:10px;">
-            <div class="plat-icon pi-d" style="width:34px;height:34px;border-radius:10px;flex-shrink:0;"><svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="5.5" fill="#202124"/><path d="M12 3C12.5 8 16 11.5 21 12C16 12.5 12.5 16 12 21C11.5 16 8 12.5 3 12C8 11.5 11.5 8 12 3Z" fill="white"/></svg></div>
-            <span style="font-size:14px;font-weight:700;">Яндекс.Дзен</span>
+            <div style="width:34px;height:34px;border-radius:10px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🎠</div>
+            <span style="font-size:14px;font-weight:700;">Карусель</span>
           </div>
           <div style="display:flex;align-items:center;gap:10px;">
-            <input type="range" id="ap-dzen" min="0" max="10" value="0" class="ap-slider" oninput="apSlider(this,'ap-dzen-val')">
-            <span id="ap-dzen-val" class="ap-val">0</span>
+            <input type="range" id="ap-carousel" min="0" max="10" value="0" class="ap-slider" oninput="apSlider(this,'ap-carousel-val')">
+            <span id="ap-carousel-val" class="ap-val">0</span>
           </div>
         </div>
 
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+        <!-- Slides count — shown when carousel > 0 -->
+        <div id="ap-carousel-slides-row" style="display:none;padding-top:12px;border-top:1px solid var(--border);">
+          <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;">Слайдов в каждой карусели</div>
           <div style="display:flex;align-items:center;gap:10px;">
-            <div class="plat-icon pi-i" style="width:34px;height:34px;border-radius:10px;flex-shrink:0;"><svg viewBox="0 0 24 24" width="18" height="18"><defs><linearGradient id="ig3" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#F77737"/><stop offset="50%" stop-color="#E1306C"/><stop offset="100%" stop-color="#405DE6"/></linearGradient></defs><path fill="url(#ig3)" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></div>
-            <span style="font-size:14px;font-weight:700;">Instagram</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <input type="range" id="ap-instagram" min="0" max="10" value="0" class="ap-slider" oninput="apSlider(this,'ap-instagram-val')">
-            <span id="ap-instagram-val" class="ap-val">0</span>
+            <input type="range" id="ap-carousel-slides" min="3" max="10" value="5" class="ap-slider" oninput="apSlider(this,'ap-carousel-slides-val')">
+            <span id="ap-carousel-slides-val" class="ap-val">5</span>
           </div>
         </div>
 
-        <!-- Instagram extras: shown when instagram > 0 -->
-        <div id="ap-carousel-row" style="display:none;flex-direction:column;gap:12px;padding-top:12px;border-top:1px solid var(--border);">
-          <div>
-            <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;">Из них карусель</div>
-            <div style="display:flex;align-items:center;gap:10px;">
-              <input type="range" id="ap-instagram-carousel" min="0" max="10" value="0" class="ap-slider" oninput="apSlider(this,'ap-instagram-carousel-val')">
-              <span id="ap-instagram-carousel-val" class="ap-val">0</span>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;opacity:0.45;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:34px;height:34px;border-radius:10px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🎬</div>
+            <div>
+              <div style="font-size:14px;font-weight:700;">Видео</div>
+              <div style="font-size:11px;color:var(--text2);">скоро</div>
             </div>
           </div>
-          <div id="ap-carousel-slides-row" style="display:none;">
-            <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;">Слайдов в каждой карусели</div>
-            <div style="display:flex;align-items:center;gap:10px;">
-              <input type="range" id="ap-carousel-slides" min="2" max="10" value="5" class="ap-slider" oninput="apSlider(this,'ap-carousel-slides-val')">
-              <span id="ap-carousel-slides-val" class="ap-val">5</span>
-            </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <input type="range" id="ap-video" min="0" max="10" value="0" class="ap-slider" disabled>
+            <span class="ap-val">0</span>
           </div>
         </div>
 
@@ -1171,6 +1283,8 @@
     saveAutopost:      'https://bymzavod.online/webhook/save-autopost',
     getPause:          'https://bymzavod.online/webhook/get-pause',
     togglePause:       'https://bymzavod.online/webhook/toggle-pause',
+    updateElement:     'https://bymzavod.online/webhook/update-element',
+    deleteElement:     'https://bymzavod.online/webhook/delete-element',
     editText:          'https://bymzavod.online/webhook/edit-text',
   };
 
@@ -1180,60 +1294,28 @@
   const toastEl         = document.getElementById('toast');
   const balanceEl       = document.getElementById('balance');
   const balanceValueEl  = document.getElementById('balanceValue');
-  const platformList    = document.getElementById('platformList');
-  const settingsTitle   = document.getElementById('settingsTitle');
-  const pinterestManualBox   = document.getElementById('pinterestManualBox');
-  const autoCountBox         = document.getElementById('autoCountBox');
-  const autoPostCountSelect  = document.getElementById('autoPostCountSelect');
-  const instagramSubtypeBox  = document.getElementById('instagramSubtypeBox');
-  const carouselSlidesBox    = document.getElementById('carouselSlidesBox');
-  const carouselSlidesSelect = document.getElementById('carouselSlidesSelect');
-  const generateBtn          = document.getElementById('generateBtn');
-  const textFlowBox          = document.getElementById('textFlowBox');
-  const textStatus           = document.getElementById('textStatus');
-  const generatedTextArea    = document.getElementById('generatedTextArea');
-  const regenerateTextBtn    = document.getElementById('regenerateTextBtn');
-  const imageCountSelect     = document.getElementById('imageCountSelect');
-  const generateImageBtn     = document.getElementById('generateImageBtn');
-  const generationsList      = document.getElementById('generationsList');
-  const postDetails          = document.getElementById('postDetails');
-  const photoInput           = document.getElementById('photoInput');
-  const photoResults         = document.getElementById('photoResults');
-  const simpleTitle          = document.getElementById('simpleTitle');
-  const simpleName           = document.getElementById('simpleName');
-  const simpleDescription    = document.getElementById('simpleDescription');
-  const simpleActive         = document.getElementById('simpleActive');
-  const simpleSaveBtn        = document.getElementById('simpleSaveBtn');
-  const bottomNav            = document.getElementById('bottomNav');
-
-  const selects = {
-    style:     document.getElementById('styleSelect'),
-    color:     document.getElementById('colorSelect'),
-    print:     document.getElementById('printSelect'),
-    material:  document.getElementById('materialSelect'),
-    postType:  document.getElementById('postTypeSelect'),
-    postTheme: document.getElementById('postThemeSelect'),
-  };
+  const generationsList = document.getElementById('generationsList');
+  const postDetails     = document.getElementById('postDetails');
+  const photoInput      = document.getElementById('photoInput');
+  const photoResults    = document.getElementById('photoResults');
+  const simpleTitle     = document.getElementById('simpleTitle');
+  const simpleName      = document.getElementById('simpleName');
+  const simpleDescription = document.getElementById('simpleDescription');
+  const simpleActive    = document.getElementById('simpleActive');
+  const simpleSaveBtn   = document.getElementById('simpleSaveBtn');
+  const bottomNav       = document.getElementById('bottomNav');
 
   // ── Data ──
-  const platformSVGs = {
-    pinterest: `<svg viewBox="0 0 24 24" width="28" height="28" fill="#E60023" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>`,
-    telegram:  `<svg viewBox="0 0 24 24" width="28" height="28" fill="#2AABEE" xmlns="http://www.w3.org/2000/svg"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>`,
-    instagram: `<svg viewBox="0 0 24 24" width="28" height="28" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="igLg" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#F77737"/><stop offset="30%" stop-color="#E1306C"/><stop offset="65%" stop-color="#833AB4"/><stop offset="100%" stop-color="#405DE6"/></linearGradient></defs><path fill="url(#igLg)" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>`,
-    dzen:      `<svg viewBox="0 0 24 24" width="28" height="28" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="5.5" fill="#202124"/><path d="M12 3C12.5 8 16 11.5 21 12C16 12.5 12.5 16 12 21C11.5 16 8 12.5 3 12C8 11.5 11.5 8 12 3Z" fill="white"/></svg>`,
+  const contentTypes = {
+    text:     { title: 'Текст',     icon: '📝', color: 'rgba(123,92,246,.14)' },
+    image:    { title: 'Картинка',  icon: '🖼',  color: 'rgba(34,197,94,.14)'  },
+    carousel: { title: 'Карусель',  icon: '🎠', color: 'rgba(245,158,11,.14)'  },
+    video:    { title: 'Видео',     icon: '🎬', color: 'rgba(239,68,68,.14)'   },
   };
-  const platformSVGsSm = {
-    pinterest: `<svg viewBox="0 0 24 24" width="22" height="22" fill="#E60023" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>`,
-    telegram:  `<svg viewBox="0 0 24 24" width="22" height="22" fill="#2AABEE" xmlns="http://www.w3.org/2000/svg"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>`,
-    instagram: `<svg viewBox="0 0 24 24" width="22" height="22" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="igSm" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#F77737"/><stop offset="30%" stop-color="#E1306C"/><stop offset="65%" stop-color="#833AB4"/><stop offset="100%" stop-color="#405DE6"/></linearGradient></defs><path fill="url(#igSm)" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>`,
-    dzen:      `<svg viewBox="0 0 24 24" width="22" height="22" xmlns="http://www.w3.org/2000/svg"><rect width="24" height="24" rx="5.5" fill="#202124"/><path d="M12 3C12.5 8 16 11.5 21 12C16 12.5 12.5 16 12 21C11.5 16 8 12.5 3 12C8 11.5 11.5 8 12 3Z" fill="white"/></svg>`,
-  };
-  const platforms = [
-    { key: 'pinterest', title: 'Pinterest',    cls: 'pi-p' },
-    { key: 'telegram',  title: 'Telegram',     cls: 'pi-t' },
-    { key: 'instagram', title: 'Instagram',    cls: 'pi-i' },
-    { key: 'dzen',      title: 'Яндекс.Дзен', cls: 'pi-d' },
-  ];
+
+  function contentTypeData(key) {
+    return contentTypes[key] || { title: key, icon: '📄', color: 'rgba(255,255,255,.08)' };
+  }
 
   const statusMap = {
     done:       'Готово',
@@ -1261,15 +1343,14 @@
   // ── State ──
   let currentScreen       = 'home';
   let screenHistory       = [];
-  let selectedPlatform    = null;
+  let selectedContentType = 'text';
+  let selectedAspectRatio = '3:4';
+  let consCount           = 1;
   let references          = null;
   let generations         = [];
   let generationsFilter   = 'all';
   let selectedGeneration  = null;
   let pollingTimer        = null;
-  let textPollingTimer    = null;
-  let activeTextGeneration = null;
-  let activeTextParams    = {};
   let simpleCollection    = 'post_types';
   let toastTimer          = null;
   let selectMode          = false;
@@ -1278,15 +1359,16 @@
   const NAV_SCREENS = new Set(['home', 'generations', 'add']);
 
   const logicalBack = {
-    platform:      'home',
+    constructor:   'home',
     balanceScreen: 'home',
-    settings:   'platform',
-    generations:'home',
-    post:       'generations',
-    add:        'home',
-    photo:      'add',
-    simpleForm: 'add',
-    autopost:   'home',
+    generations:   'home',
+    post:          'generations',
+    add:           'home',
+    addOwn:        'add',
+    manageRefs:    'add',
+    photo:         'add',
+    simpleForm:    'add',
+    autopost:      'home',
   };
 
   // ── Init ──
@@ -1317,7 +1399,6 @@
       stopPolling();
       if (selectMode) toggleSelectMode();
     }
-    if (screen !== 'settings') stopTextPolling();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -1367,10 +1448,8 @@
   }
 
   // ── Helpers ──
-  function platformData(key) {
-    return platforms.find(p => p.key === key) || { title: key, icon: '📄', cls: '' };
-  }
-  function platformName(key) { return platformData(key).title; }
+  function platformData(key) { return contentTypeData(key); }
+  function platformName(key) { return contentTypeData(key).title; }
 
   function formatDate(value) {
     if (!value) return '';
@@ -1476,47 +1555,88 @@
     } catch { /* silent */ }
   }
 
-  // ── Platforms ──
-  function renderPlatforms() {
-    platformList.innerHTML = platforms.map(p => `
-      <div class="plat-card" data-platform="${p.key}">
-        <div class="plat-icon ${p.cls}">${platformSVGs[p.key] || ''}</div>
-        <span class="plat-name">${p.title}</span>
-      </div>
-    `).join('');
+  // ── Constructor ──
+  function initConstructor() {
+    // Content type switching
+    document.getElementById('ctypeRow').addEventListener('click', e => {
+      const btn = e.target.closest('.ctype-btn');
+      if (!btn) return;
+      selectedContentType = btn.dataset.type;
+      document.querySelectorAll('.ctype-btn').forEach(b => b.classList.toggle('active', b.dataset.type === selectedContentType));
+      document.querySelectorAll('.ctype-panel').forEach(p => p.style.display = 'none');
+      const panel = document.getElementById('panel-' + selectedContentType);
+      if (panel) panel.style.display = 'flex';
+      document.getElementById('cons-actions').style.display = selectedContentType === 'video' ? 'none' : 'flex';
+      consCount = 1;
+      document.getElementById('cons-count-val').textContent = '1';
+    });
+
+    // Mode toggles
+    document.querySelectorAll('[name="cons-text-mode"]').forEach(r => r.addEventListener('change', () => {
+      document.getElementById('text-manual-fields').style.display = r.value === 'manual' && r.checked ? 'flex' : 'none';
+      if (r.value === 'auto' && r.checked) document.getElementById('text-manual-fields').style.display = 'none';
+    }));
+    document.querySelectorAll('[name="cons-image-mode"]').forEach(r => r.addEventListener('change', () => {
+      document.getElementById('image-manual-fields').style.display = r.value === 'manual' && r.checked ? 'flex' : 'none';
+      if (r.value === 'auto' && r.checked) document.getElementById('image-manual-fields').style.display = 'none';
+    }));
+    document.querySelectorAll('[name="cons-car-mode"]').forEach(r => r.addEventListener('change', () => {
+      document.getElementById('carousel-manual-fields').style.display = r.value === 'manual' && r.checked ? 'flex' : 'none';
+      if (r.value === 'auto' && r.checked) document.getElementById('carousel-manual-fields').style.display = 'none';
+    }));
+
+    // Aspect ratio
+    document.getElementById('arRow').addEventListener('click', e => {
+      const btn = e.target.closest('.ar-btn');
+      if (!btn) return;
+      selectedAspectRatio = btn.dataset.ar;
+      document.querySelectorAll('.ar-btn').forEach(b => b.classList.toggle('active', b.dataset.ar === selectedAspectRatio));
+    });
+
+    // Generate button
+    document.getElementById('cons-generate-btn').addEventListener('click', createGeneration);
   }
 
-  async function openSettings(key) {
-    selectedPlatform = key;
-    settingsTitle.textContent = platformName(key);
-    document.querySelector('input[name="mode"][value="auto"]').checked = true;
-    document.querySelector('input[name="contentSubtype"][value="single"]').checked = true;
-    resetTextFlow();
-    updateSettingsView();
-    navigate('settings');
+  function consCountChange(delta) {
+    const max = selectedContentType === 'carousel' ? 3 : 5;
+    consCount = Math.max(1, Math.min(max, consCount + delta));
+    document.getElementById('cons-count-val').textContent = consCount;
+  }
+
+  async function openConstructor() {
+    navigate('constructor');
     if (!references) await loadReferences();
   }
 
   // ── References ──
   async function loadReferences() {
-    setButtonLoading(generateBtn, true);
+    const genBtn = document.getElementById('cons-generate-btn');
+    if (genBtn) { genBtn.disabled = true; genBtn.textContent = 'Загрузка...'; }
     try {
       const data = await request(API.getReferences);
-      references = { ...data, post_types: data.post_types || [], post_themes: data.post_themes || [] };
-      fillSelect(selects.style,     references.styles     || []);
-      fillSelect(selects.color,     references.colors     || []);
-      fillSelect(selects.print,     references.prints     || []);
-      fillSelect(selects.material,  references.materials  || []);
-      fillSelect(selects.postType,  references.post_types || []);
-      fillSelect(selects.postTheme, references.post_themes || []);
+      references = data;
+      const active = items => (items || []).filter(i => i.active !== false);
+      fillSelect(document.getElementById('cons-postType'),  active(data.post_types));
+      fillSelect(document.getElementById('cons-postTheme'), active(data.post_themes));
+      ['cons-style','cons-color','cons-print','cons-material','cons-fastening'].forEach((id, i) => {
+        const src = [data.styles, data.colors, data.prints, data.materials, data.fastening_types][i];
+        fillSelect(document.getElementById(id), active(src));
+      });
+      ['cons-car-style','cons-car-color','cons-car-print','cons-car-material','cons-car-fastening'].forEach((id, i) => {
+        const src = [data.styles, data.colors, data.prints, data.materials, data.fastening_types][i];
+        fillSelect(document.getElementById(id), active(src));
+      });
+      const csEl = document.getElementById('cons-carouselStyle');
+      if (csEl) fillSelect(csEl, active(data.carousel_styles));
     } catch (err) {
       showToast(err.message || 'Не удалось загрузить справочники');
     } finally {
-      setButtonLoading(generateBtn, false);
+      if (genBtn) { genBtn.disabled = false; genBtn.textContent = '⚡ Сгенерировать'; }
     }
   }
 
   function fillSelect(select, items) {
+    items = items.filter(i => i.active !== false);
     select.innerHTML = '<option value="">Не выбрано</option>' + items.map(item =>
       `<option value="${escapeHtml(item.id || item.short_name)}" data-name="${escapeHtml(item.short_name)}" data-description="${escapeHtml(item.tech_description || '')}">${escapeHtml(item.short_name)}</option>`
     ).join('');
@@ -1527,208 +1647,91 @@
     return { name: opt?.dataset.name || '', description: opt?.dataset.description || '' };
   }
 
-  function getMode() { return document.querySelector('input[name="mode"]:checked').value; }
-  function isTextPlatform() { return selectedPlatform !== 'pinterest'; }
-
-  // ── Settings view ──
-  function updateSettingsView() {
-    const mode        = getMode();
-    const textPlatform = isTextPlatform();
-    const textReady   = activeTextGeneration && !textFlowBox.classList.contains('hidden');
-    const isCarousel  = document.querySelector('input[name="contentSubtype"]:checked')?.value === 'carousel';
-
-    pinterestManualBox.classList.toggle('active', selectedPlatform === 'pinterest' && mode === 'manual');
-
-    const textParamsBox = document.getElementById('textParamsBox');
-    if (textParamsBox) {
-      textParamsBox.style.display = (textPlatform && mode === 'manual') ? 'flex' : 'none';
-    }
-
-    autoCountBox.classList.toggle('hidden', textReady);
-    instagramSubtypeBox.classList.toggle('hidden', selectedPlatform !== 'instagram' || textReady);
-    carouselSlidesBox.classList.toggle('hidden', !isCarousel || selectedPlatform !== 'instagram' || textReady);
-    generateBtn.textContent = textPlatform ? 'Сгенерировать текст' : 'Сгенерировать';
-  }
-
-  // ── Text flow ──
-  function resetTextFlow() {
-    stopTextPolling();
-    activeTextGeneration = null;
-    activeTextParams = {};
-    generatedTextArea.value = '';
-    textStatus.textContent = 'Ожидание текста...';
-    textStatus.classList.remove('hidden');
-    textFlowBox.style.display = 'none';
-    generateBtn.style.display = '';
-  }
-
-  function showTextLoading() {
-    generateBtn.style.display = 'none';
-    textFlowBox.style.display = 'flex';
-    textStatus.classList.remove('hidden');
-    textStatus.textContent = 'Генерация текста...';
-    generatedTextArea.value = '';
-    generatedTextArea.disabled = true;
-    regenerateTextBtn.textContent = '🔄 Перегенерировать текст';
-    regenerateTextBtn.disabled = true;
-    generateImageBtn.textContent = '🎨 Сгенерировать картинку';
-    generateImageBtn.disabled = true;
-    updateSettingsView();
-  }
-
-  function showTextReady(item) {
-    stopTextPolling();
-    textStatus.textContent = '📝 Текст готов';
-    generatedTextArea.value = item.post_text || '';
-    generatedTextArea.disabled = false;
-    regenerateTextBtn.disabled = false;
-    generateImageBtn.disabled = false;
-    if (item.params && typeof item.params === 'object') activeTextParams = item.params;
-  }
-
-  function startTextPolling(id) {
-    stopTextPolling();
-    pollTextGeneration(id);
-    textPollingTimer = setInterval(() => pollTextGeneration(id), 3000);
-  }
-  function stopTextPolling() {
-    if (!textPollingTimer) return;
-    clearInterval(textPollingTimer);
-    textPollingTimer = null;
-  }
-  async function pollTextGeneration(id) {
-    try {
-      const data = await request(`${API.getGeneration}?id=${encodeURIComponent(id)}`);
-      const item = Array.isArray(data) ? data[0] : data;
-      if (item.status === 'text_done') showTextReady(item);
-      if (item.status === 'error') {
-        stopTextPolling();
-        textStatus.textContent = item.error || 'Ошибка генерации текста';
-        showToast('Ошибка генерации текста');
-      }
-    } catch (err) {
-      stopTextPolling();
-      showToast(err.message || 'Не удалось проверить статус');
-    }
-  }
-
   // ── Generation params ──
-  function buildTextParams() {
-    const mode = getMode();
-    const postType  = getSelected(selects.postType);
-    const postTheme = getSelected(selects.postTheme);
-    const params = {
-      post_type:             postType.name  || '',
-      post_type_description: postType.description || '',
-      post_theme:            postTheme.name || '',
-      post_theme_description:postTheme.description || '',
-    };
-    if (selectedPlatform === 'instagram') {
-      const subtype = document.querySelector('input[name="contentSubtype"]:checked')?.value || 'single';
-      if (subtype === 'carousel') {
-        params.post_subtype = 'carousel';
-        params.image_count  = Number(carouselSlidesSelect.value);
-      }
-    }
-    return params;
-  }
-
-  function buildPinterestParams(mode) {
-    if (mode !== 'manual') return {};
-    const style    = getSelected(selects.style);
-    const color    = getSelected(selects.color);
-    const print    = getSelected(selects.print);
-    const material = getSelected(selects.material);
-    return {
-      style: style.name, style_description: style.description,
-      color: color.name, color_description: color.description,
-      print: print.name, print_description: print.description,
-      material: material.name, material_description: material.description,
-    };
-  }
-
-  async function postNewGeneration(payload) {
-    return request(API.newGeneration, { method: 'POST', body: JSON.stringify(payload) });
+  function getSelected(select) {
+    if (!select) return { name: '', description: '' };
+    const opt = select.options[select.selectedIndex];
+    return { name: opt?.dataset.name || '', description: opt?.dataset.description || '' };
   }
 
   async function createGeneration() {
-    if (selectedPlatform === 'pinterest') await createPinterestGeneration();
-    else await createTextGeneration();
-  }
-
-  async function createPinterestGeneration() {
-    const mode  = getMode();
-    const count = Number(autoPostCountSelect.value);
-    const params = buildPinterestParams(mode);
-    setButtonLoading(generateBtn, true, 'Отправка...');
+    const btn = document.getElementById('cons-generate-btn');
+    setButtonLoading(btn, true, 'Отправка...');
     try {
-      for (let i = 0; i < count; i++) {
-        await postNewGeneration({ platform: selectedPlatform, mode, params });
+      const payloads = buildPayloads();
+      for (const payload of payloads) {
+        await request(API.newGeneration, { method: 'POST', body: JSON.stringify(payload) });
       }
-      showToast(count > 1 ? `✅ Добавлено ${count} задачи в очередь` : '✅ Задача добавлена в очередь');
+      const n = payloads.length;
+      showToast(n > 1 ? `✅ Добавлено ${n} задачи в очередь` : '✅ Задача добавлена в очередь');
       navigate('home');
     } catch (err) {
       showToast(err.message || 'Не удалось создать задачу');
     } finally {
-      setButtonLoading(generateBtn, false);
+      setButtonLoading(btn, false);
     }
   }
 
-  async function createTextGeneration() {
-    const mode  = getMode();
-    const count = Number(autoPostCountSelect.value);
-    const params = buildTextParams();
-    setButtonLoading(generateBtn, true, 'Отправка...');
-    try {
-      for (let i = 0; i < count; i++) {
-        await postNewGeneration({ platform: selectedPlatform, mode, params });
+  function buildPayloads() {
+    const type = selectedContentType;
+    const payloads = [];
+
+    if (type === 'text') {
+      const mode = document.querySelector('[name="cons-text-mode"]:checked')?.value || 'auto';
+      const params = { ai_comment: document.getElementById('cons-text-comment')?.value.trim() || '' };
+      if (mode === 'manual') {
+        const pt = getSelected(document.getElementById('cons-postType'));
+        const th = getSelected(document.getElementById('cons-postTheme'));
+        params.post_type = pt.name; params.post_type_description = pt.description;
+        params.post_theme = th.name; params.post_theme_description = th.description;
       }
-      showToast(count > 1 ? `✅ Добавлено ${count} задачи в очередь` : '✅ Задача добавлена в очередь');
-      navigate('home');
-    } catch (err) {
-      showToast(err.message || 'Не удалось создать задачу');
-    } finally {
-      setButtonLoading(generateBtn, false);
-    }
-  }
+      for (let i = 0; i < consCount; i++) payloads.push({ platform: 'text', mode, params });
 
-  async function regenerateText() {
-    if (!activeTextGeneration) return;
-    setButtonLoading(regenerateTextBtn, true, 'Отправка...');
-    try {
-      const data = await postNewGeneration({
-        platform: selectedPlatform,
-        mode: getMode(),
-        params: activeTextParams,
-        regenerate: 'text',
-        generation_id: activeTextGeneration,
-      });
-      activeTextGeneration = getGenerationId(data) || activeTextGeneration;
-      showTextLoading();
-      startTextPolling(activeTextGeneration);
-    } catch (err) {
-      showToast(err.message || 'Не удалось перегенерировать текст');
-    } finally {
-      if (!textPollingTimer) setButtonLoading(regenerateTextBtn, false);
-    }
-  }
+    } else if (type === 'image') {
+      const mode = document.querySelector('[name="cons-image-mode"]:checked')?.value || 'auto';
+      const params = {
+        aspect_ratio: selectedAspectRatio,
+        ai_comment: document.getElementById('cons-image-comment')?.value.trim() || '',
+      };
+      if (mode === 'manual') {
+        const s = getSelected(document.getElementById('cons-style'));
+        const c = getSelected(document.getElementById('cons-color'));
+        const p = getSelected(document.getElementById('cons-print'));
+        const m = getSelected(document.getElementById('cons-material'));
+        const f = getSelected(document.getElementById('cons-fastening'));
+        params.style = s.name; params.style_description = s.description;
+        params.color = c.name; params.color_description = c.description;
+        params.print = p.name; params.print_description = p.description;
+        params.material = m.name; params.material_description = m.description;
+        params.fastening_type = f.name; params.fastening_type_description = f.description;
+      }
+      for (let i = 0; i < consCount; i++) payloads.push({ platform: 'image', mode, params, aspect_ratio: selectedAspectRatio });
 
-  async function generateImageOnly() {
-    if (!activeTextGeneration) return;
-    setButtonLoading(generateImageBtn, true, 'Отправка...');
-    try {
-      await postNewGeneration({
-        platform: selectedPlatform,
-        mode: 'image_only',
-        params: { generation_id: activeTextGeneration, image_count: Number(imageCountSelect.value) },
-      });
-      showToast('✅ Задача добавлена в очередь');
-      navigate('home');
-    } catch (err) {
-      showToast(err.message || 'Не удалось создать картинку');
-    } finally {
-      setButtonLoading(generateImageBtn, false);
+    } else if (type === 'carousel') {
+      const mode = document.querySelector('[name="cons-car-mode"]:checked')?.value || 'auto';
+      const csEl = document.getElementById('cons-carouselStyle');
+      const csOpt = csEl?.options[csEl.selectedIndex];
+      const params = {
+        slides_count: Number(document.getElementById('cons-slides')?.value || 5),
+        ai_comment: document.getElementById('cons-carousel-comment')?.value.trim() || '',
+        carousel_style_id: csOpt?.value || '',
+      };
+      if (mode === 'manual') {
+        const s = getSelected(document.getElementById('cons-car-style'));
+        const c = getSelected(document.getElementById('cons-car-color'));
+        const p = getSelected(document.getElementById('cons-car-print'));
+        const m = getSelected(document.getElementById('cons-car-material'));
+        const f = getSelected(document.getElementById('cons-car-fastening'));
+        params.style = s.name; params.style_description = s.description;
+        params.color = c.name; params.color_description = c.description;
+        params.print = p.name; params.print_description = p.description;
+        params.material = m.name; params.material_description = m.description;
+        params.fastening_type = f.name; params.fastening_type_description = f.description;
+      }
+      for (let i = 0; i < consCount; i++) payloads.push({ platform: 'carousel', mode, params });
     }
+
+    return payloads;
   }
 
   // ── Generations list ──
@@ -1786,18 +1789,17 @@
     }
     generationsList.innerHTML = list.map(item => {
       const status = item.status || 'queue';
-      const pd = platformData(item.platform);
+      const ct = contentTypeData(item.platform);
       const pillCls = statusPillClass[status] || 'sp-queue';
-      const piSvg = platformSVGsSm[item.platform] || '';
       const isSelected = selectedIds.has(item.id);
       const checkHtml = selectMode ? `<div class="gen-check"></div>` : '';
       return `
         <div class="gen-card${isSelected ? ' selected' : ''}" data-generation="${escapeHtml(item.id)}">
           ${checkHtml}
-          <div class="gen-pi ${pd.cls}">${piSvg}</div>
+          <div class="gen-pi" style="background:${ct.color};width:44px;height:44px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">${ct.icon}</div>
           <div class="gen-body">
             <div class="gen-title">${escapeHtml(getGenerationTitle(item))}</div>
-            <div class="gen-meta">${escapeHtml(pd.title)} · ${formatDate(item.created)}</div>
+            <div class="gen-meta">${escapeHtml(ct.title)} · ${formatDate(item.created)}</div>
           </div>
           <div class="gen-right">
             <span class="status-pill ${pillCls}">${statusMap[status] || status}</span>
@@ -1823,9 +1825,8 @@
     selectedGeneration = generations.find(g => String(g.id) === String(id));
     if (!selectedGeneration) { showToast('Запись не найдена'); return; }
 
-    // Update header
-    const pd = platformData(selectedGeneration.platform);
-    document.getElementById('postPlatformTitle').textContent = pd.title + ' пост';
+    const ct = contentTypeData(selectedGeneration.platform);
+    document.getElementById('postPlatformTitle').textContent = ct.title;
     const wrap = document.getElementById('postStatusWrap');
     const s = selectedGeneration.status || 'queue';
     wrap.innerHTML = `<span class="status-pill ${statusPillClass[s] || 'sp-queue'}">${statusMap[s] || s}</span>`;
@@ -1913,9 +1914,9 @@
       : '';
 
     const imageReady = !!imageUrl;
-    const textOnlyReady = item.status === 'text_done' && !imageReady;
-    const regenImageLabel = textOnlyReady ? '🎨 Сгенерировать картинку' : '🔄 Перегенерировать картинку';
-    const isCarousel = item.platform === 'instagram' && item.params?.post_subtype === 'carousel';
+    const isCarousel = item.platform === 'carousel';
+    const isText = item.platform === 'text';
+    const regenImageLabel = '🔄 Перегенерировать';
 
     if (isCarousel && item.status === 'done') {
       loadCarouselSlides(item.id).then(slides => {
@@ -2235,8 +2236,8 @@
     const bar = document.getElementById('bulkBar');
     if (btn) {
       btn.textContent = selectMode ? 'Отмена' : 'Выбрать';
-      btn.style.color = selectMode ? 'var(--accent-light)' : '';
-      btn.style.borderColor = selectMode ? 'var(--accent)' : '';
+      btn.style.color = selectMode ? 'var(--accent-light)' : 'var(--text2)';
+      btn.style.borderColor = selectMode ? 'var(--accent)' : 'var(--border)';
     }
     if (bar) bar.style.display = selectMode ? 'flex' : 'none';
     updateBulkBar();
@@ -2286,13 +2287,127 @@
     await loadGenerations(false);
   }
 
+
+  // ── Manage References ──
+  const REF_COLS = {
+    styles:         'Стили',
+    colors:         'Цвета',
+    prints:         'Принты',
+    materials:      'Материалы',
+    fastening_types:'Крепления',
+    post_types:     'Типы постов',
+    post_themes:    'Темы постов',
+  };
+
+  let currentRefCol = 'styles';
+  let refData = null;
+
+  async function openManageRefs() {
+    navigate('manageRefs');
+    await loadManageRefs();
+  }
+
+  async function loadManageRefs() {
+    const list = document.getElementById('refList');
+    if (!list) return;
+    list.innerHTML = '<div class="loading">Загрузка...</div>';
+    try {
+      refData = await request(API.getReferences);
+      renderRefList();
+    } catch (err) {
+      list.innerHTML = `<div class="empty">Ошибка загрузки</div>`;
+    }
+  }
+
+  function renderRefList() {
+    const list = document.getElementById('refList');
+    if (!list || !refData) return;
+    const items = refData[currentRefCol] || [];
+    if (!items.length) {
+      list.innerHTML = '<div class="empty">Нет элементов</div>';
+      return;
+    }
+    list.innerHTML = items.map(item => {
+      const isActive = item.active !== false;
+      return `
+        <div class="ref-item${isActive ? '' : ' inactive'}" data-ref-id="${escapeHtml(item.id)}" data-airtable="${escapeHtml(item.airtable_id || '')}">
+          <div class="ref-item-info">
+            <div class="ref-item-name">${escapeHtml(item.short_name || '—')}</div>
+            ${item.tech_description ? `<div class="ref-item-desc">${escapeHtml(item.tech_description)}</div>` : ''}
+          </div>
+          <button class="ref-toggle ${isActive ? 'act' : 'inact'}" data-role="toggle">${isActive ? '● Вкл' : '○ Выкл'}</button>
+          <button class="ref-delete" data-role="delete" title="Удалить">🗑</button>
+        </div>`;
+    }).join('');
+  }
+
+  document.addEventListener('click', async function(ev) {
+    if (currentScreen !== 'manageRefs') return;
+    const item = ev.target.closest('.ref-item');
+    if (!item) return;
+    const id = item.dataset.refId;
+    const airtableId = item.dataset.airtable;
+
+    if (ev.target.closest('[data-role="toggle"]')) {
+      const currentlyActive = !item.classList.contains('inactive');
+      const btn = ev.target.closest('[data-role="toggle"]');
+      btn.disabled = true; btn.style.opacity = '0.5';
+      try {
+        await request(API.updateElement, {
+          method: 'POST',
+          body: JSON.stringify({ collection: currentRefCol, id, active: !currentlyActive, airtable_id: airtableId }),
+        });
+        // Update local refData
+        const arr = refData[currentRefCol] || [];
+        const rec = arr.find(r => r.id === id);
+        if (rec) rec.active = !currentlyActive;
+        renderRefList();
+        showToast((!currentlyActive ? '✅ Активировано' : '○ Деактивировано'));
+      } catch (err) {
+        showToast(err.message || 'Ошибка');
+        btn.disabled = false; btn.style.opacity = '1';
+      }
+    }
+
+    if (ev.target.closest('[data-role="delete"]')) {
+      const name = item.querySelector('.ref-item-name')?.textContent || 'элемент';
+      if (!confirm(`Удалить «${name}»? Это действие нельзя отменить.`)) return;
+      const btn = ev.target.closest('[data-role="delete"]');
+      btn.disabled = true; btn.style.opacity = '0.5';
+      try {
+        await request(API.deleteElement, {
+          method: 'POST',
+          body: JSON.stringify({ collection: currentRefCol, id, airtable_id: airtableId }),
+        });
+        // Remove from local refData
+        if (refData[currentRefCol]) {
+          refData[currentRefCol] = refData[currentRefCol].filter(r => r.id !== id);
+        }
+        renderRefList();
+        showToast('✅ Удалено');
+      } catch (err) {
+        showToast(err.message || 'Ошибка удаления');
+        btn.disabled = false; btn.style.opacity = '1';
+      }
+    }
+  });
+
+  // Ref tab switching
+  document.addEventListener('click', function(ev) {
+    const tab = ev.target.closest('[data-col]');
+    if (!tab || !tab.closest('#refTabs')) return;
+    currentRefCol = tab.dataset.col;
+    document.querySelectorAll('.ref-tab').forEach(t => t.classList.toggle('on', t.dataset.col === currentRefCol));
+    renderRefList();
+  });
+
   // ── Export references ──
   async function exportReferences() {
     const btn = document.getElementById('exportRefsBtn');
     setButtonLoading(btn, true, 'Загрузка...');
     try {
       const data = await request(API.getReferences);
-      const cols = { styles:'styles', colors:'colors', prints:'prints', materials:'materials', post_types:'post_types', post_themes:'post_themes' };
+      const cols = { styles:'styles', colors:'colors', prints:'prints', materials:'materials', fastening_types:'fastening_types', post_types:'post_types', post_themes:'post_themes' };
       const rows = [['collection','short_name','tech_description','active']];
       for (const [key, label] of Object.entries(cols)) {
         for (const item of (data[key] || [])) {
@@ -2342,26 +2457,9 @@
   function apSlider(slider, labelId) {
     const label = document.getElementById(labelId);
     if (label) label.textContent = slider.value;
-    if (slider.id === 'ap-instagram') {
-      const row = document.getElementById('ap-carousel-row');
-      const n = Number(slider.value);
-      if (row) row.style.display = n > 0 ? 'flex' : 'none';
-      const carSlider = document.getElementById('ap-instagram-carousel');
-      if (carSlider) {
-        carSlider.max = n;
-        if (Number(carSlider.value) > n) {
-          carSlider.value = n;
-          const carLabel = document.getElementById('ap-instagram-carousel-val');
-          if (carLabel) carLabel.textContent = n;
-        }
-        // Hide slides row if carousel count drops to 0
-        const slidesRow = document.getElementById('ap-carousel-slides-row');
-        if (slidesRow) slidesRow.style.display = Number(carSlider.value) > 0 ? 'block' : 'none';
-      }
-    }
-    if (slider.id === 'ap-instagram-carousel') {
-      const slidesRow = document.getElementById('ap-carousel-slides-row');
-      if (slidesRow) slidesRow.style.display = Number(slider.value) > 0 ? 'block' : 'none';
+    if (slider.id === 'ap-carousel') {
+      const row = document.getElementById('ap-carousel-slides-row');
+      if (row) row.style.display = Number(slider.value) > 0 ? 'block' : 'none';
     }
     updateNextRun();
   }
@@ -2433,12 +2531,10 @@
         el.checked = days.includes(el.value);
       });
       // Sliders
-      ['pinterest','telegram','instagram','dzen'].forEach(p => {
-        const el = document.getElementById('ap-' + p);
-        if (el) { el.value = data[p] || 0; apSlider(el, 'ap-' + p + '-val'); }
+      ['text','image','carousel'].forEach(t => {
+        const el = document.getElementById('ap-' + t);
+        if (el) { el.value = data[t] || 0; apSlider(el, 'ap-' + t + '-val'); }
       });
-      const carEl = document.getElementById('ap-instagram-carousel');
-      if (carEl) { carEl.value = data.instagram_carousel || 0; apSlider(carEl, 'ap-instagram-carousel-val'); }
       const slidesEl = document.getElementById('ap-carousel-slides');
       if (slidesEl) { slidesEl.value = data.carousel_slides || 5; document.getElementById('ap-carousel-slides-val').textContent = slidesEl.value; }
       updateAutopostToggle();
@@ -2456,15 +2552,13 @@
       await request(API.saveAutopost, {
         method: 'POST',
         body: JSON.stringify({
-          enabled:            autopostEnabled,
+          enabled:         autopostEnabled,
           time,
           days,
-          pinterest:          Number(document.getElementById('ap-pinterest').value),
-          telegram:           Number(document.getElementById('ap-telegram').value),
-          instagram:          Number(document.getElementById('ap-instagram').value),
-          instagram_carousel: Number(document.getElementById('ap-instagram-carousel').value),
-          carousel_slides:    Number(document.getElementById('ap-carousel-slides')?.value || 5),
-          dzen:               Number(document.getElementById('ap-dzen').value),
+          text:            Number(document.getElementById('ap-text').value),
+          image:           Number(document.getElementById('ap-image').value),
+          carousel:        Number(document.getElementById('ap-carousel').value),
+          carousel_slides: Number(document.getElementById('ap-carousel-slides')?.value || 5),
         }),
       });
       showToast('✅ Настройки автопоста сохранены');
@@ -2475,16 +2569,14 @@
 
   // ── Events ──
   function bindEvents() {
-    document.getElementById('createBtn').addEventListener('click', () => navigate('platform'));
+    document.getElementById('createBtn').addEventListener('click', openConstructor);
     document.getElementById('balanceBtn').addEventListener('click', openBalanceScreen);
-
     document.getElementById('autopostBtn').addEventListener('click', () => { navigate('autopost'); loadAutopost(); });
     document.getElementById('topUpBtn').addEventListener('click', () => window.open('https://openrouter.ai/settings/credits', '_blank'));
-    document.getElementById('generationsBtn').addEventListener('click', async () => {
-      navigate('generations');
-      await loadGenerations();
-    });
+    document.getElementById('generationsBtn').addEventListener('click', async () => { navigate('generations'); await loadGenerations(); });
     document.getElementById('addBtn') && document.getElementById('addBtn').addEventListener('click', () => navigate('add'));
+    document.getElementById('addOwnBtn') && document.getElementById('addOwnBtn').addEventListener('click', () => navigate('addOwn'));
+    document.getElementById('manageRefsBtn') && document.getElementById('manageRefsBtn').addEventListener('click', openManageRefs);
     document.getElementById('photoAddBtn').addEventListener('click', () => navigate('photo'));
     document.getElementById('newStyleBtn').addEventListener('click',    () => openSimpleForm('styles',         'Новый стиль'));
     document.getElementById('newColorBtn').addEventListener('click',    () => openSimpleForm('colors',         'Новый цвет'));
@@ -2497,47 +2589,24 @@
     document.getElementById('saveAutopostBtn').addEventListener('click', saveAutopost);
     document.getElementById('choosePhotoBtn').addEventListener('click', choosePhoto);
     simpleSaveBtn.addEventListener('click', saveSimple);
-    generateBtn.addEventListener('click', () => createGeneration());
-    regenerateTextBtn.addEventListener('click', regenerateText);
-    generateImageBtn.addEventListener('click', generateImageOnly);
     photoInput.addEventListener('change', ev => analyzePhoto(ev.target.files[0]));
 
-    // Platform click
-    platformList.addEventListener('click', ev => {
-      const card = ev.target.closest('[data-platform]');
-      if (card) openSettings(card.dataset.platform);
-    });
-
-    // Mode toggle
-    document.querySelectorAll('input[name="mode"]').forEach(inp => inp.addEventListener('change', () => {
-      resetTextFlow();
-      updateSettingsView();
-    }));
-    document.querySelectorAll('input[name="contentSubtype"]').forEach(inp => inp.addEventListener('change', updateSettingsView));
-
-    // Generation card click
     generationsList.addEventListener('click', ev => {
       const card = ev.target.closest('[data-generation]');
       if (!card) return;
       const id = card.dataset.generation;
       if (selectMode) {
-        if (selectedIds.has(id)) selectedIds.delete(id);
-        else selectedIds.add(id);
-        updateBulkBar();
-        renderGenerations();
-      } else {
-        openPost(id);
-      }
+        if (selectedIds.has(id)) selectedIds.delete(id); else selectedIds.add(id);
+        updateBulkBar(); renderGenerations();
+      } else { openPost(id); }
     });
 
-    // Photo results
     photoResults.addEventListener('click', ev => {
       const btn  = ev.target.closest('[data-role="save"]');
       const card = ev.target.closest('[data-photo-card]');
       if (btn && card) savePhotoCard(card);
     });
 
-    // Filter tabs
     document.getElementById('filterBar').addEventListener('click', ev => {
       const tab = ev.target.closest('[data-f]');
       if (!tab) return;
@@ -2549,7 +2618,7 @@
 
   // ── Boot ──
   initTelegram();
-  renderPlatforms();
+  initConstructor();
   bindEvents();
   loadBalance();
   loadGenerations(false);
