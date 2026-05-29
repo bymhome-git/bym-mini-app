@@ -2194,23 +2194,16 @@
       ${paramsHtml}
       ${errorHtml}
       ${item.status !== 'queue' ? `
-        <details class="params-accordion" id="regenPanel">
-          <summary>🔄 Перегенерировать</summary>
-          <div class="params-body" style="display:flex;flex-direction:column;gap:10px;padding-top:10px;">
-            <label class="field">Комментарий для ИИ&ensp;<span class="muted-note muted">(необязательно)</span>
-              <textarea id="regenComment" placeholder="Что изменить — цвет, атмосферу, детали..." style="min-height:56px;"></textarea>
-            </label>
-            ${refsLoaded ? `
-              <label class="field">Соотношение сторон<select id="regenAr">${arOpts}</select></label>
-              <label class="field">Стиль<select id="regenStyle">${styleOpts}</select></label>
-              <label class="field">Цвет<select id="regenColor">${colorOpts}</select></label>
-              <label class="field">Принт<select id="regenPrint">${printOpts}</select></label>
-              <label class="field">Материал<select id="regenMaterial">${materialOpts}</select></label>
-              <label class="field">Тип крепления<select id="regenFastening">${fasteningOpts}</select></label>
-            ` : '<div class="muted" style="font-size:13px;">Открой конструктор чтобы загрузить справочники</div>'}
-            <button id="regenImageBtn" class="btn-primary">⚡ Перегенерировать</button>
-          </div>
-        </details>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;">
+          <label class="field">Промт для фото&ensp;<span class="muted-note" style="color:var(--danger);font-weight:700;">(Обязательно)</span>
+            <div style="position:relative;">
+              <textarea id="regenImagePrompt" placeholder="Опиши что изменить в фото..." style="min-height:80px;padding-right:46px;" oninput="toggleImageEnhanceBtn()"></textarea>
+              <button id="image-enhance-btn" onclick="enhanceImagePrompt()" title="Улучшить промт" style="display:none;position:absolute;bottom:8px;right:8px;width:34px;height:34px;border-radius:9px;background:var(--accent-soft);border:1px solid var(--accent);color:var(--accent-light);font-size:16px;cursor:pointer;font-family:inherit;align-items:center;justify-content:center;transition:all .18s;">✨</button>
+            </div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px;">Нажми ✨ чтобы улучшить промт с помощью ИИ</div>
+          </label>
+          <button id="regenImageBtn" class="btn-secondary" style="min-height:44px;font-size:13px;width:100%;">🖼 Переделать фото</button>
+        </div>
         <button id="deleteGenerationBtn" class="btn-danger">🗑 Удалить</button>
       ` : '<button id="cancelGenerationBtn" class="btn-danger">✖ Отменить задачу</button>'}
     `;
@@ -2332,33 +2325,11 @@
 
     document.getElementById('regenImageBtn')?.addEventListener('click', async ev => {
       const btn = ev.currentTarget;
+      const prompt = document.getElementById('regenImagePrompt')?.value.trim() || '';
+      if (!prompt) { showToast('Введи промт — что изменить в фото'); return; }
       setButtonLoading(btn, true, 'Отправка...');
       try {
-        // For image cards: save updated params first
-        if (item.platform === 'image') {
-          const comment = document.getElementById('regenComment')?.value.trim() || '';
-          const arEl = document.getElementById('regenAr');
-          const styleEl = document.getElementById('regenStyle');
-          const colorEl = document.getElementById('regenColor');
-          const printEl = document.getElementById('regenPrint');
-          const materialEl = document.getElementById('regenMaterial');
-          const fasteningEl = document.getElementById('regenFastening');
-          const getOpt = el => el ? { name: el.options[el.selectedIndex]?.dataset.name || '', description: el.options[el.selectedIndex]?.dataset.description || '' } : { name: '', description: '' };
-          const s = getOpt(styleEl), c = getOpt(colorEl), p = getOpt(printEl), m = getOpt(materialEl), f = getOpt(fasteningEl);
-          const newParams = { ...item.params,
-            aspect_ratio: arEl?.value || item.params?.aspect_ratio || '3:4',
-            ai_comment: comment,
-            ...(s.name ? { style: s.name, style_description: s.description } : {}),
-            ...(c.name ? { color: c.name, color_description: c.description } : {}),
-            ...(p.name ? { print: p.name, print_description: p.description } : {}),
-            ...(m.name ? { material: m.name, material_description: m.description } : {}),
-            ...(f.name ? { fastening_type: f.name, fastening_type_description: f.description } : {}),
-          };
-          await request(`https://pb.bymzavod.online/api/collections/generations/records/${item.id}`, {
-            method: 'PATCH', body: JSON.stringify({ params: newParams })
-          });
-        }
-        await request(API.regenerate, { method: 'POST', body: JSON.stringify({ generation_id: item.id }) });
+        await request(API.regenerate, { method: 'POST', body: JSON.stringify({ generation_id: item.id, prompt }) });
         showToast('✅ Задача добавлена в очередь');
         navigate('generations');
         await loadGenerations();
@@ -3057,6 +3028,49 @@
       ta.style.borderColor = 'var(--accent)';
       setTimeout(() => { ta.style.borderColor = ''; }, 1500);
       showToast('\u2728 Промт улучшен');
+    } catch (err) {
+      showToast('Не удалось улучшить промт: ' + (err.message || 'ошибка'));
+    } finally {
+      btn.innerHTML = origContent;
+      btn.disabled = false;
+      btn.style.animation = '';
+    }
+  }
+
+  // ── Image prompt enhancer (обычная картинка) ──
+
+  function toggleImageEnhanceBtn() {
+    const ta  = document.getElementById('regenImagePrompt');
+    const btn = document.getElementById('image-enhance-btn');
+    if (!btn) return;
+    const hasText = ta?.value.trim().length > 3;
+    btn.style.display = hasText ? 'flex' : 'none';
+  }
+
+  async function enhanceImagePrompt() {
+    const ta  = document.getElementById('regenImagePrompt');
+    const btn = document.getElementById('image-enhance-btn');
+    const userText = ta?.value.trim();
+    if (!userText) return;
+
+    const origContent = btn.innerHTML;
+    btn.innerHTML = '⟳';
+    btn.disabled = true;
+    btn.style.animation = 'spin .8s linear infinite';
+
+    try {
+      const res = await fetch('https://bymzavod.online/webhook/enhance-regen-prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: userText }),
+      });
+      const data = await res.json();
+      const improved = data.improved?.trim();
+      if (!improved) throw new Error('Пустой ответ');
+      ta.value = improved;
+      ta.style.borderColor = 'var(--accent)';
+      setTimeout(() => { ta.style.borderColor = ''; }, 1500);
+      showToast('✨ Промт улучшен');
     } catch (err) {
       showToast('Не удалось улучшить промт: ' + (err.message || 'ошибка'));
     } finally {
