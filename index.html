@@ -781,8 +781,10 @@
         </div>
         <span style="background:linear-gradient(90deg,#c4a0ff,#7B5CF6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-size:16px;font-weight:800;letter-spacing:-0.3px;">BYM Home</span>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;"><div id="queueStatus" style="display:flex;align-items:center;gap:5px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:6px 10px;font-size:12px;font-weight:700;color:var(--text2);"><span id="queueStatusDot" style="width:8px;height:8px;border-radius:50%;background:var(--text2);flex-shrink:0;"></span><span id="queueStatusText">--</span></div><div id="balance" class="bal-chip">
-        <span class="bal-val" id="balanceValue">—</span>&thinsp;$
+      <div style="display:flex;align-items:center;gap:8px;"><div id="queueStatus" style="display:flex;align-items:center;gap:5px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:6px 10px;font-size:12px;font-weight:700;color:var(--text2);"><span id="queueStatusDot" style="width:8px;height:8px;border-radius:50%;background:var(--text2);flex-shrink:0;"></span><span id="queueStatusText">--</span></div><div id="balance" class="bal-chip" title="OpenRouter">
+        <span style="font-size:10px;color:var(--text2);font-weight:700;">OR</span><span class="bal-val" id="balanceValue">—</span>&thinsp;$
+      </div><div id="balanceKie" class="bal-chip" title="KIE.ai" style="border-color:rgba(239,68,68,0.25);">
+        <span style="font-size:10px;color:var(--text2);font-weight:700;">KIE</span><span class="bal-val" id="balanceKieValue" style="color:#FF6B6B;">—</span>&thinsp;$
       </div></div>
     </div>
 
@@ -819,17 +821,34 @@
       <h2>Баланс</h2>
       <div class="topbar-side"></div>
     </div>
-    <div class="sbody" style="align-items:center; padding-top:48px; gap:28px;">
-      <div style="text-align:center; width:100%;">
-        <div style="font-size:12px; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:14px;">Текущий баланс</div>
-        <div style="display:flex; align-items:baseline; justify-content:center; gap:8px;">
-          <span id="balanceScreenValue" style="font-size:56px; font-weight:800; letter-spacing:-2px; line-height:1;">—</span>
-          <span style="font-size:22px; font-weight:700; color:var(--text2);">USD</span>
+    <div class="sbody" style="align-items:center; padding-top:32px; gap:20px;">
+
+      <!-- OpenRouter -->
+      <div style="width:100%; background:var(--card); border:1px solid var(--border); border-radius:20px; padding:24px 20px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--accent-light);flex-shrink:0;"></div>
+          <span style="font-size:12px; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.08em;">OpenRouter</span>
         </div>
-      </div>
-      <div style="width:100%; margin-top:8px;">
+        <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:20px;">
+          <span id="balanceScreenValue" style="font-size:48px; font-weight:800; letter-spacing:-2px; line-height:1; color:var(--accent-light);">—</span>
+          <span style="font-size:20px; font-weight:700; color:var(--text2);">USD</span>
+        </div>
         <button id="topUpBtn" class="btn-primary">💳 Пополнить баланс</button>
       </div>
+
+      <!-- KIE.ai -->
+      <div style="width:100%; background:var(--card); border:1px solid rgba(239,68,68,0.2); border-radius:20px; padding:24px 20px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:#FF6B6B;flex-shrink:0;"></div>
+          <span style="font-size:12px; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.08em;">KIE.ai</span>
+        </div>
+        <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:20px;">
+          <span id="balanceKieScreenValue" style="font-size:48px; font-weight:800; letter-spacing:-2px; line-height:1; color:#FF6B6B;">—</span>
+          <span style="font-size:20px; font-weight:700; color:var(--text2);">USD</span>
+        </div>
+        <button id="topUpKieBtn" class="btn-primary" style="background:linear-gradient(135deg,#b91c1c,#ef4444);">💳 Пополнить KIE.ai</button>
+      </div>
+
     </div>
   </section>
 
@@ -1302,6 +1321,7 @@
 <script>
   const API = {
     balance:           'https://bymzavod.online/webhook/openrouter-balance',
+    kieBalance:        'https://bymzavod.online/webhook/kie-balance',
     newGeneration:     'https://bymzavod.online/webhook/new-generation',
     getGeneration:     'https://bymzavod.online/webhook/get-generation',
     getGenerations:    'https://bymzavod.online/webhook/get-generations',
@@ -1593,11 +1613,21 @@
     } catch {
       balanceValueEl.textContent = '—';
     }
+    // KIE.ai balance (silent)
+    try {
+      const kd = await request(API.kieBalance);
+      const kv = Number(kd.balance);
+      const kt = Number.isFinite(kv) ? kv.toFixed(2) : '—';
+      const kEl = document.getElementById('balanceKieValue');
+      if (kEl) kEl.textContent = kt;
+      const ks = document.getElementById('balanceKieScreenValue');
+      if (ks) ks.textContent = kt;
+    } catch { /* silent */ }
   }
 
   async function openBalanceScreen() {
     navigate('balanceScreen');
-    // Refresh balance when opening the screen
+    // Refresh both balances when opening the screen
     try {
       const data = await request(API.balance);
       const v = Number(data.balance);
@@ -1605,6 +1635,15 @@
       balanceValueEl.textContent = txt;
       const sv = document.getElementById('balanceScreenValue');
       if (sv) sv.textContent = txt;
+    } catch { /* silent */ }
+    try {
+      const kd = await request(API.kieBalance);
+      const kv = Number(kd.balance);
+      const kt = Number.isFinite(kv) ? kv.toFixed(2) : '—';
+      const kEl = document.getElementById('balanceKieValue');
+      if (kEl) kEl.textContent = kt;
+      const ks = document.getElementById('balanceKieScreenValue');
+      if (ks) ks.textContent = kt;
     } catch { /* silent */ }
   }
 
@@ -2883,6 +2922,7 @@
     document.getElementById('balanceBtn').addEventListener('click', openBalanceScreen);
     document.getElementById('autopostBtn').addEventListener('click', () => { navigate('autopost'); loadAutopost(); });
     document.getElementById('topUpBtn').addEventListener('click', () => window.open('https://openrouter.ai/settings/credits', '_blank'));
+    document.getElementById('topUpKieBtn').addEventListener('click', () => window.open('https://kie.ai/billing', '_blank'));
     document.getElementById('generationsBtn').addEventListener('click', async () => { navigate('generations'); await loadGenerations(); });
     document.getElementById('addBtn') && document.getElementById('addBtn').addEventListener('click', () => navigate('add'));
     document.getElementById('addOwnBtn') && document.getElementById('addOwnBtn').addEventListener('click', () => navigate('addOwn'));
