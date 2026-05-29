@@ -1324,6 +1324,7 @@
     platformRegenText:  'https://bymzavod.online/webhook/platform-regen-text',
     platformRegenImage: 'https://bymzavod.online/webhook/platform-regen-image',
     sendToTelegram:     'https://bymzavod.online/webhook/send-to-telegram',
+    imageRegen:         'https://bymzavod.online/webhook/image-regen',
   };
 
   // ── DOM refs ──
@@ -2327,10 +2328,10 @@
       const btn = ev.currentTarget;
       const prompt = document.getElementById('regenImagePrompt')?.value.trim() || '';
       if (!prompt) { showToast('Введи промт — что изменить в фото'); return; }
-      setButtonLoading(btn, true, 'Отправка...');
+      setButtonLoading(btn, true, 'Генерирую...');
       try {
-        await request(API.regenerate, { method: 'POST', body: JSON.stringify({ generation_id: item.id, prompt }) });
-        showToast('✅ Задача добавлена в очередь');
+        await request(API.imageRegen, { method: 'POST', body: JSON.stringify({ generation_id: item.id, prompt }) });
+        showToast('✅ Фото отправлено на перегенерацию');
         navigate('generations');
         await loadGenerations();
       } catch (err) { showToast(err.message || 'Не удалось отправить задачу'); }
