@@ -2066,13 +2066,23 @@
         ${item.post_text ? `<button id="copyTextBtn" class="btn-ghost">📋 Скопировать текст</button>` : ''}
         ${paramsHtml}
         <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;">
-          <label class="field">Комментарий&ensp;<span class="muted-note muted">(необязательно)</span>
-            <textarea id="platformComment" placeholder="Что изменить — тон, детали, акцент..." style="min-height:56px;"></textarea>
+          <label class="field">Промт для фото&ensp;<span class="muted-note" style="color:var(--danger);font-weight:700;">(Обязательно)</span>
+            <div style="position:relative;">
+              <textarea id="platformImagePrompt" placeholder="Опиши что изменить в фото..." style="min-height:80px;padding-right:46px;" oninput="togglePlatformEnhanceBtn()"></textarea>
+              <button id="platform-enhance-btn" onclick="enhanceRegenPrompt()" title="Улучшить промт" style="display:none;position:absolute;bottom:8px;right:8px;width:34px;height:34px;border-radius:9px;background:var(--accent-soft);border:1px solid var(--accent);color:var(--accent-light);font-size:16px;cursor:pointer;font-family:inherit;align-items:center;justify-content:center;transition:all .18s;">✨</button>
+            </div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px;">Нажми ✨ чтобы улучшить промт с помощью ИИ</div>
           </label>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-            ${item.post_text && item.platform !== 'pinterest' ? `<button id="platformRegenTextBtn" class="btn-secondary" style="min-height:44px;font-size:13px;">✏️ Переделать текст</button>` : '<div></div>'}
-            <button id="platformRegenImageBtn" class="btn-secondary" style="min-height:44px;font-size:13px;">🖼 Переделать фото</button>
-          </div>
+          ${item.platform !== 'pinterest' ? `<label class="field" style="margin-top:2px;">Комментарий для текста&ensp;<span class="muted-note muted">(необязательно)</span>
+            <textarea id="platformComment" placeholder="Что изменить — тон, детали, акцент..." style="min-height:48px;"></textarea>
+          </label>` : ''}
+          ${item.platform !== 'pinterest'
+            ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                ${item.post_text ? `<button id="platformRegenTextBtn" class="btn-secondary" style="min-height:44px;font-size:13px;">✏️ Переделать текст</button>` : '<div></div>'}
+                <button id="platformRegenImageBtn" class="btn-secondary" style="min-height:44px;font-size:13px;">🖼 Переделать фото</button>
+              </div>`
+            : `<button id="platformRegenImageBtn" class="btn-secondary" style="min-height:44px;font-size:13px;width:100%;">🖼 Переделать фото</button>`
+          }
         </div>
         ${imageUrl ? `<button id="sendToTelegramBtn" class="btn-primary">✈️ Отправить в Telegram</button>` : ''}
         <button id="deleteGenerationBtn" class="btn-danger">🗑 Удалить</button>
@@ -2160,8 +2170,7 @@
         ${errorHtml}
         ${item.status === 'queue'
           ? '<button id="cancelGenerationBtn" class="btn-danger">✖ Отменить задачу</button>'
-          : `<button id="regenTextBtn" class="btn-secondary">🔄 Перегенерировать текст</button>
-             <button id="deleteGenerationBtn" class="btn-danger">🗑 Удалить</button>`
+          : `<button id="deleteGenerationBtn" class="btn-danger">🗑 Удалить</button>`
         }
       `;
       bindPostButtons();
@@ -2266,10 +2275,10 @@
     // Platform regen image
     document.getElementById('platformRegenImageBtn')?.addEventListener('click', async ev => {
       const btn = ev.currentTarget;
-      const comment = document.getElementById('platformComment')?.value.trim() || '';
+      const prompt = document.getElementById('platformImagePrompt')?.value.trim() || '';
       setButtonLoading(btn, true, 'Генерирую...');
       try {
-        await request(API.platformRegenImage, { method: 'POST', body: JSON.stringify({ generation_id: item.id, comment }) });
+        await request(API.platformRegenImage, { method: 'POST', body: JSON.stringify({ generation_id: item.id, prompt }) });
         showToast('✅ Фото отправлено на перегенерацию');
         navigate('generations');
         await loadGenerations();
@@ -3048,6 +3057,49 @@
       ta.style.borderColor = 'var(--accent)';
       setTimeout(() => { ta.style.borderColor = ''; }, 1500);
       showToast('\u2728 Промт улучшен');
+    } catch (err) {
+      showToast('Не удалось улучшить промт: ' + (err.message || 'ошибка'));
+    } finally {
+      btn.innerHTML = origContent;
+      btn.disabled = false;
+      btn.style.animation = '';
+    }
+  }
+
+  // ── Platform image prompt enhancer ──
+
+  function togglePlatformEnhanceBtn() {
+    const ta  = document.getElementById('platformImagePrompt');
+    const btn = document.getElementById('platform-enhance-btn');
+    if (!btn) return;
+    const hasText = ta?.value.trim().length > 3;
+    btn.style.display = hasText ? 'flex' : 'none';
+  }
+
+  async function enhanceRegenPrompt() {
+    const ta  = document.getElementById('platformImagePrompt');
+    const btn = document.getElementById('platform-enhance-btn');
+    const userText = ta?.value.trim();
+    if (!userText) return;
+
+    const origContent = btn.innerHTML;
+    btn.innerHTML = '⟳';
+    btn.disabled = true;
+    btn.style.animation = 'spin .8s linear infinite';
+
+    try {
+      const res = await fetch('https://bymzavod.online/webhook/enhance-regen-prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: userText }),
+      });
+      const data = await res.json();
+      const improved = data.improved?.trim();
+      if (!improved) throw new Error('Пустой ответ');
+      ta.value = improved;
+      ta.style.borderColor = 'var(--accent)';
+      setTimeout(() => { ta.style.borderColor = ''; }, 1500);
+      showToast('✨ Промт улучшен');
     } catch (err) {
       showToast('Не удалось улучшить промт: ' + (err.message || 'ошибка'));
     } finally {
